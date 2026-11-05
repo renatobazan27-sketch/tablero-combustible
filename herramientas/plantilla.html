@@ -1,0 +1,1388 @@
+<meta name="dash-one-writer">
+<link rel="stylesheet" href="fonts.css">
+<style>
+  .fz { font-family: 'Montserrat', var(--font-anthropic-sans); color: var(--color-fg); display: grid; gap: var(--cds-gap-xl); }
+  .fz { container-type: inline-size; --fz-navy: color-mix(in srgb, #004071 72%, var(--color-fg)); --fz-sky: #0092CF; --fz-orange: #F15922; --fz-tint: color-mix(in srgb, #004071 7%, var(--color-panel)); font-family: 'Montserrat', var(--font-anthropic-sans); }
+  .fz .fz-title, .fz h2, .fz h3 { color: var(--fz-navy); }
+  .fz-card { border-top: 3px solid var(--fz-navy); }
+  .fz-kpis .fz-card { border-top-color: var(--fz-orange); }
+  .fz-top { display: flex; align-items: center; justify-content: space-between; gap: var(--cds-gap-md); padding-bottom: var(--cds-pad-md); border-bottom: 1px solid var(--color-border-line); }
+  .fz-brand { display: flex; align-items: center; gap: var(--cds-gap-md); }
+  .fz-brand > div { display: grid; gap: 4px; }
+  .fz-logo { width: 40px; height: 40px; flex: none; padding: 8px; border-radius: 12px; background: var(--fz-navy); fill: var(--fz-orange); }
+  .fz-shell { display: grid; grid-template-columns: 13.5rem minmax(0, 1fr); gap: var(--cds-gap-xl); align-items: start; }
+  .fz-nav { position: sticky; top: var(--cds-gap-md); display: grid; gap: 4px; padding: var(--cds-pad-sm); background: var(--fz-tint); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); }
+  .fz-navbtn { font: inherit; font-size: var(--cds-font-size-body); display: flex; align-items: center; gap: 10px; text-align: left; padding: 10px 12px; border: 0; border-radius: calc(var(--cds-radius) - 2px); background: transparent; color: var(--color-fg-muted); cursor: pointer; white-space: nowrap; }
+  .fz-navbtn:hover { background: var(--color-bg); color: var(--color-fg); }
+  .fz-navbtn[aria-current=page] { background: var(--color-bg); color: var(--color-fg); font-weight: var(--cds-font-weight-medium); box-shadow: inset 3px 0 0 var(--fz-orange); color: var(--fz-navy); }
+  .fz-ico { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .fz-main { display: grid; gap: var(--cds-gap-xl); min-width: 0; }
+  .fz-page { display: grid; gap: var(--cds-gap-xl); min-width: 0; }
+  .fz-page[hidden] { display: none; }
+  .fz-facts { display: grid; gap: var(--cds-gap-md); grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); }
+  .fz-fact { display: flex; gap: var(--cds-gap-sm); align-items: flex-start; padding: var(--cds-pad-md); border-radius: var(--cds-radius); background: var(--color-bg); border: 1px solid var(--color-border-line); }
+  .fz-fact p { margin: 0; font-size: var(--cds-font-size-body); line-height: 1.45; color: var(--color-fg-muted); }
+  .fz .fz-fact b { color: var(--color-fg); font-weight: 600; }
+  .fz-fact b:first-child { font-family: 'Montserrat', var(--font-anthropic-sans); font-weight: 700; color: var(--fz-navy); font-size: var(--cds-font-size-heading); }
+  .fz-fico { width: 34px; height: 34px; flex: none; padding: 7px; border-radius: 10px; fill: none; stroke: var(--fz-navy); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; background: var(--color-panel); border: 1px solid var(--color-border-line); }
+  .fz-sankey { min-height: 320px; }
+  .fz-card h3 { margin: var(--cds-gap-md) 0 0; font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); }
+  @container (max-width: 52rem) {
+    .fz-shell { grid-template-columns: minmax(0, 1fr); gap: var(--cds-gap-md); }
+    .fz-nav { position: static; display: flex; overflow-x: auto; }
+    .fz-navbtn[aria-current=page] { box-shadow: inset 0 -3px 0 var(--fz-orange); }
+  }
+  .fz-top { flex-wrap: wrap; }
+  .fz-upd { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-variant-numeric: tabular-nums; }
+  .fz .fz-upd b { color: var(--color-fg); font-weight: 500; }
+  .fz-info { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); max-width: 30rem; }
+  .fz-info summary { cursor: pointer; color: var(--fz-navy); font-weight: 500; list-style: none; padding: 6px 12px; border: 1px solid var(--color-border-line); border-radius: 999px; text-align: center; }
+  .fz-info summary::-webkit-details-marker { display: none; }
+  .fz-info[open] summary { margin-bottom: 8px; }
+  .fz-info ul { margin: 0; padding: var(--cds-pad-sm) var(--cds-pad-md) var(--cds-pad-sm) 1.6rem; background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); line-height: 1.5; }
+  .fz-cardhead { display: flex; align-items: center; justify-content: space-between; gap: var(--cds-gap-sm); flex-wrap: wrap; }
+  .fz-cardhead h3 { margin: 0; }
+  .fz-tools { display: flex; gap: 6px; align-items: center; }
+  .fz-tools-end { justify-content: flex-end; }
+  .fz-tbtn { font: inherit; font-size: var(--cds-font-size-caption); border: 1px solid var(--color-border-line); background: var(--color-bg); color: var(--fz-navy); border-radius: 999px; padding: 3px 10px; cursor: pointer; }
+  .fz-tbtn[aria-pressed=true] { background: var(--fz-navy); color: var(--color-bg); border-color: var(--fz-navy); }
+  .fz-copied { font-size: var(--cds-font-size-caption); color: var(--color-ok); }
+  .fz-wide { grid-column: 1 / -1; }
+  .fz-chartwrap { position: relative; }
+  .fz-focusbtn { position: absolute; top: -6px; right: 0; z-index: 2; width: 30px; height: 30px; display: grid; place-items: center; border: 1px solid var(--color-border-line); background: var(--color-panel); color: var(--fz-navy); border-radius: 8px; cursor: pointer; opacity: .55; transition: opacity var(--cds-dur-slow); }
+  .fz-chartwrap:hover .fz-focusbtn, .fz-focusbtn:focus-visible { opacity: 1; }
+  .fz-focusbtn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .fz-focusbar { display: flex; align-items: center; gap: var(--cds-gap-md); }
+  .fz-focusbar[hidden] { display: none; }
+  .fz.fz-focus .fz-top, .fz.fz-focus .fz-nav { display: none; }
+  .fz.fz-focus .fz-shell { grid-template-columns: minmax(0, 1fr); }
+  .fz.fz-focus .fz-page > *:not(.fz-focused):not(:has(.fz-focused)) { display: none; }
+  .fz.fz-focus .fz-grid2 { grid-template-columns: minmax(0, 1fr); }
+  .fz.fz-focus .fz-grid2 > *:not(.fz-focused) { display: none; }
+  .fz.fz-focus .fz-focused > *:not(.fz-cardhead):not(.fz-chartwrap):not(h2):not(.fz-ptools):not(.fz-legend) { display: none; }
+  .fz.fz-focus .fz-focused .fz-focusbtn { display: none; }
+  .fz-tview { display: grid; gap: 8px; }
+  .fz-tview .fz-tablebox { max-height: 26rem; }
+  .fz-sim2 { display: grid; gap: var(--cds-gap-md); }
+  .fz-sim-now { display: grid; gap: var(--cds-gap-sm); grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr)); }
+  .fz-sim-tile { display: grid; gap: 2px; padding: var(--cds-pad-sm) var(--cds-pad-md); border-radius: var(--cds-radius); background: var(--fz-tint); }
+  .fz .fz-sim-tile b { font-size: var(--cds-font-size-heading); color: var(--fz-navy); font-weight: 700; font-variant-numeric: tabular-nums; }
+  .fz-sim-h { margin: var(--cds-gap-sm) 0 0; font-size: var(--cds-font-size-body); font-weight: var(--cds-font-weight-medium); color: var(--fz-navy); }
+  .fz-sim-mv { display: grid; gap: var(--cds-gap-sm); padding-top: var(--cds-pad-md); border-top: 1px dashed var(--color-border-line); }
+  .fz-sim-mv[hidden] { display: none; }
+  .fz-sim-ctr { display: grid; gap: 10px; }
+  .fz-sim-line { display: grid; grid-template-columns: minmax(12rem, 1.2fr) minmax(8rem, 2fr) minmax(14rem, auto); gap: var(--cds-gap-sm); align-items: center; font-size: var(--cds-font-size-caption); }
+  .fz-sim-line[hidden] { display: none; }
+  .fz-sim-line input { accent-color: var(--fz-orange); width: 100%; }
+  .fz-sim-name { display: flex; align-items: center; gap: 4px; color: var(--color-fg); flex-wrap: wrap; }
+  .fz-sim-name small { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+  .fz-sim-val { text-align: right; font-variant-numeric: tabular-nums; color: var(--fz-navy); font-weight: 500; }
+  @container (max-width: 40rem) { .fz-sim-line { grid-template-columns: 1fr; } .fz-sim-val { text-align: left; } }
+  .fz-head { display: grid; gap: var(--cds-gap-xs); }
+  .fz-title { font-family: 'Montserrat', var(--font-anthropic-sans); font-weight: 700; font-size: var(--cds-font-size-title); margin: 0; }
+  .fz-take { margin: 0; font-size: var(--cds-font-size-body); color: var(--color-fg-muted); max-width: 52rem; line-height: 1.55; }
+  .fz .fz-take b { color: var(--color-fg); font-weight: 600; }
+  .fz-badge { justify-self: start; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); border: 1px dashed var(--color-border-line); border-radius: 999px; padding: 2px var(--cds-pad-sm); }
+  .fz-filters { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cds-gap-sm) var(--cds-gap-md); padding: var(--cds-pad-sm) var(--cds-pad-md); background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); position: sticky; top: 0; z-index: 4; box-shadow: 0 6px 12px -10px rgba(0,0,0,.25); }
+  .fz-seg { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 2px; border-radius: var(--cds-radius); background: var(--color-bg); border: 1px solid var(--color-border-line); }
+  .fz-seg button { font: inherit; font-size: var(--cds-font-size-caption); border: 0; background: transparent; color: var(--color-fg-muted); padding: 4px 10px; border-radius: calc(var(--cds-radius) - 2px); cursor: pointer; }
+  .fz-seg button[aria-pressed=true] { background: var(--color-panel); color: var(--color-fg); box-shadow: 0 0 0 1px var(--color-border-line); font-weight: var(--cds-font-weight-medium); }
+  .fz-date { display: inline-flex; align-items: center; gap: 6px; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .fz-date input { font: inherit; color: var(--color-fg); background: var(--color-bg); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: 3px 6px; }
+  .fz-range-lbl { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-variant-numeric: tabular-nums; margin-left: auto; }
+  .fz-kpis { display: grid; gap: var(--cds-gap-md); grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); }
+  .fz-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: grid; gap: var(--cds-gap-sm); align-content: start; min-width: 0; }
+  .fz-card h2, .fz-card h3 { margin: 0; font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); }
+  .fz-note { margin: 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); line-height: 1.45; }
+  .fz-kpi-label { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .fz-kpi-val { font-family: 'Montserrat', var(--font-anthropic-sans); font-weight: 700; color: var(--fz-navy); font-size: var(--cds-font-size-title); font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .fz .fz-kpi-val b { font-weight: 700; }
+  .fz-unit { font-size: var(--cds-font-size-body); color: var(--color-fg-muted); font-family: 'Montserrat', var(--font-anthropic-sans); }
+  .fz-kpi-sub { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-variant-numeric: tabular-nums; }
+  .fz .fz-kpi-sub b { font-weight: 600; }
+  .fz-good { color: var(--color-ok); } .fz-bad { color: var(--color-bad); } .fz-warn { color: var(--color-warn); }
+  .fz-grid2 { display: grid; gap: var(--cds-gap-md); grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); }
+  .fz-sec { display: grid; gap: var(--cds-gap-md); }
+  .fz-sec > h2 { margin: 0; font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); }
+  .fz-chart { position: relative; min-width: 0; }
+  .fz-chart svg { display: block; overflow: visible; }
+  .fz-fc { min-height: 320px; } .fz-mirror { min-height: 260px; } .fz-cal { min-height: 150px; } .fz-scatter { min-height: 260px; } .fz-rings { min-height: 180px; } .fz-sim-out { min-height: 170px; }
+  .fz-chart text { font-family: 'Montserrat', var(--font-anthropic-sans); font-size: var(--cds-font-size-caption); fill: var(--color-fg-muted); }
+  .fz-tip { position: absolute; z-index: 3; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-size: var(--cds-font-size-caption); pointer-events: none; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .fz-tip .fz-tip-h { color: var(--cds-text-secondary); margin-bottom: 2px; }
+  .fz-sw { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+  .fz-legend { display: flex; flex-wrap: wrap; gap: var(--cds-gap-md); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .fz-legend span { display: inline-flex; align-items: center; }
+  .fz-fail { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: inherit; height: 100%; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+  .fz-fail i { width: .375rem; height: .375rem; border-radius: 50%; background: var(--color-bad); }
+  [data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+  [data-dash-source-state=empty] { color: transparent; }
+  .fz-rings-grid { display: grid; gap: var(--cds-gap-md); grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr)); }
+  .fz-ring { display: grid; justify-items: center; gap: 4px; padding: var(--cds-pad-sm); border-radius: var(--cds-radius); border: 1px solid var(--color-border-line); background: var(--color-bg); text-align: center; }
+  .fz-ring-name { font-weight: var(--cds-font-weight-medium); font-size: var(--cds-font-size-body); }
+  .fz-ring-meta { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-variant-numeric: tabular-nums; }
+  .fz-ring svg text.fz-ring-pct { font-family: 'Montserrat', var(--font-anthropic-sans); font-size: 22px; fill: var(--color-fg); }
+  .fz-ring svg text.fz-ring-lbl { font-size: 10px; }
+  .fz-sim-row { display: flex; align-items: center; gap: var(--cds-gap-md); flex-wrap: wrap; }
+  .fz-sim-row input { flex: 1 1 12rem; accent-color: var(--fz-orange); }
+  .fz-sim-pct { font-family: 'Montserrat', var(--font-anthropic-sans); font-size: var(--cds-font-size-title); min-width: 5ch; font-variant-numeric: tabular-nums; }
+  .fz-sim-big { font-family: 'Montserrat', var(--font-anthropic-sans); font-weight: 700; color: var(--fz-navy); font-size: var(--cds-font-size-title); font-variant-numeric: tabular-nums; }
+  .fz-sim-bars { display: grid; gap: 6px; margin-top: var(--cds-gap-sm); }
+  .fz-sim-bar { display: grid; grid-template-columns: 6.5rem 1fr auto; gap: var(--cds-gap-sm); align-items: center; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-variant-numeric: tabular-nums; }
+  .fz-sim-bar div { height: 14px; border-radius: 3px; transition: width var(--cds-dur-slow) var(--cds-ease-out); }
+  .fz-tablebox { max-height: 22rem; overflow: auto; }
+  .fz-table { width: 100%; border-collapse: collapse; font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
+  .fz-table th { position: sticky; top: 0; background: var(--color-panel); text-align: left; font-weight: var(--cds-font-weight-medium); color: var(--color-fg-muted); padding: 6px 8px; border-bottom: 1px solid var(--color-border-line); }
+  .fz-table td { padding: 6px 8px; border-bottom: 1px solid var(--color-border-line); }
+  .fz-table .fz-num { text-align: right; }
+  .fz-pill { display: inline-block; padding: 1px 8px; border-radius: 999px; background: color-mix(in srgb, var(--cds-chart-status-critical) 16%, transparent); color: var(--color-bad); font-weight: 600; }
+  @media (max-width: 40rem) { .fz-hide-narrow { display: none; } }
+  @media (prefers-reduced-motion: no-preference) {
+    @keyframes fz-pulse { 0% { r: 5; opacity: .7; } 100% { r: 16; opacity: 0; } }
+    .fz-pulse { animation: fz-pulse 1.8s var(--cds-ease-out) infinite; }
+    @keyframes fz-grow { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    .fz-in { animation: fz-grow var(--cds-dur-slow) var(--cds-ease-out) both; }
+  }
+</style>
+<style>
+  .fz-sel { font: inherit; font-size: var(--cds-font-size-caption); color: var(--color-fg); background: var(--color-bg); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: 3px 6px; max-width: 12rem; }
+  .fz-clear { font: inherit; font-size: var(--cds-font-size-caption); border: 1px solid var(--color-border-line); background: transparent; color: var(--color-fg-muted); border-radius: 999px; padding: 2px 10px; cursor: pointer; }
+  /* filtros con más contraste */
+  .fz-filters { background: var(--fz-tint); border-color: color-mix(in srgb, var(--fz-navy) 25%, transparent); border-left: 4px solid var(--fz-navy); }
+  .fz-filters .fz-date { color: var(--fz-navy); font-weight: var(--cds-font-weight-medium); }
+  .fz-filters .fz-sel, .fz-filters .fz-date input { background: var(--color-panel); color: var(--fz-navy); font-weight: var(--cds-font-weight-medium); border: 1px solid color-mix(in srgb, var(--fz-navy) 40%, transparent); padding: 5px 8px; cursor: pointer; }
+  .fz-filters .fz-sel:hover, .fz-filters .fz-date input:hover { border-color: var(--fz-navy); }
+  .fz-filters .fz-sel:focus-visible, .fz-filters .fz-date input:focus-visible { outline: 2px solid var(--fz-sky); outline-offset: 1px; }
+  .fz-filters .fz-on { border-color: var(--fz-orange) !important; box-shadow: 0 0 0 1px var(--fz-orange); }
+  .fz-seg { background: var(--color-panel); border-color: color-mix(in srgb, var(--fz-navy) 40%, transparent); }
+  .fz-seg button { color: var(--fz-navy); }
+  .fz-seg button:hover { background: var(--fz-tint); }
+  .fz-seg button[aria-pressed=true] { background: var(--fz-navy); color: #fff; box-shadow: none; }
+  .fz-clear { border-color: var(--fz-orange) !important; color: var(--fz-orange) !important; font-weight: var(--cds-font-weight-medium); background: var(--color-panel) !important; }
+  .fz-grifos { min-height: 240px; } .fz-ring { cursor: pointer; } .fz-ring:hover { border-color: var(--color-fg-muted); }
+  .fz-tog { font: inherit; font-size: var(--cds-font-size-caption); display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--color-border-line); background: var(--color-bg); color: var(--color-fg); border-radius: 999px; padding: 3px 10px; cursor: pointer; }
+  .fz-tog[aria-pressed=false] { opacity: .45; }
+  .fz-ptools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cds-gap-sm); }
+  .fz-ptiles { display: grid; gap: var(--cds-gap-sm); grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); min-height: 84px; }
+  .fz-ptile { border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-sm) var(--cds-pad-md); background: var(--color-bg); display: grid; gap: 2px; }
+  .fz-ptile .fz-kpi-sub span { white-space: nowrap; }
+  .fz-ptile-v { font-family: 'Montserrat', var(--font-anthropic-sans); font-weight: 700; color: var(--fz-navy); font-size: var(--cds-font-size-title); font-variant-numeric: tabular-nums; }
+  .fz-pchart { min-height: 320px; }
+  .fz-ring[aria-pressed=true] { box-shadow: 0 0 0 2px var(--color-fg); }
+</style>
+
+<div class="fz">
+  <header class="fz-top">
+    <div class="fz-brand"><svg class="fz-logo" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c3.5 4.6 7 8.6 7 12.6a7 7 0 0 1-14 0c0-4 3.5-8 7-12.6z"/></svg>
+      <div><h1 class="fz-title">Centro de combustible · Diésel DPWL</h1>
+      <span class="fz-upd">Actualizado al <b data-draw="upd-c" data-source="dia_seg">—</b> (consumo) y <b data-draw="upd-p" data-source="tarifarios">—</b> (precios)</span></div></div>
+    <details class="fz-info">
+      <summary>Cómo leer este tablero</summary>
+      <ul>
+        <li>Cifras de diésel en galones (GAL); el GNV no está incluido.</li>
+        <li>Precios y costos en soles, sin IGV.</li>
+        <li>Costo real: galones por el precio promedio pagado ese día en cada grifo.</li>
+        <li>Sobrecosto: costo real menos el costo al precio base definido en el reporte de Power BI.</li>
+        <li>Tarifario: precio publicado del día por Coesti (externo), Primax (interno) y Servosa (IBC).</li>
+        <li>Proyección de consumo: promedio de los últimos 3 meses ajustado por la estacionalidad de cada mes (historial desde 2023); fue el método que menos se equivocó al probarlo con meses pasados.</li>
+        <li>Escenario conservador del precio: hasta dónde podría subir el tarifario en el plazo de proyección elegido; en 4 de cada 5 casos no se supera, según cuánto varía normalmente cada semana. Sirve para presupuestar con margen.</li>
+        <li>Carga atípica: un día en que una placa cargó muy por encima de lo normal para ella; conviene revisarla, no es necesariamente un error.</li>
+        <li>Desde y Hasta eligen el periodo a revisar (por defecto, los últimos 3 meses); Proyección elige cuántos meses hacia adelante se estiman el consumo y el precio. Tipo de grifo (interno o externo), ubicación (Callao, Paita y, en precios, otras ciudades) y tipo de activo aplican a todas las vistas.</li>
+      </ul>
+    </details>
+  </header>
+  <div class="fz-shell">
+    <nav class="fz-nav" aria-label="Vistas">
+      <button type="button" class="fz-navbtn" data-view="resumen" aria-current="false"><svg class="fz-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13h4v8H3zM10 8h4v13h-4zM17 3h4v18h-4z"/></svg><span>Resumen</span></button>
+      <button type="button" class="fz-navbtn" data-view="precios" aria-current="false"><svg class="fz-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 17l5-5 4 4 7-8"/><path d="M15 8h5v5"/></svg><span>Precios y tarifarios</span></button>
+      <button type="button" class="fz-navbtn" data-view="consumo" aria-current="false"><svg class="fz-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c3 4 6 7.5 6 11a6 6 0 0 1-12 0c0-3.5 3-7 6-11z"/></svg><span>Consumo e ingresos</span></button>
+      <button type="button" class="fz-navbtn" data-view="activos" aria-current="false"><svg class="fz-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="9" width="13" height="8" rx="1"/><path d="M15 12h4l3 3v2h-7"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg><span>Grifos y activos</span></button>
+      <button type="button" class="fz-navbtn" data-view="alertas" aria-current="false"><svg class="fz-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.5"/></svg><span>Alertas</span></button>
+    </nav>
+    <main class="fz-main">
+      <div class="fz-focusbar" hidden><button type="button" class="fz-tbtn fz-exitfocus">← Volver al tablero</button><span class="fz-date">Esc para salir</span></div>
+      <div class="fz-filters" id="filtros" role="group" aria-label="Filtros">
+    <span class="fz-date">Proyección:</span>
+    <div class="fz-seg">
+      <button type="button" class="fz-hzg" data-m="1" aria-pressed="false">1 mes</button>
+      <button type="button" class="fz-hzg" data-m="3" aria-pressed="true">3 meses</button>
+      <button type="button" class="fz-hzg" data-m="6" aria-pressed="false">6 meses</button>
+      <button type="button" class="fz-hzg" data-m="12" aria-pressed="false">12 meses</button>
+    </div>
+    <label class="fz-date">Desde <input class="fz-desde" type="date" min="2000-01-01" max="2099-12-31"></label>
+    <label class="fz-date">Hasta <input class="fz-hasta" type="date" min="2000-01-01" max="2099-12-31"></label>
+    <select class="fz-sel fz-tg" aria-label="Tipo de grifo"><option value="">Grifos internos y externos</option><option value="Interno">Grifo interno</option><option value="Externo">Grifo externo</option></select>
+    <select class="fz-sel fz-sede" aria-label="Ubicación"><option value="">Todas las ubicaciones</option><option value="Callao">Callao</option><option value="Paita">Paita</option><option value="Otros" class="fz-only-precios">Otros</option></select>
+    <select class="fz-sel fz-tipo fz-no-precios" aria-label="Tipo de activo" data-draw="tipo-sel" data-source="dia_seg"></select>
+    <button type="button" class="fz-clear" hidden>Borrar filtros</button>
+    <span class="fz-range-lbl" data-draw="rango-lbl" data-source="dia_seg">—</span>
+  </div>
+      <section class="fz-page" data-page="resumen" id="resumen">
+        <p class="fz-take">Entre el <b data-draw="tk-rango" data-source="dia_seg">—</b> se consumieron <b data-draw="tk-gal-p" data-source="dia_seg">—</b> galones de diésel, <b data-draw="tk-dir" data-source="dia_seg">—</b> frente al periodo anterior de igual duración. Se pagaron <b data-draw="tk-sobre" data-source="dia_seg">—</b> por encima del precio base. Para <b data-draw="tk-mes" data-source="dia_seg">—</b> proyectamos <b data-draw="tk-gal" data-source="dia_seg">—</b> galones y en el periodo hay <b data-draw="tk-alertas" data-source="anomalias">—</b> cargas atípicas por revisar.</p>
+        <section class="fz-kpis" id="indicadores">
+    <div class="fz-card">
+      <span class="fz-kpi-label">Consumo · periodo elegido</span>
+      <span class="fz-kpi-val"><b data-draw="k-consumo" data-source="dia_seg">—</b> <span class="fz-unit">gal</span></span>
+      <span class="fz-kpi-sub"><b data-draw="k-consumo-d" data-source="dia_seg">—</b> vs periodo anterior</span>
+    </div>
+    <div class="fz-card">
+      <span class="fz-kpi-label">Costo real · periodo elegido</span>
+      <span class="fz-kpi-val"><span class="fz-unit">S/</span> <b data-draw="k-costo" data-source="dia_seg">—</b></span>
+      <span class="fz-kpi-sub">S/ <b data-draw="k-precio" data-source="dia_seg">—</b> por galón en promedio</span>
+    </div>
+    <div class="fz-card">
+      <span class="fz-kpi-label">Sobrecosto vs precio base</span>
+      <span class="fz-kpi-val"><span class="fz-unit">S/</span> <b data-draw="k-sobre" data-source="dia_seg">—</b></span>
+      <span class="fz-kpi-sub"><b data-draw="k-sobre-p" data-source="dia_seg">—</b> sobre el costo a precio base</span>
+    </div>
+    <div class="fz-card">
+      <span class="fz-kpi-label">Proyección · próximo mes</span>
+      <span class="fz-kpi-val"><b data-draw="k-proy" data-source="dia_seg">—</b> <span class="fz-unit">gal</span></span>
+      <span class="fz-kpi-sub">≈ S/ <b data-draw="k-proy-c" data-source="dia_seg">—</b> al precio de los últimos 30 días</span>
+    </div>
+    <div class="fz-card">
+      <span class="fz-kpi-label">Cargas atípicas · periodo elegido</span>
+      <span class="fz-kpi-val"><b data-draw="k-alertas" data-source="anomalias">—</b> <span class="fz-unit">alertas</span></span>
+      <span class="fz-kpi-sub">en <b data-draw="k-alertas-u" data-source="anomalias">—</b> placas distintas</span>
+    </div>
+  </section>
+        <section class="fz-card" id="infografia">
+          <h2>Infografía del periodo</h2>
+          <p class="fz-note">Las cifras clave del periodo y los filtros elegidos, en una mirada.</p>
+          <div class="fz-facts">
+            <div class="fz-fact"><svg class="fz-fico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c3 4 6 7.5 6 11a6 6 0 0 1-12 0c0-3.5 3-7 6-11z"/></svg><p><b data-draw="f-dia" data-source="dia_seg">—</b> galones despachados por día en promedio.</p></div>
+            <div class="fz-fact"><svg class="fz-fico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 9.5c0-1.4 1.3-2.2 3-2.2s3 .8 3 2.1c0 3-6 1.6-6 4.6 0 1.3 1.3 2.2 3 2.2s3-.9 3-2.3M12 5.5v1.8M12 16.7v1.8"/></svg><p>S/ <b data-draw="f-precio" data-source="dia_seg">—</b> por galón pagado en promedio, <b data-draw="f-precio-y" data-source="dia_seg">—</b> frente al mismo periodo del año anterior.</p></div>
+            <div class="fz-fact"><svg class="fz-fico" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="9" width="13" height="8" rx="1"/><path d="M15 12h4l3 3v2h-7"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg><p><b data-draw="f-tipo" data-source="dia_seg">—</b> se lleva el <b data-draw="f-tipo-p" data-source="dia_seg">—</b> del diésel.</p></div>
+            <div class="fz-fact"><svg class="fz-fico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v16M2 21h15M7 7h5v4H7zM15 10h2a2 2 0 0 1 2 2v5a1.5 1.5 0 0 0 3 0V8l-3-3"/></svg><p>El grifo <b data-draw="f-grifo" data-source="dia_seg">—</b> despacha el <b data-draw="f-grifo-p" data-source="dia_seg">—</b> de los galones.</p></div>
+            <div class="fz-fact"><svg class="fz-fico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.5"/></svg><p>El sobrecosto frente al precio base equivale a <b data-draw="f-dias" data-source="dia_seg">—</b> días de consumo.</p></div>
+          </div>
+          <div class="fz-cardhead"><h3>De dónde sale el diésel y a dónde va</h3><div class="fz-tools"><button type="button" class="fz-tbtn" data-tabla="sankey" aria-pressed="false">Ver tabla</button></div></div>
+          <p class="fz-note">Galones del periodo desde cada tipo de grifo (izquierda) hacia cada tipo de activo (derecha). Pasa el cursor por una franja para ver su volumen.</p>
+          <div class="fz-chartwrap"><button type="button" class="fz-focusbtn" data-focus="sankey" aria-label="Ver en pantalla completa" title="Ver en pantalla completa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button><div class="fz-chart fz-sankey dash-skeleton" data-draw="sankey" data-source="dia_seg"></div></div>
+        </section>
+      </section>
+      <section class="fz-page" data-page="precios" id="vista-precios" hidden>
+        <section class="fz-card" id="precios">
+    <div class="fz-cardhead"><h2>Precio diario del diésel: externo, interno e IBC</h2><div class="fz-tools"><button type="button" class="fz-tbtn" data-tabla="precio-chart" aria-pressed="false">Ver tabla</button></div></div>
+    <p class="fz-note">Tarifario del día (precio sin IGV por galón).</p>
+    <div class="fz-ptools">
+      <button type="button" class="fz-tog" data-grupo="Externo (Coesti)" aria-pressed="true"><i class="fz-sw fz-swg-0"></i>Externo (Coesti)</button>
+      <button type="button" class="fz-tog" data-grupo="Interno" aria-pressed="true"><i class="fz-sw fz-swg-1"></i>Interno</button>
+      <button type="button" class="fz-tog" data-grupo="IBC" aria-pressed="true"><i class="fz-sw fz-swg-2"></i>IBC</button>
+    </div>
+    <div class="fz-ptiles dash-skeleton" data-draw="precio-tiles" data-source="tarifarios"></div>
+    <div class="fz-chartwrap"><button type="button" class="fz-focusbtn" data-focus="precio-chart" aria-label="Ver en pantalla completa" title="Ver en pantalla completa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button><div class="fz-chart fz-pchart dash-skeleton" data-draw="precio-chart" data-source="tarifarios"></div></div>
+    <p class="fz-note">Línea continua: tarifario de cada día. Punto: precio de hoy. Línea punteada: escenario conservador para el plazo de proyección elegido arriba; en 4 de cada 5 casos el precio no lo supera. Pasa el cursor para ver los valores.</p>
+  </section>
+        <section class="fz-card" id="simulador">
+      <h2>Simulador de costo del diésel</h2>
+      <p class="fz-note">Elige un mes (pasado o proyectado), cambia el precio por galón y mira cuánto se habría pagado o se pagaría. Los galones son los consumidos (despachados a los equipos). La segunda tabla muestra el ahorro si el consumo del grifo externo se hubiera cargado en los internos.</p>
+      <div class="fz-chart fz-sim-out dash-skeleton" data-draw="sim" data-source="dia_seg tarifarios"></div>
+    </section>
+      </section>
+      <section class="fz-page" data-page="consumo" id="vista-consumo" hidden>
+        <section class="fz-card" id="anual">
+    <div class="fz-cardhead"><h2>Ingresos y consumo</h2><div class="fz-tools"><div class="fz-seg" id="anual-modo"><button type="button" data-modo="anio" aria-pressed="true">Por año</button><button type="button" data-modo="mes" aria-pressed="false">Por mes</button></div></div></div>
+    <p class="fz-note">Ingresos: galones recibidos y pagados según Precio Combustible. Consumo: galones despachados a los equipos. Haz clic en una fila con ▸ para ver el detalle por grifo. Todo el historial; respeta sede, tipo de grifo y (solo en consumo) tipo de activo.</p>
+    <div class="fz-chart dash-skeleton" data-draw="anual" data-source="dia_seg compras tarifarios"></div>
+  </section>
+        <section class="fz-card" id="proyeccion">
+    <div class="fz-cardhead"><h2>Proyección de consumo</h2><div class="fz-tools"><button type="button" class="fz-tbtn" data-tabla="fc" aria-pressed="false">Ver tabla</button></div></div>
+    <p class="fz-note">Línea sólida: consumo real. Línea punteada: promedio de los últimos 3 meses ajustado por la estacionalidad de cada mes (historial desde 2023). Franja: rango donde cayó el 90 % de los errores al probar el método en meses pasados. Zona sombreada: periodo elegido.</p>
+    <div class="fz-chartwrap"><button type="button" class="fz-focusbtn" data-focus="fc" aria-label="Ver en pantalla completa" title="Ver en pantalla completa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button><div class="fz-chart fz-fc dash-skeleton" data-draw="fc" data-source="dia_seg flota_mensual error_proyeccion"></div></div>
+  </section>
+        <section class="fz-card" id="balance">
+    <div class="fz-cardhead"><h2>Espejo de compras y consumo</h2><div class="fz-tools"><button type="button" class="fz-tbtn" data-tabla="mirror" aria-pressed="false">Ver tabla</button></div></div>
+    <p class="fz-note">Arriba lo comprado (facturas y abastecimiento a tanques), abajo lo despachado a los equipos. Las compras se filtran por sede, no por tipo de activo.</p>
+    <div class="fz-legend"><span><i class="fz-sw fz-sw-0"></i>Compras</span><span><i class="fz-sw fz-sw-1"></i>Consumo</span></div>
+    <div class="fz-chartwrap"><button type="button" class="fz-focusbtn" data-focus="mirror" aria-label="Ver en pantalla completa" title="Ver en pantalla completa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button><div class="fz-chart fz-mirror dash-skeleton" data-draw="mirror" data-source="dia_seg compras"></div></div>
+  </section>
+        <section class="fz-card" id="calendario">
+    <div class="fz-cardhead"><h2>Calendario de consumo</h2><div class="fz-tools"><button type="button" class="fz-tbtn" data-tabla="cal" aria-pressed="false">Ver tabla</button></div></div>
+    <p class="fz-note">Cada cuadro es un día del periodo elegido (hasta 53 semanas); más intenso, más galones despachados.</p>
+    <div class="fz-chartwrap"><button type="button" class="fz-focusbtn" data-focus="cal" aria-label="Ver en pantalla completa" title="Ver en pantalla completa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button><div class="fz-chart fz-cal dash-skeleton" data-draw="cal" data-source="dia_seg"></div></div>
+  </section>
+      </section>
+      <section class="fz-page" data-page="activos" id="vista-activos" hidden>
+        <section class="fz-card" id="grifos">
+      <div class="fz-cardhead"><h2>Grifos: volumen y precio</h2><div class="fz-tools"><button type="button" class="fz-tbtn" data-tabla="grifos" aria-pressed="false">Ver tabla</button></div></div>
+      <p class="fz-note">Galones despachados por grifo en el periodo, con su precio promedio por galón y cuánto se pagó sobre el precio base.</p>
+      <div class="fz-chartwrap"><button type="button" class="fz-focusbtn" data-focus="grifos" aria-label="Ver en pantalla completa" title="Ver en pantalla completa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button><div class="fz-chart fz-grifos dash-skeleton" data-draw="grifos" data-source="dia_seg"></div></div>
+    </section>
+        <section class="fz-sec" id="activos">
+    <h2>Pulso por tipo de activo</h2>
+    <p class="fz-note">El anillo compara el consumo de cada tipo de activo en el periodo con su promedio fuera de ese periodo, para la misma cantidad de días: 100 % es lo normal, en rojo si supera 115 %. Haz clic en uno para filtrar todo el tablero.</p>
+    <div class="fz-chart fz-rings dash-skeleton" data-draw="rings" data-source="dia_seg anomalias"></div>
+  </section>
+      </section>
+      <section class="fz-page" data-page="alertas" id="vista-alertas" hidden>
+        <section class="fz-card" id="alertas">
+    <div class="fz-cardhead"><h2>Detector de cargas atípicas por placa</h2></div>
+    <p class="fz-note">Cada punto es el consumo diario de una placa. En rojo, los días en que una placa cargó mucho más de lo normal para ella (más de 4 desviaciones robustas y al menos 15 galones sobre su mediana): posibles errores de registro, cargas duplicadas o desvíos.</p>
+    <div class="fz-chartwrap"><button type="button" class="fz-focusbtn" data-focus="scatter" aria-label="Ver en pantalla completa" title="Ver en pantalla completa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button><div class="fz-chart fz-scatter dash-skeleton" data-draw="scatter" data-source="anomalias"></div></div>
+    <div class="fz-tools fz-tools-end"><button type="button" class="fz-tbtn fz-copy-alertas">Copiar tabla</button><span class="fz-copied" hidden>Copiado</span></div>
+    <div class="fz-tablebox">
+      <table class="fz-table" data-source="alertas" data-row-key="fecha,placa">
+        <thead><tr>
+          <th data-field="fecha">Fecha</th>
+          <th data-field="placa">Placa</th>
+          <th data-field="tipo" class="fz-hide-narrow">Tipo</th>
+          <th data-field="galones" class="fz-num">Galones</th>
+          <th data-field="esperado" class="fz-num fz-hide-narrow">Normal</th>
+          <th data-field="exceso" class="fz-num">Exceso</th>
+          <th data-field="costo_extra" class="fz-num fz-hide-narrow">Costo extra S/</th>
+        </tr></thead>
+        <tbody data-draw="alert-rows"></tbody>
+      </table>
+    </div>
+  </section>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script>
+(() => {
+  const C0 = 'var(--fz-navy)', C1 = 'var(--fz-sky)', C2 = 'var(--fz-orange)';
+  const D = 86400000;
+  const MES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  const MESL = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const nf0 = new Intl.NumberFormat('es-PE', { maximumFractionDigits: 0 });
+  const nf1 = new Intl.NumberFormat('es-PE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const nf2 = new Intl.NumberFormat('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const pct = (v) => (v > 0 ? '+' : '') + (v * 100).toFixed(1) + '%';
+  const toD = (s) => new Date(String(s).slice(0, 10) + 'T00:00:00Z');
+  const iso = (d) => d.toISOString().slice(0, 10);
+  const mesKey = (d) => d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0');
+  const mesD = (s) => { const [y, m] = String(s).split('-').map(Number); return new Date(Date.UTC(y, m - 1, 1)); };
+  const mesTxt = (d) => MES[d.getUTCMonth()] + ' ' + String(d.getUTCFullYear()).slice(2);
+  const diaTxt = (d) => d.getUTCDate() + ' ' + MES[d.getUTCMonth()] + ' ' + d.getUTCFullYear();
+
+  // ---------- Calculations ----------
+  dash.calc('dia_seg', {
+    inputs: ['consumo'], title: 'Consumo por día, sede, grifo y tipo',
+    description: 'Galones, costo real y costo a precio base por día, sede, grifo y tipo de activo.',
+    fn: (consumo) => {
+      const m = new Map();
+      for (const r of consumo) {
+        const k = r.fecha + '|' + r.sede + '|' + r.grifo + '|' + r.tipo;
+        let o = m.get(k);
+        if (!o) { o = { fecha: String(r.fecha).slice(0, 10), sede: r.sede, grifo: r.grifo, tipo: r.tipo, galones: 0, costo_real: 0, costo_base: 0 }; m.set(k, o); }
+        o.galones += Number(r.galones); o.costo_real += Number(r.costo_real); o.costo_base += Number(r.costo_base);
+      }
+      return [...m.values()].sort((a, b) => (a.fecha < b.fecha ? -1 : a.fecha > b.fecha ? 1 : 0))
+        .map((o) => ({ ...o, galones: Math.round(o.galones * 100) / 100, costo_real: Math.round(o.costo_real * 100) / 100, costo_base: Math.round(o.costo_base * 100) / 100 }));
+    },
+  });
+
+  dash.calc('anomalias', {
+    inputs: ['consumo'], title: 'Consumo diario por placa',
+    description: 'Galones por placa y día con su mediana y tipo de grifo donde cargó la mayor parte; atípico si supera la mediana en más de 4 desviaciones robustas y 15 galones (placas con 20 o más días).',
+    fn: (consumo) => {
+      const m = new Map();
+      for (const r of consumo) {
+        const k = r.fecha + '|' + r.placa;
+        let o = m.get(k);
+        if (!o) { o = { fecha: String(r.fecha).slice(0, 10), placa: r.placa, tipo: r.tipo, sede: r.sede, galones: 0, costo: 0, ext: 0 }; m.set(k, o); }
+        o.galones += Number(r.galones); o.costo += Number(r.costo_real); if (r.grifo === 'Primax') o.ext += Number(r.galones);
+      }
+      const rows = [...m.values()];
+      const byP = new Map();
+      for (const o of rows) { const l = byP.get(o.placa) || []; l.push(o.galones); byP.set(o.placa, l); }
+      const med = (l) => { const s = [...l].sort((a, b) => a - b); const k = s.length >> 1; return s.length % 2 ? s[k] : (s[k - 1] + s[k]) / 2; };
+      const st = new Map();
+      for (const [p, l] of byP) { const md = med(l); st.set(p, { md, mad: med(l.map((v) => Math.abs(v - md))) * 1.4826 || 1, n: l.length }); }
+      return rows.map((o) => {
+        const s = st.get(o.placa), ex = o.galones - s.md;
+        return { fecha: o.fecha, placa: o.placa, tipo: o.tipo, sede: o.sede, tgrifo: o.ext >= o.galones / 2 ? 'Externo' : 'Interno', galones: Math.round(o.galones * 10) / 10,
+          esperado: Math.round(s.md * 10) / 10, exceso: Math.round(ex * 10) / 10,
+          precio: o.galones ? Math.round((o.costo / o.galones) * 100) / 100 : 0,
+          atipica: s.n >= 20 && ex >= 15 && ex / s.mad > 4 };
+      });
+    },
+  });
+
+  dash.calc('alertas', {
+    inputs: ['anomalias'], title: 'Cargas atípicas',
+    description: 'Solo los días atípicos por placa, con el costo del exceso sobre su consumo normal.',
+    fn: (anomalias) => anomalias.filter((r) => r.atipica)
+      .sort((a, b) => (a.fecha < b.fecha ? 1 : a.fecha > b.fecha ? -1 : 0))
+      .map((r) => ({ fecha: r.fecha, placa: r.placa, tipo: r.tipo, sede: r.sede, tgrifo: r.tgrifo, galones: r.galones, esperado: r.esperado, exceso: r.exceso, costo_extra: Math.round(r.exceso * r.precio) })),
+  });
+
+  // ---------- Helpers ----------
+  const fail = (el) => { const d = document.createElement('div'); d.className = 'fz-fail'; d.append(document.createElement('i'), 'Failed to load'); el.append(d); };
+  const gate = (el, ids) => {
+    el.replaceChildren();
+    const ss = ids.map((i) => dash.data(i).status);
+    if (ss.some((s) => s === 'error' || s === 'connect' || s === 'declined' || s === 'missing')) { el.classList.remove('dash-skeleton'); fail(el); return false; }
+    if (ss.some((s) => s !== 'ok')) { el.classList.add('dash-skeleton'); return false; }
+    el.classList.remove('dash-skeleton');
+    return true;
+  };
+  const tipBox = (host) => { const t = document.createElement('div'); t.className = 'fz-tip'; t.hidden = true; host.append(t); return t; };
+  const placeTip = (tip, host, x, y) => {
+    tip.hidden = false;
+    const w = tip.offsetWidth, h = tip.offsetHeight, W = host.clientWidth;
+    let left = x + 14; if (left + w > W) left = Math.max(0, x - w - 14);
+    tip.style.left = left + 'px'; tip.style.top = Math.max(0, y - h - 10) + 'px';
+  };
+  const tipLine = (tip, head, lines) => {
+    tip.replaceChildren();
+    const h = document.createElement('div'); h.className = 'fz-tip-h'; h.textContent = head; tip.append(h);
+    for (const [color, label] of lines) {
+      const l = document.createElement('div');
+      if (color) { const s = document.createElement('i'); s.className = 'fz-sw'; s.style.background = color; l.append(s); }
+      l.append(label); tip.append(l);
+    }
+  };
+  const measure = (svg, texts) => { const g = svg.append('g'); let w = 0; for (const s of texts) { const n = g.append('text').text(s).node(); w = Math.max(w, n.getComputedTextLength()); } g.remove(); return w; };
+  const gridY = (svg, y, x0, x1, ticks, fmt) => {
+    const g = svg.append('g');
+    g.selectAll('line').data(ticks).join('line').attr('x1', x0).attr('x2', x1).attr('y1', (d) => y(d)).attr('y2', (d) => y(d)).attr('stroke', 'var(--cds-chart-grid)').attr('stroke-width', 1);
+    g.selectAll('text').data(ticks).join('text').attr('x', x0 - 8).attr('y', (d) => y(d)).attr('dy', '0.32em').attr('text-anchor', 'end').text(fmt);
+  };
+  const compact = (v) => (Math.abs(v) >= 1e6 ? nf2.format(v / 1e6) + ' M' : Math.abs(v) >= 1e4 ? nf0.format(v / 1e3) + ' mil' : nf0.format(v));
+
+  // ---------- Filtered data (memoized) ----------
+  let memoKey = null, memo = null;
+  const base = () => {
+    const g = dash.data('dia_seg');
+    if (g.status !== 'ok' || !g.data.length) return null;
+    const gh = dash.data('flota_mensual'), ge = dash.data('error_proyeccion');
+    if (gh.status !== 'ok' || ge.status !== 'ok') return null;
+    const p = dash.params();
+    const gp0 = dash.data('tarifarios');
+    const pLast = gp0.status === 'ok' && gp0.data.length ? d3.max(gp0.data, (x) => x.fecha) : null;
+    const key = JSON.stringify([p.horiz, p.desde, p.hasta, p.sede, p.tgrifo, p.tipo, g.data.length, g.data[0].fecha, pLast, gh.data.length, ge.data.length]);
+    if (key === memoKey) return memo;
+    const first = toD(g.data[0].fecha), lastC = toD(g.data[g.data.length - 1].fecha);
+    const last = pLast && toD(pLast) > lastC ? toD(pLast) : lastC;
+    let s, e;
+    const PRE = { '30d': 30, '3m': 91, '6m': 182, '12m': 365 };
+    e = p.hasta ? toD(p.hasta) : last;
+    s = p.desde ? toD(p.desde) : new Date(e - 90 * D);
+    if (s < first) s = first; if (e > last) e = last; if (s > e) [s, e] = [e, s];
+    const rows = g.data.filter((x) => (!p.sede || x.sede === p.sede) && (!p.tipo || x.tipo === p.tipo) && tgOk(x, p));
+    const daily = new Map();
+    for (const x of rows) {
+      let o = daily.get(x.fecha); if (!o) { o = { gal: 0, cr: 0, cb: 0 }; daily.set(x.fecha, o); }
+      o.gal += x.galones; o.cr += x.costo_real; o.cb += x.costo_base;
+    }
+    const r = { s, e, first, last, dias: Math.round((e - s) / D) + 1 };
+    const inR = (d) => d >= r.s && d <= r.e;
+    const ps = new Date(r.s - r.dias * D), pe = new Date(r.s - D);
+    let gal = 0, cr = 0, cb = 0, gp = 0, l30g = 0, l30c = 0;
+    for (const [f, o] of daily) {
+      const d = toD(f);
+      if (inR(d)) { gal += o.gal; cr += o.cr; cb += o.cb; } else if (d >= ps && d <= pe) gp += o.gal;
+      if (d > new Date(lastC - 30 * D)) { l30g += o.gal; l30c += o.cr; }
+    }
+    // monthly series and forecast
+    const months = new Map();
+    for (let d = new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth(), 1)); d <= last; d = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1))) {
+      const end = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0));
+      const a = d < first ? first : d, b = end > last ? last : end;
+      months.set(mesKey(d), { mes: mesKey(d), d, gal: 0, cr: 0, dias: Math.round((b - a) / D) + 1 });
+    }
+    for (const [f, o] of daily) { const m = months.get(f.slice(0, 7)); if (m) { m.gal += o.gal; m.cr += o.cr; } }
+    let mens = [...months.values()];
+    const lm = mens[mens.length - 1];
+    if (lm && lastC < new Date(Date.UTC(lm.d.getUTCFullYear(), lm.d.getUTCMonth() + 1, 0))) mens = mens.slice(0, -1);
+    const precio = l30g ? l30c / l30g : (gal ? cr / gal : 0);
+    const proy = forecast(mens, precio, gh.data, ge.data, horiz());
+    memo = { r, inR, rows, daily, lastC, gal, cr, cb, dc: ps >= first && gp ? gal / gp - 1 : null, precio, mens, proy };
+    memoKey = key;
+    return memo;
+  };
+  // Consumption outlook: mean of the last 3 months (seasonally adjusted) times each month's seasonal index.
+  // Seasonality comes from the fleet's monthly history since 2023; the band is the 90th-percentile error of this
+  // same method when tested on past months (error_proyeccion).
+  const seasonIdx = (hist) => {
+    const rows = hist.map((r) => { const d = mesD(r.mes); return { d, v: Number(r.galones) / new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate() }; }).sort((a, b) => a.d - b.d);
+    const ratio = {};
+    for (let i = 6; i < rows.length - 6; i++) {
+      const a = d3.mean(rows.slice(i - 6, i + 6), (r) => r.v), b = d3.mean(rows.slice(i - 5, i + 7), (r) => r.v);
+      const k = rows[i].d.getUTCMonth() + 1; (ratio[k] = ratio[k] || []).push(rows[i].v / ((a + b) / 2));
+    }
+    if (Object.keys(ratio).length < 12) return null;
+    const s = {}; for (let k = 1; k <= 12; k++) s[k] = d3.mean(ratio[k]);
+    const m = d3.mean(Object.values(s)); for (let k = 1; k <= 12; k++) s[k] /= m;
+    return s;
+  };
+  const forecast = (mens, precio, hist, errs, H) => {
+    const n = mens.length; if (n < 3) return [];
+    const s = seasonIdx(hist) || Object.fromEntries(d3.range(1, 13).map((k) => [k, 1]));
+    const lvl = d3.mean(mens.slice(-3), (m) => m.gal / m.dias / s[m.d.getUTCMonth() + 1]);
+    const eByH = new Map(errs.map((e) => [Number(e.horizonte), Number(e.error_p90)]));
+    const out = []; const lastD = mens[n - 1].d;
+    for (let h = 1; h <= H; h++) {
+      const d = new Date(Date.UTC(lastD.getUTCFullYear(), lastD.getUTCMonth() + h, 1));
+      const dias = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate();
+      const g = Math.max(0, lvl * s[d.getUTCMonth() + 1] * dias), e = eByH.get(h) ?? eByH.get(Math.max(...eByH.keys())) ?? 0.3;
+      out.push({ mes: mesKey(d), d, gal: g, lo: Math.max(0, g * (1 - e)), hi: g * (1 + e), cr: g * precio });
+    }
+    return out;
+  };
+  const tgOk = (x, p) => !p.tgrifo || (x.tgrifo ? x.tgrifo === p.tgrifo : ((x.grifo === 'Primax') === (p.tgrifo === 'Externo')));
+  const alertasEn = () => {
+    const B = base(), g = dash.data('anomalias'); if (!B || g.status !== 'ok') return null;
+    const p = dash.params();
+    return g.data.filter((x) => x.atipica && B.inR(toD(x.fecha)) && (!p.sede || x.sede === p.sede) && (!p.tipo || x.tipo === p.tipo) && tgOk(x, p));
+  };
+
+  // ---------- Filters ----------
+  const horiz = () => [1, 3, 6, 12].includes(Number(dash.params().horiz)) ? Number(dash.params().horiz) : 3;
+  const horizTxt = () => (horiz() === 1 ? '1 mes' : horiz() + ' meses');
+  document.querySelectorAll('.fz-hzg').forEach((b) => b.addEventListener('click', () => dash.setParams({ horiz: Number(b.dataset.m) })));
+  const dateInput = (cls, key) => document.querySelectorAll(cls).forEach((inp) => {
+    let tm = null;
+    const apply = () => {
+      if (!inp.value || !inp.validity.valid || inp.value < '2000-01-01') return;
+      const B = base();
+      const next = { desde: B ? iso(B.r.s) : null, hasta: B ? iso(B.r.e) : null };
+      next[key] = inp.value;
+      if (dash.params()[key] === inp.value) return;
+      dash.setParams(next);
+    };
+    inp.addEventListener('input', () => { clearTimeout(tm); tm = setTimeout(apply, 350); });
+    inp.addEventListener('change', () => { clearTimeout(tm); apply(); });
+    inp.addEventListener('blur', () => { const B = base(); if (B) inp.value = iso(key === 'desde' ? B.r.s : B.r.e); });
+  });
+  dateInput('.fz-desde', 'desde'); dateInput('.fz-hasta', 'hasta');
+  document.querySelectorAll('.fz-sede').forEach((s) => s.addEventListener('change', () => dash.setParams({ sede: s.value || null })));
+  document.querySelectorAll('.fz-tg').forEach((s) => s.addEventListener('change', () => dash.setParams({ tgrifo: s.value || null })));
+  document.querySelectorAll('.fz-clear').forEach((b) => b.addEventListener('click', () => dash.setParams({ sede: null, tgrifo: null, tipo: null, desde: null, hasta: null })));
+  dash.onData(() => {
+    const p = dash.params();
+    document.querySelectorAll('.fz-hzg').forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.m) === horiz())));
+    const B = base();
+    document.querySelectorAll('.fz-desde').forEach((i) => { if (B && i !== document.activeElement) i.value = iso(B.r.s); });
+    document.querySelectorAll('.fz-hasta').forEach((i) => { if (B && i !== document.activeElement) i.value = iso(B.r.e); });
+    document.querySelectorAll('.fz-sede').forEach((s) => { s.value = p.sede || ''; });
+    document.querySelectorAll('.fz-tg').forEach((s) => { s.value = p.tgrifo || ''; });
+    document.querySelectorAll('.fz-clear').forEach((b) => { b.hidden = !(p.sede || p.tgrifo || p.tipo || p.desde || p.hasta); });
+    document.querySelectorAll('.fz-filters .fz-sel, .fz-filters .fz-date input').forEach((x) => x.classList.toggle('fz-on', !!x.value && !(x.classList.contains('fz-desde') && !p.desde) && !(x.classList.contains('fz-hasta') && !p.hasta)));
+  });
+  dash.draw('tipo-sel', (sel) => {
+    const g = dash.data('dia_seg');
+    const tot = new Map();
+    if (g.status === 'ok') for (const x of g.data) tot.set(x.tipo, (tot.get(x.tipo) || 0) + x.galones);
+    const tipos = [...tot.entries()].sort((a, b) => b[1] - a[1]).map((t) => t[0]);
+    sel.replaceChildren(new Option('Todos los activos', ''), ...tipos.map((t) => new Option(t, t)));
+    sel.value = dash.params().tipo || '';
+    sel.onchange = () => dash.setParams({ tipo: sel.value || null });
+  });
+  dash.draw('rango-lbl', (el) => { const B = base(); el.textContent = B ? nf0.format(B.r.dias) + ' días' : '—'; });
+
+  document.querySelectorAll('.fz-sw-0').forEach((s) => { s.style.background = C0; });
+  document.querySelectorAll('.fz-sw-1').forEach((s) => { s.style.background = C1; });
+
+  // ---------- Headline and cards ----------
+  const pd = (name, fn) => dash.draw(name, (el) => {
+    el.classList.remove('fz-good', 'fz-bad');
+    const B = base();
+    el.classList.toggle('dash-skeleton', !B && dash.data('dia_seg').status === 'loading');
+    if (!B) { el.textContent = '—'; return; }
+    const t = fn(B, el); el.textContent = t == null ? '—' : t;
+  });
+  pd('tk-rango', (B) => diaTxt(B.r.s) + ' y el ' + diaTxt(B.r.e));
+  pd('tk-gal-p', (B) => nf0.format(B.gal));
+  pd('tk-dir', (B) => (B.dc == null ? 'sin un periodo anterior para comparar' : (B.dc >= 0 ? 'un aumento de ' : 'una reducción de ') + Math.abs(B.dc * 100).toFixed(1) + '%'));
+  pd('tk-sobre', (B) => 'S/ ' + compact(B.cr - B.cb));
+  pd('tk-mes', (B) => (B.proy.length ? MESL[B.proy[0].d.getUTCMonth()] + ' ' + B.proy[0].d.getUTCFullYear() : null));
+  pd('tk-gal', (B) => (B.proy.length ? nf0.format(B.proy[0].gal) : null));
+  pd('k-consumo', (B) => nf0.format(B.gal));
+  pd('k-consumo-d', (B, el) => { if (B.dc == null) return null; el.classList.add(B.dc > 0 ? 'fz-bad' : 'fz-good'); return pct(B.dc); });
+  pd('k-costo', (B) => nf0.format(B.cr));
+  pd('k-precio', (B) => (B.gal ? nf2.format(B.cr / B.gal) : null));
+  pd('k-sobre', (B, el) => { el.classList.add(B.cr > B.cb ? 'fz-bad' : 'fz-good'); return nf0.format(B.cr - B.cb); });
+  pd('k-sobre-p', (B) => (B.cb ? pct(B.cr / B.cb - 1) : null));
+  pd('k-proy', (B) => (B.proy.length ? nf0.format(B.proy[0].gal) : null));
+  pd('k-proy-c', (B) => (B.proy.length ? nf0.format(B.proy[0].cr) : null));
+  const al = (name, fn) => dash.draw(name, (el) => { const l = alertasEn(); el.textContent = l ? fn(l) : '—'; });
+  al('tk-alertas', (l) => nf0.format(l.length));
+  al('k-alertas', (l) => nf0.format(l.length));
+  al('k-alertas-u', (l) => nf0.format(new Set(l.map((x) => x.placa)).size));
+
+  // ---------- Update dates ----------
+  dash.draw('upd-c', (el) => { const g = dash.data('dia_seg'); el.textContent = g.status === 'ok' && g.data.length ? diaTxt(toD(g.data[g.data.length - 1].fecha)) : '—'; });
+  dash.draw('upd-p', (el) => { const g = dash.data('tarifarios'); el.textContent = g.status === 'ok' && g.data.length ? diaTxt(toD(d3.max(g.data, (x) => x.fecha))) : '—'; });
+
+  // ---------- Table view, copy and enlarge ----------
+  const asTable = new Set();
+  const big = (el, h) => (el.closest('.fz-focused') ? Math.max(h, (window.innerHeight || 800) - 230) : h);
+  const toTSV = (cols, rows) => [cols.join('\t'), ...rows.map((r) => r.join('\t'))].join('\n');
+  const copyText = (txt, flag) => {
+    const done = () => { if (flag) { flag.hidden = false; setTimeout(() => { flag.hidden = true; }, 1800); } };
+    const fallback = () => { const ta = document.createElement('textarea'); ta.value = txt; ta.style.position = 'absolute'; ta.style.left = '-9999px'; document.body.append(ta); ta.select(); try { document.execCommand('copy'); done(); } catch (e) {} ta.remove(); };
+    try { navigator.clipboard.writeText(txt).then(done, fallback); } catch (e) { fallback(); }
+  };
+  const renderTable = (el, cols, rows, numCols) => {
+    el.replaceChildren();
+    const wrap = document.createElement('div'); wrap.className = 'fz-tview';
+    const bar = document.createElement('div'); bar.className = 'fz-tools fz-tools-end';
+    const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'fz-tbtn'; btn.textContent = 'Copiar para Excel';
+    const ok = document.createElement('span'); ok.className = 'fz-copied'; ok.hidden = true; ok.textContent = 'Copiado';
+    btn.addEventListener('click', () => copyText(toTSV(cols, rows.map((r) => r.map((v) => (typeof v === 'number' ? String(Math.round(v * 100) / 100) : v)))), ok));
+    bar.append(ok, btn);
+    const box = document.createElement('div'); box.className = 'fz-tablebox';
+    const t = document.createElement('table'); t.className = 'fz-table';
+    const th = document.createElement('tr');
+    cols.forEach((c, i) => { const h = document.createElement('th'); h.textContent = c; if (numCols.includes(i)) h.className = 'fz-num'; th.append(h); });
+    const thead = document.createElement('thead'); thead.append(th); t.append(thead);
+    const tb = document.createElement('tbody');
+    for (const r of rows) {
+      const tr = document.createElement('tr');
+      r.forEach((v, i) => { const td = document.createElement('td'); td.textContent = typeof v === 'number' ? (Math.abs(v) < 100 && v % 1 ? nf2.format(v) : nf0.format(v)) : v; if (numCols.includes(i)) td.className = 'fz-num'; tr.append(td); });
+      tb.append(tr);
+    }
+    t.append(tb); box.append(t); wrap.append(bar, box); el.append(wrap);
+  };
+  document.querySelectorAll('.fz-tbtn[data-tabla]').forEach((b) => b.addEventListener('click', () => {
+    const n = b.dataset.tabla; if (asTable.has(n)) asTable.delete(n); else asTable.add(n);
+    b.setAttribute('aria-pressed', String(asTable.has(n))); b.textContent = asTable.has(n) ? 'Ver gráfico' : 'Ver tabla';
+    dash.draw(n);
+  }));
+  let focusName = null;
+  const setFocus = (name, btn) => {
+    document.querySelectorAll('.fz-focused').forEach((c) => c.classList.remove('fz-focused'));
+    document.querySelectorAll('.fz').forEach((r) => r.classList.toggle('fz-focus', !!name));
+    document.querySelectorAll('.fz-focusbar').forEach((b) => { b.hidden = !name; });
+    const prev = focusName; focusName = name;
+    if (name && btn) { const card = btn.closest('.fz-card'); if (card) card.classList.add('fz-focused'); window.scrollTo({ top: 0 }); }
+    if (prev) dash.draw(prev); if (name) dash.draw(name);
+  };
+  document.querySelectorAll('.fz-focusbtn[data-focus]').forEach((b) => b.addEventListener('click', () => setFocus(b.dataset.focus, b)));
+  document.querySelectorAll('.fz-exitfocus').forEach((b) => b.addEventListener('click', () => setFocus(null)));
+  document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && focusName) setFocus(null); });
+  document.querySelectorAll('.fz-copy-alertas').forEach((b) => b.addEventListener('click', () => {
+    const t = b.closest('.fz-card').querySelector('table'); if (!t) return;
+    const txt = [...t.querySelectorAll('tr')].filter((tr) => getComputedStyle(tr).display !== 'none').map((tr) => [...tr.children].map((c) => c.textContent).join('\t')).join('\n');
+    copyText(txt, b.parentElement.querySelector('.fz-copied'));
+  }));
+
+  // ---------- Views (sidebar) ----------
+  const VIEWS = ['resumen', 'precios', 'consumo', 'activos', 'alertas'];
+  const show = (v) => {
+    if (!VIEWS.includes(v)) v = 'resumen';
+    if (typeof focusName !== 'undefined' && focusName) setFocus(null);
+    document.querySelectorAll('.fz-page[data-page]').forEach((p) => { p.hidden = p.dataset.page !== v; });
+    document.querySelectorAll('.fz-navbtn[data-view]').forEach((b) => b.setAttribute('aria-current', b.dataset.view === v ? 'page' : 'false'));
+    document.querySelectorAll('.fz-no-precios').forEach((el) => { el.hidden = v === 'precios'; });
+    if (v === 'precios' && dash.params().tipo) dash.setParams({ tipo: null });
+    document.querySelectorAll('.fz-only-precios').forEach((el) => { el.hidden = v !== 'precios'; });
+    if (v !== 'precios' && dash.params().sede === 'Otros') dash.setParams({ sede: null });
+    dash.setLink(v);
+  };
+  document.querySelectorAll('.fz-navbtn[data-view]').forEach((b) => b.addEventListener('click', () => show(b.dataset.view)));
+  show(location.hash.slice(1));
+
+  // ---------- Infographic facts ----------
+  const GRIFO_LBL = { Argentina: 'Argentina', Gambetta1: 'Gambetta 1', Gambetta2: 'Gambetta 2', Gambetta3: 'Gambetta 3', Paita: 'Paita 1', Paita2: 'Paita 2', Primax: 'Primax' };
+  const GRUPO_DE = { Primax: 'Externo (Coesti)', Argentina: 'Interno', Gambetta1: 'Interno', Paita: 'Interno', Gambetta2: 'IBC', Gambetta3: 'IBC', Paita2: 'IBC' };
+  const topOf = (B, key) => {
+    const m = new Map(); let t = 0;
+    for (const x of B.rows) { if (!B.inR(toD(x.fecha))) continue; m.set(x[key], (m.get(x[key]) || 0) + x.galones); t += x.galones; }
+    const best = [...m.entries()].sort((a, b) => b[1] - a[1])[0];
+    return best && t ? { name: best[0], share: best[1] / t } : null;
+  };
+  pd('f-dia', (B) => nf0.format(B.gal / Math.max(1, Math.round((Math.min(B.r.e, B.lastC) - B.r.s) / D) + 1)));
+  pd('f-precio', (B) => (B.gal ? nf2.format(B.cr / B.gal) : null));
+  pd('f-precio-y', (B, el) => {
+    const s0 = new Date(Date.UTC(B.r.s.getUTCFullYear() - 1, B.r.s.getUTCMonth(), B.r.s.getUTCDate()));
+    const e0 = new Date(Date.UTC(B.r.e.getUTCFullYear() - 1, B.r.e.getUTCMonth(), B.r.e.getUTCDate()));
+    if (s0 < B.r.first || !B.gal) return 'sin datos';
+    let g = 0, c = 0; for (const [f, o] of B.daily) { const d = toD(f); if (d >= s0 && d <= e0) { g += o.gal; c += o.cr; } }
+    if (!g) return 'sin datos';
+    const ch = (B.cr / B.gal) / (c / g) - 1; el.classList.add(ch > 0 ? 'fz-bad' : 'fz-good'); return pct(ch);
+  });
+  pd('f-tipo', (B) => { const t = topOf(B, 'tipo'); return t ? t.name : null; });
+  pd('f-tipo-p', (B) => { const t = topOf(B, 'tipo'); return t ? (t.share * 100).toFixed(1) + '%' : null; });
+  pd('f-grifo', (B) => { const t = topOf(B, 'grifo'); return t ? t.name : null; });
+  pd('f-grifo-p', (B) => { const t = topOf(B, 'grifo'); return t ? (t.share * 100).toFixed(1) + '%' : null; });
+  pd('f-dias', (B) => { const dias = Math.max(1, Math.round((Math.min(B.r.e, B.lastC) - B.r.s) / D) + 1); const perDay = B.cr / dias; return perDay ? nf1.format((B.cr - B.cb) / perDay) : null; });
+
+  // ---------- Sankey: grifo group -> asset type ----------
+  dash.draw('sankey', (el) => {
+    if (!gate(el, ['dia_seg'])) return;
+    const B = base(); if (!B) return;
+    const flows = new Map(), tipoTot = new Map();
+    for (const x of B.rows) { if (!B.inR(toD(x.fecha))) continue; tipoTot.set(x.tipo, (tipoTot.get(x.tipo) || 0) + x.galones); }
+    const top = [...tipoTot.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map((t) => t[0]);
+    for (const x of B.rows) {
+      if (!B.inR(toD(x.fecha))) continue;
+      const g = GRUPO_DE[x.grifo] || 'Otros grifos', t = top.includes(x.tipo) ? x.tipo : 'Otros activos';
+      const k = g + '|' + t; flows.set(k, (flows.get(k) || 0) + x.galones);
+    }
+    const links = [...flows.entries()].map(([k, v]) => { const [g, t] = k.split('|'); return { g, t, v }; }).filter((l) => l.v > 0);
+    if (!links.length) return;
+    const total = d3.sum(links, (l) => l.v);
+    const L = [...GRUPOS, 'Otros grifos'].filter((g) => links.some((l) => l.g === g)).map((g) => ({ id: g, v: d3.sum(links.filter((l) => l.g === g), (l) => l.v) }));
+    const R = [...top, 'Otros activos'].filter((t) => links.some((l) => l.t === t)).map((t) => ({ id: t, v: d3.sum(links.filter((l) => l.t === t), (l) => l.v) }));
+    if (asTable.has('sankey')) { renderTable(el, ['Tipo de grifo', 'Tipo de activo', 'Galones', '% del total'], [...links].sort((a, b) => b.v - a.v).map((l) => [l.g, l.t, Math.round(l.v), Math.round(l.v / total * 1000) / 10]), [2, 3]); return; }
+    const W = Math.max(280, el.clientWidth), H = big(el, 320), pad = 10, nw = 14;
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+    const lab = (n) => n.id + ' · ' + (n.v / total * 100).toFixed(0) + '%';
+    const narrow = W < 520;
+    const lw = narrow ? 0 : measure(svg, L.map(lab)) + 10, rw = measure(svg, R.map(lab)) + 10;
+    const x0 = Math.max(4, lw), x1 = W - rw - nw;
+    const kL = (H - pad * (L.length - 1)) / total, kR = (H - pad * (R.length - 1)) / total;
+    const k = Math.min(kL, kR);
+    let yy = (H - (total * k + pad * (L.length - 1))) / 2; L.forEach((n) => { n.y = yy; n.h = n.v * k; n.off = 0; yy += n.h + pad; });
+    yy = (H - (total * k + pad * (R.length - 1))) / 2; R.forEach((n) => { n.y = yy; n.h = n.v * k; n.off = 0; yy += n.h + pad; });
+    const LI = new Map(L.map((n) => [n.id, n])), RI = new Map(R.map((n) => [n.id, n]));
+    links.sort((a, b) => L.findIndex((n) => n.id === a.g) - L.findIndex((n) => n.id === b.g) || R.findIndex((n) => n.id === a.t) - R.findIndex((n) => n.id === b.t));
+    const col = (g) => (GRUPOS.includes(g) ? gcol(g) : 'var(--cds-chart-muted)');
+    const tip = tipBox(el);
+    const gl = svg.append('g');
+    for (const l of links) {
+      const a = LI.get(l.g), b = RI.get(l.t), w = l.v * k;
+      const ya = a.y + a.off + w / 2; a.off += w;
+      const yb = b.y + b.off + w / 2; b.off += w;
+      const xa = x0 + nw, xb = x1, xm = (xa + xb) / 2;
+      gl.append('path').attr('d', `M${xa},${ya}C${xm},${ya} ${xm},${yb} ${xb},${yb}`).attr('fill', 'none').attr('stroke', col(l.g)).attr('stroke-opacity', .38).attr('stroke-width', Math.max(1, w))
+        .on('pointermove', function (ev) {
+          gl.selectAll('path').attr('stroke-opacity', .12); d3.select(this).attr('stroke-opacity', .7);
+          tipLine(tip, l.g + ' → ' + l.t, [[col(l.g), nf0.format(l.v) + ' gal · ' + (l.v / total * 100).toFixed(1) + '% del total']]);
+          const [px, py] = d3.pointer(ev, el); placeTip(tip, el, px, py);
+        })
+        .on('pointerleave', () => { gl.selectAll('path').attr('stroke-opacity', .38); tip.hidden = true; });
+    }
+    svg.append('g').selectAll('rect').data(L).join('rect').attr('x', x0).attr('y', (n) => n.y).attr('width', nw).attr('height', (n) => Math.max(1, n.h)).attr('rx', 3).attr('fill', (n) => col(n.id));
+    svg.append('g').selectAll('rect').data(R).join('rect').attr('x', x1).attr('y', (n) => n.y).attr('width', nw).attr('height', (n) => Math.max(1, n.h)).attr('rx', 3).attr('fill', 'var(--color-fg-muted)');
+    if (!narrow) svg.append('g').selectAll('text').data(L).join('text').attr('x', x0 - 8).attr('y', (n) => n.y + n.h / 2).attr('dy', '0.32em').attr('text-anchor', 'end').attr('style', 'fill:var(--color-fg)').text(lab);
+    else svg.append('g').selectAll('text').data(L.filter((n) => n.h > 14)).join('text').attr('x', x0 + nw + 6).attr('y', (n) => n.y + n.h / 2).attr('dy', '0.32em').attr('style', 'fill:var(--color-fg)').text((n) => n.id);
+    svg.append('g').selectAll('text').data(R).join('text').attr('x', x1 + nw + 8).attr('y', (n) => n.y + n.h / 2).attr('dy', '0.32em').attr('style', 'fill:var(--color-fg)').text(lab);
+  });
+
+  // ---------- Forecast ----------
+  dash.draw('fc', (el) => {
+    if (!gate(el, ['dia_seg'])) return;
+    const B = base(); if (!B || !B.mens.length) return;
+    const real = B.mens, proy = B.proy, lastR = real[real.length - 1];
+    const rows = [...real.map((m) => ({ ...m, isP: false })), ...proy.map((m) => ({ ...m, isP: true }))];
+    if (asTable.has('fc')) { renderTable(el, ['Mes', 'Tipo', 'Galones', 'Mínimo probable', 'Máximo probable', 'Costo S/'], rows.map((r) => [r.mes, r.isP ? 'Proyección' : 'Real', Math.round(r.gal), r.isP ? Math.round(r.lo) : '', r.isP ? Math.round(r.hi) : '', Math.round(r.cr)]), [2, 3, 4, 5]); return; }
+    const W = Math.max(280, el.clientWidth), H = big(el, 320), mt = 18, mb = 28;
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+    const y = d3.scaleLinear([0, (d3.max(rows, (r) => r.hi ?? r.gal) || 1) * 1.05], [H - mb, mt]).nice();
+    const ticks = y.ticks(5);
+    const ml = measure(svg, ticks.map(compact)) + 12;
+    const endLbl = proy.length ? compact(proy[proy.length - 1].gal) : '';
+    const mr = Math.max(16, measure(svg, [endLbl]) + 14);
+    const x = d3.scaleUtc([rows[0].d, rows[rows.length - 1].d], [ml, W - mr]);
+    gridY(svg, y, ml, W - mr, ticks, compact);
+    const xs = Math.max(ml, x(d3.utcMonth.floor(B.r.s))), xe = Math.min(W - mr, x(d3.utcMonth.floor(B.r.e)));
+    svg.append('rect').attr('x', xs - 4).attr('y', mt).attr('width', Math.max(8, xe - xs + 8)).attr('height', H - mb - mt).attr('rx', 4).attr('fill', 'var(--cds-chart-muted)').attr('opacity', .14);
+    svg.append('g').selectAll('text').data(x.ticks(d3.utcMonth.every(W < 520 ? 4 : 2))).join('text').attr('x', (d) => x(d)).attr('y', H - 8).attr('text-anchor', 'middle').text(mesTxt);
+    const id = 'fzg' + Math.random().toString(36).slice(2, 8);
+    const grad = svg.append('defs').append('linearGradient').attr('id', id).attr('x1', 0).attr('x2', 0).attr('y1', 0).attr('y2', 1);
+    [[0, .26], [.25, .16], [.5, .08], [.75, .03], [1, 0]].forEach(([o, a]) => grad.append('stop').attr('offset', o).attr('style', `stop-color:${C0};stop-opacity:${a}`));
+    svg.append('path').datum(real).attr('fill', `url(#${id})`).attr('d', d3.area().x((r) => x(r.d)).y0(y(0)).y1((r) => y(r.gal)));
+    const xb = x(lastR.d);
+    svg.append('line').attr('x1', xb).attr('x2', xb).attr('y1', mt - 6).attr('y2', H - mb).attr('stroke', 'var(--cds-chart-reference)').attr('stroke-dasharray', '3 3');
+    svg.append('text').attr('x', xb + 6).attr('y', mt - 4).text('Proyección →');
+    const pr = [{ ...lastR, lo: lastR.gal, hi: lastR.gal }, ...proy];
+    svg.append('path').datum(pr).attr('fill', C2).attr('opacity', .16).attr('d', d3.area().x((r) => x(r.d)).y0((r) => y(r.lo)).y1((r) => y(r.hi)));
+    svg.append('path').datum(real).attr('fill', 'none').attr('stroke', C0).attr('stroke-width', 2).attr('stroke-linejoin', 'round').attr('stroke-linecap', 'round').attr('d', d3.line().x((r) => x(r.d)).y((r) => y(r.gal)));
+    svg.append('path').datum(pr).attr('fill', 'none').attr('stroke', C2).attr('stroke-width', 2).attr('stroke-dasharray', '5 4').attr('d', d3.line().x((r) => x(r.d)).y((r) => y(r.gal)));
+    svg.append('g').selectAll('circle').data(proy).join('circle').attr('cx', (r) => x(r.d)).attr('cy', (r) => y(r.gal)).attr('r', 3).attr('fill', 'var(--color-panel)').attr('stroke', C2).attr('stroke-width', 2);
+    if (proy.length) { const e = proy[proy.length - 1]; svg.append('text').attr('x', x(e.d) + 8).attr('y', y(e.gal)).attr('dy', '0.32em').attr('style', 'fill:var(--color-fg)').text(endLbl); }
+    const dot = svg.append('circle').attr('r', 5).attr('stroke', 'var(--color-panel)').attr('stroke-width', 2).attr('visibility', 'hidden');
+    const tip = tipBox(el);
+    svg.append('rect').attr('x', ml).attr('y', mt).attr('width', W - mr - ml).attr('height', H - mb - mt).attr('fill', 'transparent')
+      .on('pointermove', (ev) => {
+        const [px] = d3.pointer(ev);
+        const r = d3.least(rows, (q) => Math.abs(x(q.d) - px));
+        const c = r.isP ? C2 : C0;
+        dot.attr('cx', x(r.d)).attr('cy', y(r.gal)).attr('fill', c).attr('visibility', 'visible');
+        const lines = [[c, (r.isP ? 'Proyección: ' : 'Real: ') + nf0.format(r.gal) + ' gal']];
+        if (r.isP) lines.push([null, 'Rango: ' + nf0.format(r.lo) + ' – ' + nf0.format(r.hi) + ' gal']);
+        lines.push([null, 'Costo: S/ ' + nf0.format(r.cr)]);
+        tipLine(tip, MESL[r.d.getUTCMonth()] + ' ' + r.d.getUTCFullYear(), lines);
+        const k = W / el.clientWidth; placeTip(tip, el, x(r.d) / k, y(r.gal) / k);
+      })
+      .on('pointerleave', () => { tip.hidden = true; dot.attr('visibility', 'hidden'); });
+  });
+
+  // ---------- Daily price by group ----------
+  const GRUPOS = ['Externo (Coesti)', 'Interno', 'IBC'];
+  const gcol = (g) => [C0, C1, C2][GRUPOS.indexOf(g)] || 'var(--cds-chart-muted)';
+  document.querySelectorAll('.fz-swg-0').forEach((s) => { s.style.background = gcol(GRUPOS[0]); });
+  document.querySelectorAll('.fz-swg-1').forEach((s) => { s.style.background = gcol(GRUPOS[1]); });
+  document.querySelectorAll('.fz-swg-2').forEach((s) => { s.style.background = gcol(GRUPOS[2]); });
+  const hidden = new Set();
+
+  document.querySelectorAll('.fz-tog[data-grupo]').forEach((b) => b.addEventListener('click', () => {
+    const g = b.dataset.grupo;
+    if (hidden.has(g)) hidden.delete(g); else if (hidden.size < GRUPOS.length - 1) hidden.add(g);
+    document.querySelectorAll('.fz-tog[data-grupo]').forEach((x) => x.setAttribute('aria-pressed', String(!hidden.has(x.dataset.grupo))));
+    dash.draw('precio-chart'); dash.draw('precio-tiles');
+  }));
+  // Price outlook, conservative: the price that 4 out of 5 times would not be exceeded, from today's price and the
+  // group's own typical weekly moves (robust: median absolute change). Holding today's price beat a straight-line
+  // trend in a backtest on these tariffs, so the outlook starts from today's price.
+  const trend = (all, h) => {
+    if (all.length < 30) return null;
+    const byDay = new Map(all.map((q) => [iso(q.d), q.v]));
+    const ch = [];
+    for (const q of all) { const prev = byDay.get(iso(new Date(+q.d - 7 * D))); if (prev && q.v) ch.push(Math.log(q.v / prev)); }
+    if (ch.length < 8) return null;
+    const med = d3.median(ch), sig = 1.4826 * d3.median(ch.map((c) => Math.abs(c - med)));
+    const last = all[all.length - 1], out = [{ d: last.d, v: last.v, lo: last.v, hi: last.v, hoy: last.v }];
+    for (const k of [...d3.range(7, h, 7), h]) {
+      const w = 0.8416 * sig * Math.sqrt(k / 7);
+      out.push({ d: new Date(+last.d + k * D), v: last.v * Math.exp(w), lo: last.v, hi: last.v * Math.exp(w), hoy: last.v });
+    }
+    return out;
+  };
+  const priceSeries = () => {
+    const g = dash.data('tarifarios'), B = base();
+    if (g.status !== 'ok' || !B) return null;
+    const p = dash.params();
+    const rows = g.data.filter((x) => (!p.sede || x.sede === p.sede) && (!p.tgrifo || (p.tgrifo === 'Externo') === (x.grupo === 'Externo (Coesti)')));
+    const by = new Map();
+    for (const x of rows) {
+      if (!by.has(x.grupo)) by.set(x.grupo, new Map());
+      const m = by.get(x.grupo); const o = m.get(x.fecha) || { s: 0, n: 0, det: [] };
+      o.s += Number(x.suma); o.n += Number(x.n); o.det.push([x.ubicacion, Number(x.precio)]); m.set(x.fecha, o);
+    }
+    const series = [];
+    for (const gname of GRUPOS) {
+      const m = by.get(gname); if (!m) continue;
+      const all = [...m.entries()].map(([f, o]) => ({ d: toD(f), v: o.s / o.n, det: o.det })).sort((a, b) => a.d - b.d);
+      const pts = all.filter((q) => B.inR(q.d));
+      if (!pts.length) continue;
+      const lastG = all[all.length - 1].d;
+      const tr = B.r.e >= lastG ? trend(all, horiz() * 30) : null;
+      series.push({ g: gname, pts, all, tr });
+    }
+    return { series, B };
+  };
+  dash.draw('precio-tiles', (el) => {
+    if (!gate(el, ['tarifarios', 'dia_seg'])) return;
+    const P = priceSeries(); if (!P) return;
+    for (const s of P.series) {
+      const last = s.pts[s.pts.length - 1];
+      const prevD = new Date(+last.d - 30 * D);
+      const prev = d3.least(s.all.filter((q) => q.d <= prevD), (q) => -q.d);
+      const t = document.createElement('div'); t.className = 'fz-ptile'; if (hidden.has(s.g)) t.style.opacity = '.45';
+      const h = document.createElement('span'); h.className = 'fz-kpi-label';
+      const sw = document.createElement('i'); sw.className = 'fz-sw'; sw.style.background = gcol(s.g); h.append(sw, s.g + ' · ' + diaTxt(last.d));
+      const v = document.createElement('span'); v.className = 'fz-ptile-v'; v.textContent = 'S/ ' + nf2.format(last.v);
+      const sub = document.createElement('span'); sub.className = 'fz-kpi-sub';
+      const det = document.createElement('span'); det.className = 'fz-kpi-sub';
+      det.textContent = last.det.length > 1 ? last.det.map(([u, pv]) => u + ' ' + nf2.format(pv)).join(' · ') : last.det.map(([u]) => u).join('');
+      if (prev) { const ch = last.v / prev.v - 1; const b = document.createElement('b'); b.className = ch > 0 ? 'fz-bad' : ch < 0 ? 'fz-good' : ''; b.textContent = pct(ch); sub.append(b, ' en 30 días'); }
+      if (s.tr) { const tz = document.createElement('span'); const e = s.tr[s.tr.length - 1]; tz.textContent = ' · escenario conservador en ' + horizTxt() + ': S/ ' + nf2.format(e.v); sub.append(tz); }
+      t.append(h, v, det, sub); el.append(t);
+    }
+  });
+  dash.draw('precio-chart', (el) => {
+    if (!gate(el, ['tarifarios', 'dia_seg'])) return;
+    const P = priceSeries();
+    if (!P || !P.series.length) { const n = document.createElement('p'); n.className = 'fz-note'; n.textContent = 'Los tarifarios empiezan en febrero–marzo de 2026: elige un periodo que llegue a esas fechas.'; el.append(n); return; }
+    const vis = P.series.filter((s) => !hidden.has(s.g));
+    if (!vis.length) return;
+    if (asTable.has('precio-chart')) {
+      const out = [];
+      for (const s of vis) { for (const q of s.pts) out.push([iso(q.d), s.g, 'Tarifario', Math.round(q.v * 100) / 100, q.det.map(([u, pv]) => u + ' ' + nf2.format(pv)).join(' · ')]); if (s.tr) for (const q of s.tr.slice(1)) out.push([iso(q.d), s.g, 'Escenario conservador', Math.round(q.v * 100) / 100, '']); }
+      out.sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
+      renderTable(el, ['Fecha', 'Grupo', 'Tipo', 'Precio S/ por galón', 'Detalle por ubicación'], out, [3]); return;
+    }
+    const W = Math.max(280, el.clientWidth), H = big(el, 320), mt = 14, mb = 28;
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+    const allV = vis.flatMap((s) => [...s.pts.map((q) => q.v), ...(s.tr ? s.tr.map((q) => q.v) : [])]);
+    const y = d3.scaleLinear([d3.min(allV) * 0.97, d3.max(allV) * 1.03], [H - mb, mt]).nice();
+    const ticks = y.ticks(5), fmt = (t) => 'S/ ' + nf0.format(t);
+    const ml = measure(svg, ticks.map(fmt)) + 12;
+    const endX = d3.max(vis, (s) => (s.tr ? s.tr[s.tr.length - 1].d : s.pts[s.pts.length - 1].d));
+    const labs = vis.map((s) => ({ s, q: s.tr ? s.tr[s.tr.length - 1] : s.pts[s.pts.length - 1] }));
+    const mr = 16;
+    const x = d3.scaleUtc([P.B.r.s, endX], [ml, W - mr]);
+    gridY(svg, y, ml, W - mr, ticks, fmt);
+    const span = (endX - P.B.r.s) / D;
+    svg.append('g').selectAll('text').data(x.ticks(span <= 120 ? (W < 520 ? 4 : 6) : d3.utcMonth.every(span > 400 ? (W < 520 ? 4 : 2) : (W < 520 ? 2 : 1)))).join('text')
+      .attr('x', (d) => x(d)).attr('y', H - 8).attr('text-anchor', 'middle').text((d) => (span <= 120 ? d.getUTCDate() + ' ' + MES[d.getUTCMonth()] : mesTxt(d)));
+    const lastPt = d3.max(vis, (s) => s.pts[s.pts.length - 1].d);
+    if (vis.some((s) => s.tr)) {
+      const xb = x(lastPt);
+      svg.append('line').attr('x1', xb).attr('x2', xb).attr('y1', mt).attr('y2', H - mb).attr('stroke', 'var(--cds-chart-reference)').attr('stroke-dasharray', '3 3');
+      svg.append('text').attr('x', xb + 6).attr('y', mt + 8).text('Escenario conservador →');
+    }
+    for (const s of vis) {
+      const c = gcol(s.g);
+      if (s.tr) {
+        svg.append('path').datum(s.tr).attr('fill', 'none').attr('stroke', c).attr('stroke-width', 2).attr('stroke-dasharray', '5 4').attr('d', d3.line().x((q) => x(q.d)).y((q) => y(q.v)));
+      }
+      svg.append('path').datum(s.pts).attr('fill', 'none').attr('stroke', c).attr('stroke-width', 2).attr('stroke-linejoin', 'round').attr('d', d3.line().curve(d3.curveStepAfter).x((q) => x(q.d)).y((q) => y(q.v)));
+    }
+    for (const s of vis) { const q = s.pts[s.pts.length - 1]; svg.append('circle').attr('cx', x(q.d)).attr('cy', y(q.v)).attr('r', 4).attr('fill', gcol(s.g)).attr('stroke', 'var(--color-panel)').attr('stroke-width', 1.5); }
+    // end labels, pushed apart
+    const rule = svg.append('line').attr('y1', mt).attr('y2', H - mb).attr('stroke', 'var(--cds-chart-axis)').attr('visibility', 'hidden');
+    const dots = svg.append('g');
+    const tip = tipBox(el);
+    svg.append('rect').attr('x', ml).attr('y', mt).attr('width', W - mr - ml).attr('height', H - mb - mt).attr('fill', 'transparent')
+      .on('pointermove', (ev) => {
+        const [px] = d3.pointer(ev); const d = x.invert(px);
+        const lines = []; dots.selectAll('*').remove();
+        let isProj = d > lastPt;
+        for (const s of vis) {
+          const src = isProj && s.tr ? s.tr : s.pts;
+          const q = d3.least(src, (z) => Math.abs(z.d - d));
+          if (!q) continue;
+          dots.append('circle').attr('cx', x(q.d)).attr('cy', y(q.v)).attr('r', 4).attr('fill', gcol(s.g)).attr('stroke', 'var(--color-panel)').attr('stroke-width', 1.5);
+          let txt = s.g + ': S/ ' + nf2.format(q.v);
+          if (isProj && s.tr) txt = s.g + ': hasta S/ ' + nf2.format(q.v) + ' (hoy S/ ' + nf2.format(q.hoy) + ')';
+          else if (q.det && q.det.length > 1) txt += ' · ' + q.det.map(([gn, pv]) => gn + ' ' + nf2.format(pv)).join(', ');
+          lines.push([gcol(s.g), txt]);
+        }
+        rule.attr('x1', px).attr('x2', px).attr('visibility', 'visible');
+        tipLine(tip, (isProj ? 'Escenario conservador · ' : '') + diaTxt(d3.utcDay.round(d)), lines);
+        const k = W / el.clientWidth; placeTip(tip, el, px / k, mt / k + 20);
+      })
+      .on('pointerleave', () => { tip.hidden = true; rule.attr('visibility', 'hidden'); dots.selectAll('*').remove(); });
+  });
+
+  // ---------- Simulator ----------
+  // Prices start from what was paid in the last 30 days per grifo type; changes are in soles per gallon.
+  // The conservative button adds, per type, the gap between today's tariff and its conservative scenario.
+  const sim = { d: { 'Externo (Coesti)': 0, Interno: 0, IBC: 0 }, mover: 0 };
+  const simBase = () => {
+    const B = base(); if (!B || !B.proy.length) return null;
+    const from90 = new Date(B.lastC - 90 * D), from30 = new Date(B.lastC - 30 * D);
+    const gs = {};
+    for (const gname of GRUPOS) gs[gname] = { g90: 0, g30: 0, c30: 0 };
+    for (const x of B.rows) {
+      const gname = GRUPO_DE[x.grifo]; if (!gname) continue;
+      const d = toD(x.fecha); if (d <= from90 || d > B.lastC) continue;
+      gs[gname].g90 += x.galones; if (d > from30) { gs[gname].g30 += x.galones; gs[gname].c30 += x.costo_real; }
+    }
+    const tot90 = d3.sum(GRUPOS, (g) => gs[g].g90); if (!tot90) return null;
+    const G = d3.sum(B.proy, (r) => r.gal);
+    const list = GRUPOS.filter((g) => gs[g].g90 > 0).map((g) => ({ g, share: gs[g].g90 / tot90, gal: G * gs[g].g90 / tot90, precio: gs[g].g30 ? gs[g].c30 / gs[g].g30 : B.precio }));
+    return { B, G, list };
+  };
+  const consDelta = () => {
+    const t = dash.data('tarifarios'); const out = {};
+    if (t.status !== 'ok') return out;
+    for (const gname of GRUPOS) {
+      const m = new Map();
+      for (const x of t.data) { if (x.grupo !== gname) continue; const o = m.get(x.fecha) || { s: 0, n: 0 }; o.s += Number(x.suma); o.n += Number(x.n); m.set(x.fecha, o); }
+      const all = [...m.entries()].map(([f, o]) => ({ d: toD(f), v: o.s / o.n })).sort((a, b) => a.d - b.d);
+      const tr = trend(all, horiz() * 30);
+      if (tr) out[gname] = Math.round((tr[tr.length - 1].v - all[all.length - 1].v) * 100) / 100;
+    }
+    return out;
+  };
+  const sol = (v) => (v > 0 ? '+' : v < 0 ? '−' : '') + 'S/ ' + nf2.format(Math.abs(v));
+  const mkEl = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+  const simMonths = () => {
+    const B = base(); if (!B) return null;
+    const S = simBase();
+    const m = new Map();
+    const lastFull = B.mens.length ? B.mens[B.mens.length - 1].mes : null;
+    for (const x of B.rows) {
+      const k = String(x.fecha).slice(0, 7); if (!lastFull || k > lastFull) continue;
+      const gname = GRUPO_DE[x.grifo]; if (!gname) continue;
+      let o = m.get(k); if (!o) { o = { mes: k, real: true, g: {} }; m.set(k, o); }
+      const q = o.g[gname] || (o.g[gname] = { gal: 0, cost: 0 }); q.gal += x.galones; q.cost += x.costo_real;
+    }
+    if (S) for (const pr of B.proy) {
+      const o = { mes: pr.mes, real: false, g: {} };
+      for (const it of S.list) o.g[it.g] = { gal: pr.gal * it.share, cost: pr.gal * it.share * it.precio };
+      m.set(pr.mes, o);
+    }
+    return [...m.values()].sort((a, b) => (a.mes < b.mes ? -1 : 1));
+  };
+  const simSel = { mes: null, d: { 'Externo (Coesti)': 0, Interno: 0, IBC: 0 }, mover: 100 };
+  const mesLargo = (k) => { const d = mesD(k); return MESL[d.getUTCMonth()] + ' ' + d.getUTCFullYear(); };
+  dash.draw('sim', {
+    mount: (el) => {
+      el.replaceChildren(); el.classList.remove('dash-skeleton');
+      const made = {};
+      const wrap = mkEl('div', 'fz-sim2');
+      const pick = mkEl('div', 'fz-ptools');
+      const selY = document.createElement('select'); selY.className = 'fz-sel'; selY.setAttribute('aria-label', 'Año');
+      const selM = document.createElement('select'); selM.className = 'fz-sel'; selM.setAttribute('aria-label', 'Mes');
+      pick.append(mkEl('span', 'fz-date', 'Mes a simular:'), selY, selM);
+      const tiles = mkEl('div', 'fz-sim-now');
+      const h1 = mkEl('h3', 'fz-sim-h', '1. Si el precio hubiera sido distinto');
+      const ctl = mkEl('div', 'fz-sim-ctr');
+      const quick = mkEl('div', 'fz-seg');
+      const rows = {};
+      const setAll = (v) => { for (const g of GRUPOS) { simSel.d[g] = v; rows[g].r.value = String(v); } made.refresh(); };
+      [['Todos −S/ 5', -5], ['Todos −S/ 1', -1], ['Sin cambio', 0], ['Todos +S/ 1', 1], ['Todos +S/ 5', 5]].forEach(([t, v]) => { const b = mkEl('button', '', t); b.type = 'button'; b.addEventListener('click', () => setAll(v)); quick.append(b); });
+      ctl.append(quick);
+      for (const gname of GRUPOS) {
+        const row = mkEl('label', 'fz-sim-line');
+        const name = mkEl('span', 'fz-sim-name'); const sw = mkEl('i', 'fz-sw'); sw.style.background = gcol(gname);
+        const base0 = mkEl('small'); name.append(sw, mkEl('span', '', gname), base0);
+        const r = document.createElement('input'); r.type = 'range'; r.min = '-10'; r.max = '10'; r.step = '0.1'; r.value = '0'; r.setAttribute('aria-label', 'Cambio de precio por galón, ' + gname);
+        const val = mkEl('span', 'fz-sim-val');
+        r.addEventListener('input', () => { simSel.d[gname] = Number(r.value); made.refresh(); });
+        row.append(name, r, val); ctl.append(row); rows[gname] = { row, r, val, base0 };
+      }
+      const res1 = mkEl('p', 'fz-take');
+      const t1 = mkEl('div', 'fz-tablebox');
+      const h2 = mkEl('h3', 'fz-sim-h', '2. Si el consumo del grifo externo hubiera pasado a los internos');
+      const ctl2 = mkEl('div', 'fz-sim-row');
+      const r2 = document.createElement('input'); r2.type = 'range'; r2.min = '0'; r2.max = '100'; r2.step = '5'; r2.value = '100'; r2.setAttribute('aria-label', 'Porcentaje del consumo externo que pasa a internos');
+      const rv2 = mkEl('span', 'fz-sim-val');
+      r2.addEventListener('input', () => { simSel.mover = Number(r2.value); made.refresh(); });
+      ctl2.append(mkEl('span', 'fz-date', '% del consumo externo que pasa:'), r2, rv2);
+      const res2 = mkEl('p', 'fz-take');
+      const t2 = mkEl('div', 'fz-tablebox');
+      const box2 = mkEl('div', 'fz-sim-mv'); box2.append(h2, ctl2, res2, t2);
+      wrap.append(pick, tiles, h1, ctl, res1, t1, box2); el.append(wrap);
+      const openG = new Set();
+      const table = (cols, rows, grp) => {
+        const t = mkEl('table', 'fz-table'); const hr = document.createElement('tr');
+        cols.forEach(([h, c]) => hr.append(mkEl('th', c, h)));
+        const th = document.createElement('thead'); th.append(hr); t.append(th);
+        const tb = document.createElement('tbody');
+        let cur = null; const kids = {};
+        rows.forEach((row, i) => {
+          const tr = document.createElement('tr'); const sub = grp && String(row[0]).startsWith('\u2003');
+          if (i === rows.length - 1 || (grp && !sub)) tr.style.fontWeight = '600';
+          if (sub) { tr.style.color = 'var(--color-text-secondary, inherit)'; tr.hidden = !openG.has(cur); (kids[cur] || (kids[cur] = [])).push(tr); }
+          row.forEach((v, k) => tr.append(mkEl('td', cols[k][1], v)));
+          if (grp && !sub && i < rows.length - 1) cur = row[0];
+          tb.append(tr);
+        });
+        for (const tr of tb.children) {
+          const g = tr.firstChild.textContent; if (!kids[g]) continue;
+          const td = tr.firstChild, ar = mkEl('span', '', openG.has(g) ? '▾ ' : '▸ '); td.prepend(ar);
+          tr.style.cursor = 'pointer'; tr.tabIndex = 0; tr.setAttribute('aria-expanded', String(openG.has(g))); tr.title = 'Clic para ver u ocultar los grifos';
+          const tog = () => { const op = !openG.has(g); if (op) openG.add(g); else openG.delete(g); kids[g].forEach((k) => { k.hidden = !op; }); ar.textContent = op ? '▾ ' : '▸ '; tr.setAttribute('aria-expanded', String(op)); };
+          tr.addEventListener('click', tog); tr.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tog(); } });
+        }
+        t.append(tb); return t;
+      };
+      const sgn = (v) => (Math.abs(v) < 0.5 ? '0' : (v > 0 ? '+' : '−') + nf0.format(Math.abs(v)));
+      selY.addEventListener('change', () => { const ms = made.months.filter((x) => x.mes.startsWith(selY.value)); simSel.mes = (ms.find((x) => !x.real) || ms[ms.length - 1]).mes; made.refresh(); });
+      selM.addEventListener('change', () => { simSel.mes = selM.value; made.refresh(); });
+      made.refresh = () => {
+        const months = simMonths(); made.months = months || [];
+        if (!months || !months.length) { tiles.replaceChildren(); t1.replaceChildren(); t2.replaceChildren(); return; }
+        if (!simSel.mes || !months.some((x) => x.mes === simSel.mes)) simSel.mes = (months.find((x) => !x.real) || months[months.length - 1]).mes;
+        const years = [...new Set(months.map((x) => x.mes.slice(0, 4)))];
+        const yy = simSel.mes.slice(0, 4);
+        selY.replaceChildren(...years.map((y) => new Option(y, y))); selY.value = yy;
+        selM.replaceChildren(...months.filter((x) => x.mes.startsWith(yy)).map((x) => new Option(MESL[mesD(x.mes).getUTCMonth()] + (x.real ? '' : ' (proyectado)'), x.mes))); selM.value = simSel.mes;
+        const M = months.find((x) => x.mes === simSel.mes), nom = mesLargo(M.mes), verbo = M.real ? 'se pagó' : 'se pagaría';
+        const gl = GRUPOS.filter((g) => M.g[g] && M.g[g].gal > 0).map((g) => ({ g, gal: M.g[g].gal, cost: M.g[g].cost, p: M.g[g].cost / M.g[g].gal }));
+        const G = d3.sum(gl, (x) => x.gal), C = d3.sum(gl, (x) => x.cost);
+        tiles.replaceChildren();
+        [[(M.real ? 'Consumo real · ' : 'Consumo proyectado · ') + nom, nf0.format(G) + ' gal'], ['Precio promedio pagado', 'S/ ' + nf2.format(C / G) + ' por gal'], [(M.real ? 'Gasto real · ' : 'Gasto proyectado · ') + nom, 'S/ ' + nf0.format(C)]].forEach(([l, v]) => { const t = mkEl('div', 'fz-sim-tile'); t.append(mkEl('span', 'fz-kpi-label', l), mkEl('b', '', v)); tiles.append(t); });
+        // table 1: price change
+        for (const g of GRUPOS) {
+          const R = rows[g], x = gl.find((q) => q.g === g); R.row.hidden = !x;
+          if (x) { const dd = simSel.d[g]; R.base0.textContent = ' ' + (M.real ? 'pagado' : 'hoy') + ' S/ ' + nf2.format(x.p) + '/gal'; R.val.textContent = 'S/ ' + nf2.format(Math.max(0, x.p + dd)) + '/gal' + (Math.abs(dd) < 0.001 ? '' : ' (' + sol(dd) + ')'); }
+        }
+        const rows1 = gl.map((x) => { const p1 = Math.max(0, x.p + simSel.d[x.g]); return [x.g, nf0.format(x.gal), nf2.format(x.p), nf0.format(x.cost), nf2.format(p1), nf0.format(x.gal * p1), sgn(x.gal * p1 - x.cost)]; });
+        const C1 = d3.sum(gl, (x) => x.gal * Math.max(0, x.p + simSel.d[x.g]));
+        rows1.push(['Total', nf0.format(G), nf2.format(C / G), nf0.format(C), nf2.format(C1 / G), nf0.format(C1), sgn(C1 - C)]);
+        const pLbl = M.real ? 'pagado' : 'proyectado';
+        t1.replaceChildren(table([['Tipo de grifo', ''], ['Galones consumidos ' + nom, 'fz-num'], ['Precio ' + pLbl + ' S/ por gal', 'fz-num'], ['Gasto ' + pLbl + ' S/', 'fz-num'], ['Precio simulado S/ por gal', 'fz-num'], ['Gasto simulado S/', 'fz-num'], ['Diferencia S/', 'fz-num']], rows1));
+        res1.replaceChildren();
+        if (gl.every((x) => Math.abs(simSel.d[x.g]) < 0.001)) res1.append('Mueve la barra de cada tipo de grifo, o usa los botones para cambiar todos a la vez.');
+        else { const b = mkEl('b', C1 > C ? 'fz-bad' : 'fz-good', 'S/ ' + nf0.format(C1)); const b2 = mkEl('b', C1 > C ? 'fz-bad' : 'fz-good', (C1 > C ? '+' : '−') + 'S/ ' + nf0.format(Math.abs(C1 - C))); res1.append('En ' + nom + ' ' + verbo + ' S/ ' + nf0.format(C) + '. Con los precios simulados ' + (M.real ? 'habría sido ' : 'sería '), b, ' (', b2, ').'); }
+        // table 2: move external to internal
+        const ex = gl.find((x) => x.g === 'Externo (Coesti)'), it = gl.find((x) => x.g === 'Interno');
+        box2.hidden = !(ex && it);
+        if (ex && it) {
+          const mv = ex.gal * simSel.mover / 100;
+          rv2.textContent = simSel.mover + '% · ' + nf0.format(mv) + ' gal';
+          const rowsX = [
+            ['Externo (Coesti)', nf0.format(ex.gal), nf0.format(ex.gal - mv), nf2.format(ex.p), nf0.format(ex.cost), nf0.format((ex.gal - mv) * ex.p), sgn(mv * ex.p)],
+            ['Interno', nf0.format(it.gal), nf0.format(it.gal + mv), nf2.format(it.p), nf0.format(it.cost), nf0.format((it.gal + mv) * it.p), sgn(-mv * it.p)],
+          ];
+          const ah = mv * (ex.p - it.p);
+          rowsX.push(['Total', nf0.format(ex.gal + it.gal), nf0.format(ex.gal + it.gal), '', nf0.format(ex.cost + it.cost), nf0.format(ex.cost + it.cost - ah), sgn(ah)]);
+          t2.replaceChildren(table([['Tipo de grifo', ''], ['Galones consumidos antes', 'fz-num'], ['Galones consumidos después', 'fz-num'], ['Precio S/ por gal', 'fz-num'], ['Gasto antes S/', 'fz-num'], ['Gasto después S/', 'fz-num'], ['Ahorro S/', 'fz-num']], rowsX));
+          res2.replaceChildren();
+          const b = mkEl('b', ah >= 0 ? 'fz-good' : 'fz-bad', 'S/ ' + nf0.format(Math.abs(ah)));
+          res2.append('Si en ' + nom + ' se hubieran cargado ' + nf0.format(mv) + ' galones en grifos internos en vez de Primax (S/ ' + nf2.format(ex.p) + ' contra S/ ' + nf2.format(it.p) + ' por galón), ' + (ah >= 0 ? 'el ahorro sería de ' : 'costaría ') , b, '.');
+        }
+      };
+      return made;
+    },
+    update: (el, made) => {
+      el.classList.toggle('dash-skeleton', dash.data('dia_seg').status === 'loading');
+      made.refresh();
+    },
+  });
+
+  // ---------- Grifos ----------
+  dash.draw('grifos', (el) => {
+    if (!gate(el, ['dia_seg'])) return;
+    const B = base(); if (!B) return;
+    const m = new Map();
+    for (const x of B.rows) { if (!B.inR(toD(x.fecha))) continue; let o = m.get(x.grifo); if (!o) { o = { grifo: x.grifo, gal: 0, cr: 0, cb: 0 }; m.set(x.grifo, o); } o.gal += x.galones; o.cr += x.costo_real; o.cb += x.costo_base; }
+    const rows = [...m.values()].filter((o) => o.gal > 0).sort((a, b) => b.gal - a.gal);
+    if (!rows.length) return;
+    if (asTable.has('grifos')) { const tt = d3.sum(rows, (r) => r.gal); renderTable(el, ['Grifo', 'Galones', '% del total', 'Precio S/ por galón', 'Costo real S/', 'Sobre precio base S/'], rows.map((r) => [r.grifo, Math.round(r.gal), Math.round(r.gal / tt * 1000) / 10, Math.round(r.cr / r.gal * 100) / 100, Math.round(r.cr), Math.round(r.cr - r.cb)]), [1, 2, 3, 4, 5]); return; }
+    const W = Math.max(280, el.clientWidth), bh = 22, gap = 12, H = rows.length * (bh + gap) + 8;
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+    const ml = measure(svg, rows.map((r) => r.grifo)) + 12;
+    const lab = (r) => nf0.format(r.gal) + ' gal · S/ ' + nf2.format(r.cr / r.gal) + '/gal';
+    const mr = measure(svg, rows.map(lab)) + 12;
+    const x = d3.scaleLinear([0, d3.max(rows, (r) => r.gal)], [ml, Math.max(ml + 40, W - mr)]);
+    const tot = d3.sum(rows, (r) => r.gal);
+    const g = svg.append('g').selectAll('g').data(rows).join('g').attr('transform', (r, i) => `translate(0,${i * (bh + gap) + 4})`);
+    g.append('text').attr('x', ml - 10).attr('y', bh / 2).attr('dy', '0.32em').attr('text-anchor', 'end').attr('style', 'fill:var(--color-fg)').text((r) => r.grifo);
+    g.append('rect').attr('x', ml).attr('y', 0).attr('height', bh).attr('rx', 4).attr('width', (r) => Math.max(2, x(r.gal) - ml)).attr('fill', (r, i) => (i === 0 ? C0 : 'var(--cds-chart-muted)'));
+    g.append('text').attr('x', (r) => x(r.gal) + 8).attr('y', bh / 2).attr('dy', '0.32em').text(lab);
+    const tip = tipBox(el);
+    g.on('pointermove', (ev, r) => {
+      tipLine(tip, r.grifo, [[null, nf0.format(r.gal) + ' gal (' + (r.gal / tot * 100).toFixed(1) + '% del total)'], [null, 'Costo real: S/ ' + nf0.format(r.cr)], [null, 'Sobre precio base: S/ ' + nf0.format(r.cr - r.cb)]]);
+      const [px, py] = d3.pointer(ev, el); placeTip(tip, el, px, py);
+    }).on('pointerleave', () => { tip.hidden = true; });
+  });
+
+  // ---------- Ingresos y consumo (anual / mensual) ----------
+  const anualSt = { modo: 'anio', open: new Set() };
+  document.querySelectorAll('#anual-modo button').forEach((b) => b.addEventListener('click', () => {
+    anualSt.modo = b.dataset.modo; anualSt.open.clear();
+    document.querySelectorAll('#anual-modo button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    const el = document.querySelector('[data-draw="anual"]'); if (el) renderAnual(el);
+  }));
+  const renderAnual = (el) => {
+    if (!gate(el, ['dia_seg', 'compras', 'tarifarios'])) return;
+    const B = base(); if (!B) return;
+    const P = dash.params();
+    const per = (f) => (anualSt.modo === 'anio' ? String(f).slice(0, 4) : String(f).slice(0, 7));
+    const T = new Map();
+    const node = (k) => { let o = T.get(k); if (!o) { o = { rg: 0, rt: 0, cg: 0, meses: new Set(), tp: { s: 0, n: 0 }, g: {} }; T.set(k, o); } return o; };
+    const sub = (o, g) => o.g[g] || (o.g[g] = { rg: 0, rt: 0, cg: 0, tp: { s: 0, n: 0 }, gr: {} });
+    const leaf = (q, k) => q.gr[k] || (q.gr[k] = { rg: 0, rt: 0, cg: 0 });
+    for (const x of dash.data('compras').data) {
+      if (P.sede && x.sede !== P.sede) continue; if (!tgOk(x, P)) continue;
+      const g = GRUPO_DE[x.grifo]; if (!g) continue;
+      const o = node(per(x.fecha)), q = sub(o, g), l = leaf(q, x.grifo), gl = Number(x.galones), tt = Number(x.total);
+      o.rg += gl; o.rt += tt; q.rg += gl; q.rt += tt; l.rg += gl; l.rt += tt;
+    }
+    for (const x of B.rows) {
+      const g = GRUPO_DE[x.grifo]; if (!g) continue;
+      const o = node(per(x.fecha)), q = sub(o, g), l = leaf(q, x.grifo);
+      o.cg += x.galones; q.cg += x.galones; l.cg += x.galones; o.meses.add(String(x.fecha).slice(0, 7));
+    }
+    // tarifario: promedio diario del grupo (suma/n), luego promedio de días
+    const tday = new Map();
+    for (const x of dash.data('tarifarios').data) {
+      if (P.sede && x.sede !== P.sede) continue;
+      if (P.tgrifo && ((x.grupo === 'Externo (Coesti)') !== (P.tgrifo === 'Externo'))) continue;
+      const k = x.fecha + '|' + x.grupo; const o = tday.get(k) || { s: 0, n: 0 }; o.s += Number(x.suma); o.n += Number(x.n); tday.set(k, o);
+    }
+    for (const [k, v] of tday) { const [f, g] = k.split('|'); if (!v.n || !T.has(per(f))) continue; const o = T.get(per(f)); const q = sub(o, g); q.tp.s += v.s / v.n; q.tp.n += 1; o.tp.s += v.s / v.n; o.tp.n += 1; }
+    const lastC = B.rows.length ? String(d3.max(B.rows, (x) => x.fecha)) : '';
+    const keys = [...T.keys()].sort().reverse();
+    const pr = (a, b) => (b > 0 ? nf2.format(a / b) : '—');
+    const cols = ['Periodo / grifo', 'Galones recibidos', 'Gasto en recepciones S/', 'Precio de compra S/ por gal', 'Tarifario promedio S/ por gal', 'Galones consumidos', anualSt.modo === 'anio' ? 'Consumo promedio por mes gal' : 'Consumo promedio por día gal'];
+    const flat = [];
+    const lbl = (k) => (anualSt.modo === 'anio' ? k + (lastC.startsWith(k) ? ' (hasta ' + lastC.slice(8, 10) + '/' + lastC.slice(5, 7) + ')' : '') : MESL[Number(k.slice(5, 7)) - 1] + ' ' + k.slice(0, 4));
+    const dIn = (k) => { const y = +k.slice(0, 4), m = +k.slice(5, 7); const full = new Date(Date.UTC(y, m, 0)).getUTCDate(); return lastC.startsWith(k) ? +lastC.slice(8, 10) : full; };
+    const prom = (k, cg, o) => (anualSt.modo === 'anio' ? (o.meses.size ? nf0.format(cg / o.meses.size) : '—') : nf0.format(cg / dIn(k)));
+    const box = document.createElement('div'); box.className = 'fz-tablebox';
+    const t = document.createElement('table'); t.className = 'fz-table';
+    const hr = document.createElement('tr'); cols.forEach((c, i) => hr.append(mkEl('th', i ? 'fz-num' : '', c)));
+    const th = document.createElement('thead'); th.append(hr); t.append(th);
+    const tb = document.createElement('tbody'); t.append(tb);
+    const addRow = (lv, label, vals, id, parentId, hasKids) => {
+      const tr = document.createElement('tr');
+      const td0 = mkEl('td', '', ''); td0.style.paddingLeft = (8 + lv * 18) + 'px';
+      if (hasKids) td0.append(mkEl('span', '', anualSt.open.has(id) ? '▾ ' : '▸ '));
+      td0.append(label); tr.append(td0); vals.forEach((v) => tr.append(mkEl('td', 'fz-num', v)));
+      if (lv === 0) tr.style.fontWeight = '600'; 
+      tr.dataset.id = id; if (parentId) tr.dataset.parent = parentId;
+      if (hasKids) { tr.style.cursor = 'pointer'; tr.tabIndex = 0; tr.setAttribute('aria-expanded', String(anualSt.open.has(id))); }
+      tb.append(tr); flat.push([('  '.repeat(lv)) + label, ...vals]);
+    };
+    const TAR_DE = { Argentina: ['Interno', 'Callao'], Gambetta1: ['Interno', 'Gambetta'], Paita: ['Interno', 'Piura'], Gambetta2: ['IBC', 'Callao'], Gambetta3: ['IBC', 'Callao'], Paita2: ['IBC', 'Paita'], Primax: ['Externo (Coesti)', null] };
+    const ORDEN = ['Primax', 'Argentina', 'Gambetta1', 'Paita', 'Gambetta2', 'Gambetta3', 'Paita2'];
+    const tg = {};
+    for (const x of dash.data('tarifarios').data) {
+      if (P.sede && x.sede !== P.sede) continue;
+      const pk = per(x.fecha);
+      for (const gr of ORDEN) {
+        const [gg, ub] = TAR_DE[gr]; if (x.grupo !== gg || (ub && x.ubicacion !== ub)) continue;
+        const kk = pk + '|' + gr + '|' + x.fecha; const o = tg[kk] || (tg[kk] = { s: 0, n: 0 }); o.s += Number(x.suma); o.n += Number(x.n);
+      }
+    }
+    const tgr = {};
+    for (const kk in tg) { const [pk, gr] = kk.split('|'); const v = tg[kk]; if (!v.n) continue; const o = tgr[pk + '|' + gr] || (tgr[pk + '|' + gr] = { s: 0, n: 0 }); o.s += v.s / v.n; o.n += 1; }
+    for (const k of keys) {
+      const o = T.get(k);
+      const lst = [];
+      for (const g of GRUPOS) { const q = o.g[g]; if (!q) continue; for (const r in q.gr) lst.push([r, g, q.gr[r]]); }
+      lst.sort((a, b) => ORDEN.indexOf(a[0]) - ORDEN.indexOf(b[0]));
+      addRow(0, lbl(k), [nf0.format(o.rg), nf0.format(o.rt), pr(o.rt, o.rg), pr(o.tp.s, o.tp.n), nf0.format(o.cg), prom(k, o.cg, o)], k, null, lst.length > 0);
+      for (const [r, g, l] of lst) {
+        const tp = tgr[k + '|' + r] || { s: 0, n: 0 };
+        addRow(1, (r === 'Primax' ? 'Primax / Coesti' : (GRIFO_LBL[r] || r)) + ' · ' + (g === 'Externo (Coesti)' ? 'externo' : g === 'IBC' ? 'IBC' : 'interno'), [nf0.format(l.rg), nf0.format(l.rt), pr(l.rt, l.rg), pr(tp.s, tp.n), nf0.format(l.cg), prom(k, l.cg, o)], k + '|' + r, k, false);
+      }
+    }
+    const vis = () => { for (const tr of tb.children) { let p = tr.dataset.parent, show = true; while (p) { if (!anualSt.open.has(p)) { show = false; break; } const pt = tb.querySelector('[data-id="' + CSS.escape(p) + '"]'); p = pt ? pt.dataset.parent : null; } tr.hidden = !show; } };
+    tb.addEventListener('click', (e) => { const tr = e.target.closest('tr[aria-expanded]'); if (!tr) return; const id = tr.dataset.id; if (anualSt.open.has(id)) anualSt.open.delete(id); else anualSt.open.add(id); const op = anualSt.open.has(id); tr.setAttribute('aria-expanded', String(op)); tr.firstChild.firstChild.textContent = op ? '▾ ' : '▸ '; vis(); });
+    tb.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('tr[aria-expanded]')) { e.preventDefault(); e.target.click(); } });
+    vis();
+    const bar = mkEl('div', 'fz-tools fz-tools-end');
+    const ok = mkEl('span', 'fz-copied', 'Copiado'); ok.hidden = true;
+    const btn = mkEl('button', 'fz-tbtn', 'Copiar para Excel'); btn.type = 'button';
+    btn.addEventListener('click', () => copyText(toTSV(cols, flat), ok));
+    bar.append(ok, btn); box.append(t);
+    el.append(bar, box);
+  };
+  dash.draw('anual', renderAnual);
+
+  // ---------- Mirror ----------
+  dash.draw('mirror', (el) => {
+    if (!gate(el, ['dia_seg', 'compras'])) return;
+    const B = base(); if (!B) return;
+    const sede = dash.params().sede;
+    const comp = new Map();
+    for (const x of dash.data('compras').data) { if (sede && x.sede !== sede) continue; if (!tgOk(x, dash.params())) continue; const k = String(x.fecha).slice(0, 7); comp.set(k, (comp.get(k) || 0) + Number(x.galones)); }
+    let rows = B.mens.filter((m) => m.d >= d3.utcMonth.floor(B.r.s) && m.d <= B.r.e);
+    if (rows.length < 3) rows = B.mens.filter((m) => m.d <= B.r.e).slice(-12);
+    rows = rows.slice(-24).map((m) => ({ ...m, sub: comp.get(m.mes) || 0 }));
+    if (asTable.has('mirror')) { renderTable(el, ['Mes', 'Compras gal', 'Consumo gal', 'Diferencia gal'], rows.map((r) => [r.mes, Math.round(r.sub), Math.round(r.gal), Math.round(r.sub - r.gal)]), [1, 2, 3]); return; }
+    const W = Math.max(280, el.clientWidth), H = big(el, 260), mt = 8, mb = 24;
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+    const mxv = (d3.max(rows, (r) => Math.max(r.sub, r.gal)) || 1) * 1.05;
+    const y = d3.scaleLinear([-mxv, mxv], [H - mb, mt]).nice();
+    const ticks = y.ticks(4); const fmt = (t) => compact(Math.abs(t));
+    const ml = measure(svg, ticks.map(fmt)) + 12;
+    const x = d3.scaleBand(rows.map((r) => r.mes), [ml, W - 8]).padding(0.28);
+    gridY(svg, y, ml, W - 8, ticks, fmt);
+    svg.append('line').attr('x1', ml).attr('x2', W - 8).attr('y1', y(0)).attr('y2', y(0)).attr('stroke', 'var(--cds-chart-axis)');
+    const bw = Math.min(32, x.bandwidth()), off = (x.bandwidth() - bw) / 2;
+    svg.append('g').selectAll('rect').data(rows).join('rect').attr('x', (r) => x(r.mes) + off).attr('width', bw).attr('y', (r) => y(r.sub)).attr('height', (r) => y(0) - y(r.sub)).attr('rx', 3).attr('fill', C0);
+    svg.append('g').selectAll('rect').data(rows).join('rect').attr('x', (r) => x(r.mes) + off).attr('width', bw).attr('y', y(0)).attr('height', (r) => y(-r.gal) - y(0)).attr('rx', 3).attr('fill', C1);
+    const every = Math.max(1, Math.ceil(rows.length / Math.max(3, Math.floor(W / 70))));
+    svg.append('g').selectAll('text').data(rows.filter((_, i) => (rows.length - 1 - i) % every === 0)).join('text').attr('x', (r) => x(r.mes) + x.bandwidth() / 2).attr('y', H - 6).attr('text-anchor', 'middle').text((r) => mesTxt(r.d));
+    const tip = tipBox(el);
+    svg.append('g').selectAll('rect').data(rows).join('rect').attr('x', (r) => x(r.mes)).attr('width', x.step()).attr('y', mt).attr('height', H - mb - mt).attr('fill', 'transparent')
+      .on('pointermove', (ev, r) => {
+        const net = r.sub - r.gal;
+        tipLine(tip, MESL[r.d.getUTCMonth()] + ' ' + r.d.getUTCFullYear(), [[C0, 'Compras: ' + nf0.format(r.sub) + ' gal'], [C1, 'Consumo: ' + nf0.format(r.gal) + ' gal'], [null, 'Diferencia: ' + (net > 0 ? '+' : '') + nf0.format(net) + ' gal']]);
+        const [px, py] = d3.pointer(ev, el); placeTip(tip, el, px, py);
+      })
+      .on('pointerleave', () => { tip.hidden = true; });
+  });
+
+  // ---------- Rings by asset type ----------
+  dash.draw('rings', (el) => {
+    if (!gate(el, ['dia_seg', 'anomalias'])) return;
+    const B = base(); if (!B) return;
+    const p = dash.params();
+    const g = dash.data('dia_seg').data.filter((x) => (!p.sede || x.sede === p.sede) && tgOk(x, p));
+    const totalDias = Math.round((B.r.last - B.r.first) / D) + 1, fuera = totalDias - B.r.dias;
+    const um = new Map();
+    for (const x of g) { let o = um.get(x.tipo); if (!o) { o = { tipo: x.tipo, cons: 0, out: 0 }; um.set(x.tipo, o); } if (B.inR(toD(x.fecha))) o.cons += x.galones; else o.out += x.galones; }
+    const an = dash.data('anomalias').data;
+    const rows = [...um.values()].filter((o) => o.cons > 0).sort((a, b) => b.cons - a.cons).slice(0, 8).map((o) => ({
+      ...o, indice: fuera > 0 && o.out > 0 ? o.cons / ((o.out / fuera) * B.r.dias) : null,
+      alertas: an.filter((a) => a.atipica && a.tipo === o.tipo && (!p.sede || a.sede === p.sede) && tgOk(a, p) && B.inR(toD(a.fecha))).length,
+    }));
+    const grid = document.createElement('div'); grid.className = 'fz-rings-grid';
+    rows.forEach((r, i) => {
+      const card = document.createElement('button'); card.type = 'button'; card.className = 'fz-ring fz-in'; card.style.animationDelay = (i * 60) + 'ms';
+      card.setAttribute('aria-pressed', String(p.tipo === r.tipo)); card.style.font = 'inherit'; card.style.color = 'inherit';
+      card.addEventListener('click', () => dash.setParams({ tipo: p.tipo === r.tipo ? null : r.tipo }));
+      const S = 120, R = 46, sw = 11;
+      const svg = d3.select(card).append('svg').attr('width', S).attr('height', S).attr('viewBox', `0 0 ${S} ${S}`);
+      const gg = svg.append('g').attr('transform', `translate(${S / 2},${S / 2})`);
+      const maxI = 1.5, start = -Math.PI * 0.75, span = Math.PI * 1.5;
+      const arc = d3.arc().innerRadius(R - sw / 2).outerRadius(R + sw / 2).cornerRadius(sw / 2);
+      gg.append('path').attr('d', arc({ startAngle: start, endAngle: start + span })).attr('fill', 'var(--cds-chart-grid)');
+      const v = Math.max(0, Math.min(maxI, r.indice ?? 0)), hot = (r.indice ?? 0) > 1.15;
+      gg.append('path').attr('d', arc({ startAngle: start, endAngle: start + span * (v / maxI) })).attr('fill', hot ? 'var(--cds-chart-status-critical)' : C0);
+      const a100 = start + span / maxI;
+      gg.append('line').attr('x1', Math.sin(a100) * (R - sw)).attr('y1', -Math.cos(a100) * (R - sw)).attr('x2', Math.sin(a100) * (R + sw)).attr('y2', -Math.cos(a100) * (R + sw)).attr('stroke', 'var(--color-fg)').attr('stroke-width', 1.5);
+      gg.append('text').attr('class', 'fz-ring-pct').attr('text-anchor', 'middle').attr('dy', '0.2em').text(r.indice == null ? '—' : Math.round(r.indice * 100) + '%');
+      gg.append('text').attr('class', 'fz-ring-lbl').attr('text-anchor', 'middle').attr('y', 20).text('vs normal');
+      const name = document.createElement('div'); name.className = 'fz-ring-name'; name.textContent = r.tipo;
+      const meta = document.createElement('div'); meta.className = 'fz-ring-meta'; meta.textContent = compact(r.cons) + ' gal';
+      const alx = document.createElement('div'); alx.className = 'fz-ring-meta';
+      if (r.alertas > 0) { const pl = document.createElement('span'); pl.className = 'fz-pill'; pl.textContent = r.alertas + (r.alertas === 1 ? ' alerta' : ' alertas'); alx.append(pl); } else alx.textContent = 'Sin alertas';
+      card.append(name, meta, alx); grid.append(card);
+    });
+    el.append(grid);
+  });
+
+  // ---------- Calendar ----------
+  dash.draw('cal', (el) => {
+    if (!gate(el, ['dia_seg'])) return;
+    const B = base(); if (!B) return;
+    const cs0 = new Date(Math.max(B.r.s, B.r.e - 370 * D));
+    const rows = [];
+    for (let d = new Date(cs0); d <= B.r.e; d = new Date(+d + D)) { const o = B.daily.get(iso(d)); rows.push({ d, gal: o ? o.gal : 0 }); }
+    if (!rows.length) return;
+    if (asTable.has('cal')) { renderTable(el, ['Fecha', 'Galones despachados'], rows.map((r) => [iso(r.d), Math.round(r.gal)]), [1]); return; }
+    const first = d3.utcMonday.floor(rows[0].d), weeks = d3.utcMonday.count(first, rows[rows.length - 1].d) + 1;
+    const W = Math.max(280, el.clientWidth), ml = 26, mt = 18;
+    const cs = Math.max(4, Math.min(16, Math.floor((W - ml - 4) / weeks) - 2)), gap = 2, H = mt + 7 * (cs + gap) + 4;
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+    const ext = d3.extent(rows, (r) => r.gal), op = d3.scaleLinear(ext, [0.08, 1]);
+    const col = (r) => d3.utcMonday.count(first, r.d), day = (r) => (r.d.getUTCDay() + 6) % 7;
+    ['L', 'M', 'M', 'J', 'V', 'S', 'D'].forEach((l, i) => { if (i % 2 === 0) svg.append('text').attr('x', 0).attr('y', mt + i * (cs + gap) + cs / 2).attr('dy', '0.32em').text(l); });
+    let lastX = -99;
+    rows.filter((r) => r.d.getUTCDate() === 1).forEach((r) => { const xx = ml + col(r) * (cs + gap); if (xx - lastX > 28) { svg.append('text').attr('x', xx).attr('y', 10).text(MES[r.d.getUTCMonth()]); lastX = xx; } });
+    const tip = tipBox(el); const k = () => W / el.clientWidth;
+    svg.append('g').selectAll('rect').data(rows).join('rect')
+      .attr('x', (r) => ml + col(r) * (cs + gap)).attr('y', (r) => mt + day(r) * (cs + gap)).attr('width', cs).attr('height', cs).attr('rx', 2)
+      .attr('fill', (r) => (r.gal > 0 ? C0 : 'var(--cds-chart-grid)')).attr('fill-opacity', (r) => (r.gal > 0 ? (ext[0] === ext[1] ? 0.6 : op(r.gal)) : 1))
+      .on('pointermove', (ev, r) => { tipLine(tip, diaTxt(r.d), [[null, nf0.format(r.gal) + ' gal despachados']]); placeTip(tip, el, (ml + col(r) * (cs + gap)) / k(), (mt + day(r) * (cs + gap)) / k()); })
+      .on('pointerleave', () => { tip.hidden = true; });
+  });
+
+  // ---------- Scatter ----------
+  dash.draw('scatter', (el) => {
+    if (!gate(el, ['anomalias', 'dia_seg'])) return;
+    const B = base(); if (!B) return;
+    const p = dash.params();
+    const rows = dash.data('anomalias').data.filter((r) => (!p.sede || r.sede === p.sede) && (!p.tipo || r.tipo === p.tipo) && tgOk(r, p)).map((r) => ({ ...r, d: toD(r.fecha) })).filter((r) => B.inR(r.d));
+    if (!rows.length) return;
+    const W = Math.max(280, el.clientWidth), H = big(el, 260), mt = 10, mb = 24;
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+    const y = d3.scaleLinear([0, d3.quantile(rows.map((r) => r.galones).sort(d3.ascending), 0.999) * 1.1 || 1], [H - mb, mt]).nice().clamp(true);
+    const ticks = y.ticks(4), ml = measure(svg, ticks.map((t) => nf0.format(t))) + 12;
+    const x = d3.scaleUtc([B.r.s, B.r.e], [ml, W - 10]);
+    gridY(svg, y, ml, W - 10, ticks, (t) => nf0.format(t));
+    const short = B.r.dias <= 120;
+    svg.append('g').selectAll('text').data(x.ticks(short ? (W < 520 ? 4 : 6) : d3.utcMonth.every(W < 520 ? 3 : 2))).join('text').attr('x', (d) => x(d)).attr('y', H - 6).attr('text-anchor', 'middle').text((d) => (short ? d.getUTCDate() + ' ' + MES[d.getUTCMonth()] : mesTxt(d)));
+    const norm = rows.filter((r) => !r.atipica), at = rows.filter((r) => r.atipica);
+    let path = ''; for (const r of norm) path += 'M' + x(r.d).toFixed(1) + ' ' + y(r.galones).toFixed(1) + 'h1.6v1.6h-1.6z';
+    svg.append('path').attr('d', path).attr('fill', 'var(--cds-chart-muted)').attr('opacity', .5);
+    const ga = svg.append('g');
+    ga.selectAll('circle.fz-pulse').data(at.slice(0, 60)).join('circle').attr('class', 'fz-pulse').attr('cx', (r) => x(r.d)).attr('cy', (r) => y(r.galones)).attr('r', 5).attr('fill', 'none').attr('stroke', 'var(--cds-chart-status-critical)').attr('stroke-width', 1.5);
+    ga.selectAll('circle.fz-a').data(at).join('circle').attr('class', 'fz-a').attr('cx', (r) => x(r.d)).attr('cy', (r) => y(r.galones)).attr('r', 4.5).attr('fill', 'var(--cds-chart-status-critical)').attr('stroke', 'var(--color-panel)').attr('stroke-width', 1.5);
+    const tip = tipBox(el);
+    const dl = d3.Delaunay.from(rows, (r) => x(r.d), (r) => y(r.galones));
+    svg.append('rect').attr('x', ml).attr('y', mt).attr('width', W - 10 - ml).attr('height', H - mb - mt).attr('fill', 'transparent')
+      .on('pointermove', (ev) => {
+        const [px, py] = d3.pointer(ev); const r = rows[dl.find(px, py)];
+        const lines = [[r.atipica ? 'var(--cds-chart-status-critical)' : null, nf1.format(r.galones) + ' gal (normal ' + nf1.format(r.esperado) + ')'], [null, r.tipo + ' · ' + r.sede]];
+        if (r.atipica) lines.push([null, 'Atípica: +' + nf1.format(r.exceso) + ' gal']);
+        tipLine(tip, r.placa + ' · ' + diaTxt(r.d), lines);
+        const k = W / el.clientWidth; placeTip(tip, el, x(r.d) / k, y(r.galones) / k);
+      })
+      .on('pointerleave', () => { tip.hidden = true; });
+  });
+
+  // ---------- Alerts table ----------
+  dash.draw('alert-rows', (tb) => {
+    tb.replaceChildren();
+    const g = dash.data('alertas'), B = base(); if (g.status !== 'ok' || !B) return;
+    const p = dash.params();
+    for (const r of g.data.filter((x) => B.inR(toD(x.fecha)) && (!p.sede || x.sede === p.sede) && (!p.tipo || x.tipo === p.tipo) && tgOk(x, p))) {
+      const tr = document.createElement('tr');
+      tr.dataset.key = encodeURIComponent(r.fecha) + ',' + encodeURIComponent(r.placa);
+      const cells = [[diaTxt(toD(r.fecha)), ''], [r.placa, ''], [r.tipo, 'fz-hide-narrow'], [nf1.format(r.galones), 'fz-num'], [nf1.format(r.esperado), 'fz-num fz-hide-narrow'], ['+' + nf1.format(r.exceso), 'fz-num fz-bad'], [nf0.format(r.costo_extra), 'fz-num fz-hide-narrow']];
+      for (const [t, c] of cells) { const td = document.createElement('td'); td.textContent = t; if (c) td.className = c; tr.append(td); }
+      tb.append(tr);
+    }
+  });
+})();
+</script>
