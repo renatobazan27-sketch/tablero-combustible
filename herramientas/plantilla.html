@@ -147,6 +147,15 @@
 <style>
   .fz-sel { font: inherit; font-size: var(--cds-font-size-caption); color: var(--color-fg); background: var(--color-bg); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: 3px 6px; max-width: 12rem; }
   .fz-clear { font: inherit; font-size: var(--cds-font-size-caption); border: 1px solid var(--color-border-line); background: transparent; color: var(--color-fg-muted); border-radius: 999px; padding: 2px 10px; cursor: pointer; }
+  /* controles del simulador con el mismo estilo que los filtros */
+  .fz-sim2 > .fz-ptools { background: var(--fz-tint); border: 1px solid color-mix(in srgb, var(--fz-navy) 25%, transparent); border-left: 4px solid var(--fz-navy); border-radius: var(--cds-radius); padding: var(--cds-pad-sm) var(--cds-pad-md); }
+  .fz-sim2 .fz-date { color: var(--fz-navy); font-weight: var(--cds-font-weight-medium); }
+  .fz-sim2 .fz-sel { background: var(--color-panel); color: var(--fz-navy); font-weight: var(--cds-font-weight-medium); border: 1px solid color-mix(in srgb, var(--fz-navy) 40%, transparent); padding: 5px 8px; cursor: pointer; }
+  .fz-sim2 .fz-sel:hover { border-color: var(--fz-navy); }
+  .fz-sim-ctr, .fz-sim-row { background: var(--fz-tint); border: 1px solid color-mix(in srgb, var(--fz-navy) 20%, transparent); border-radius: var(--cds-radius); padding: var(--cds-pad-md); }
+  .fz-sim-name { color: var(--fz-navy); font-weight: var(--cds-font-weight-medium); }
+  .fz-sim-val { color: var(--fz-navy); font-weight: 700; }
+  .fz-sim-line input[type=range], .fz-sim-row input[type=range] { accent-color: var(--fz-navy); height: 6px; cursor: pointer; }
   /* filtros con más contraste */
   .fz-filters { background: var(--fz-tint); border-color: color-mix(in srgb, var(--fz-navy) 25%, transparent); border-left: 4px solid var(--fz-navy); }
   .fz-filters .fz-date { color: var(--fz-navy); font-weight: var(--cds-font-weight-medium); }
