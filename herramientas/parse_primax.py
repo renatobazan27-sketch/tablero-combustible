@@ -30,9 +30,17 @@ def leer(path):
     nums = [float(x) for x in re.findall(r'(-?\d+\.\d+)', line)]
     if len(nums) < 3:
         raise ValueError('sin precios')
-    paita = nums[3] if len(nums) >= 4 else None
-    return dict(fecha=fecha.isoformat(), gambeta=nums[0], argentina=nums[1],
-                piura=nums[2], paita_planta=paita, archivo=os.path.basename(path))
+    if len(nums) >= 5:
+        # formato desde 06/11/2026: Planta Callao | Valero | Pampilla | Piura | Paita
+        # (Gambeta y Argentina se abastecen de Planta Callao)
+        gambeta = argentina = nums[0]
+        piura, paita = nums[-2], nums[-1]
+    else:
+        # formato anterior: Gambeta | Argentina | Piura-Piura | (Piura-Paita)
+        gambeta, argentina, piura = nums[0], nums[1], nums[2]
+        paita = nums[3] if len(nums) >= 4 else None
+    return dict(fecha=fecha.isoformat(), gambeta=gambeta, argentina=argentina,
+                piura=piura, paita_planta=paita, archivo=os.path.basename(path))
 
 
 if __name__ == '__main__':
