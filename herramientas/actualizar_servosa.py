@@ -1,7 +1,7 @@
 """Agrega los despachos nuevos de Servosa al Excel y rearma el grupo IBC del tarifario.
 Uso: python3 actualizar_servosa.py servosa_correos.csv Listado_Precios_Servosa.xlsx tarifarios_actual.csv YYYY-MM-DD tarifarios_salida.csv
 - Excel (hoja Hoja1, tabla Tabla1): CLIENTE (CALLAO/PAITA) | FECHA DE EMISION GR | CANTIDAD | FACTURA | PRECIO UNITARIO (sin IGV) | TOTAL (=E*C)
-  Solo agrega filas que no estén (misma factura + fecha + cantidad) y cuya fecha sea posterior a 15 días antes de la última fila.
+  Solo agrega filas que no estén (misma sede + fecha + cantidad; Servosa a veces refactura el mismo despacho con otro número) y cuya fecha sea posterior a 15 días antes de la última fila.
 - Tarifario IBC: precio sin IGV por día y sede (promedio si hay varios en el día), arrastrado hasta la fecha de corte.
   Callao -> ubicacion Callao / sede Callao ; Paita -> ubicacion Paita / sede Paita.
 """
@@ -39,14 +39,14 @@ for r in range(2, last_row + 1):
     d = as_date(ws.cell(r, 2).value)
     if d:
         fechas.append(d)
-    existentes.add((fkey(ws.cell(r, 4).value), d, float(ws.cell(r, 3).value or 0)))
+    existentes.add((str(ws.cell(r, 1).value or '').strip().upper(), d, float(ws.cell(r, 3).value or 0)))
 desde = max(fechas) - datetime.timedelta(days=15)
 
 nuevos = pd.read_csv(csv_correos)
 nuevos['d'] = pd.to_datetime(nuevos.fecha_gr).dt.date
 agregar = []
 for _, x in nuevos.sort_values(['d', 'sede', 'guia']).iterrows():
-    k = (fkey(x.factura), x.d, float(x.cantidad))
+    k = (str(x.sede).upper(), x.d, float(x.cantidad))
     if x.d >= desde and k not in existentes:
         agregar.append(x)
         existentes.add(k)
