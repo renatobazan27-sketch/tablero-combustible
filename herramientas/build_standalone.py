@@ -1,6 +1,7 @@
 """Arma el tablero de combustible como UN archivo HTML independiente (sin Claude).
 Uso: python3 build_standalone.py plantilla.html d3.min.js carpeta_fuentes carpeta_csv salida.html
 carpeta_csv debe tener: consumo.csv compras.csv tarifarios.csv flota_mensual.csv error_proyeccion.csv
+(y si existen: gnv_mensual.csv gnv_estacion_mes.csv gnv_placa_mes.csv)
 (un CSV por dataset del tablero de Claude, con el id del dataset como nombre)
 """
 import sys, os, json, base64, datetime
@@ -9,8 +10,9 @@ tpl, d3p, fontdir, csvdir, out = sys.argv[1:6]
 html = open(tpl, encoding='utf-8').read()
 html = html.replace('<meta name="dash-one-writer">\n', '').replace('<link rel="stylesheet" href="fonts.css">\n', '')
 
-DATA = {k: k + '.csv' for k in ('consumo', 'compras', 'tarifarios', 'flota_mensual', 'error_proyeccion')}
-raw = {k: open(os.path.join(csvdir, f), encoding='utf-8').read() for k, f in DATA.items()}
+DATA = {k: k + '.csv' for k in ('consumo', 'compras', 'tarifarios', 'flota_mensual', 'error_proyeccion',
+                               'gnv_mensual', 'gnv_estacion_mes', 'gnv_placa_mes')}
+raw = {k: open(os.path.join(csvdir, f), encoding='utf-8').read() for k, f in DATA.items() if os.path.exists(os.path.join(csvdir, f))}
 
 fonts = ''
 for w in (400, 500, 700):

@@ -206,6 +206,7 @@
       <button type="button" class="fz-navbtn" data-view="precios" aria-current="false"><svg class="fz-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 17l5-5 4 4 7-8"/><path d="M15 8h5v5"/></svg><span>Precios y tarifarios</span></button>
       <button type="button" class="fz-navbtn" data-view="consumo" aria-current="false"><svg class="fz-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c3 4 6 7.5 6 11a6 6 0 0 1-12 0c0-3.5 3-7 6-11z"/></svg><span>Consumo e ingresos</span></button>
       <button type="button" class="fz-navbtn" data-view="activos" aria-current="false"><svg class="fz-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="9" width="13" height="8" rx="1"/><path d="M15 12h4l3 3v2h-7"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg><span>Grifos y activos</span></button>
+      <button type="button" class="fz-navbtn" data-view="gnv" aria-current="false"><svg class="fz-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7v18H7z"/><path d="M14 8h3l2 3v7a1.5 1.5 0 0 1-3 0v-4h-2"/><path d="M9 7h3"/></svg><span>GNV</span></button>
       <button type="button" class="fz-navbtn" data-view="alertas" aria-current="false"><svg class="fz-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.5"/></svg><span>Alertas</span></button>
     </nav>
     <main class="fz-main">
@@ -323,6 +324,24 @@
     <p class="fz-note">El anillo compara el consumo de cada tipo de activo en el periodo con su promedio fuera de ese periodo, para la misma cantidad de días: 100 % es lo normal, en rojo si supera 115 %. Haz clic en uno para filtrar todo el tablero.</p>
     <div class="fz-chart fz-rings dash-skeleton" data-draw="rings" data-source="dia_seg anomalias"></div>
   </section>
+      </section>
+      <section class="fz-page" data-page="gnv" id="vista-gnv" hidden>
+        <section class="fz-kpis" data-draw="gnv-kpis" data-source="gnv_mensual"></section>
+        <section class="fz-card" id="gnv-precio">
+          <div class="fz-cardhead"><h2>Precio unitario del GNV en el tiempo</h2><div class="fz-tools"><button type="button" class="fz-tbtn" data-tabla="gnv-precio-chart" aria-pressed="false">Ver tabla</button></div></div>
+          <p class="fz-note">Precio promedio pagado por m³ cada mes (sin IGV) en el grifo externo REDCOL. Las líneas delgadas son las estaciones donde más se carga.</p>
+          <div class="fz-chartwrap"><button type="button" class="fz-focusbtn" data-focus="gnv-precio-chart" aria-label="Ver en pantalla completa" title="Ver en pantalla completa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button><div class="fz-chart dash-skeleton" data-draw="gnv-precio-chart" data-source="gnv_mensual gnv_estacion_mes"></div></div>
+        </section>
+        <section class="fz-card" id="gnv-consumo">
+          <div class="fz-cardhead"><h2>Consumo y costo mensual de GNV</h2><div class="fz-tools"><button type="button" class="fz-tbtn" data-tabla="gnv-consumo-chart" aria-pressed="false">Ver tabla</button></div></div>
+          <p class="fz-note">Barras: m³ despachados a las unidades. Pasa el cursor para ver el costo del mes (compras a REDCOL, sin IGV).</p>
+          <div class="fz-chartwrap"><div class="fz-chart dash-skeleton" data-draw="gnv-consumo-chart" data-source="gnv_mensual"></div></div>
+        </section>
+        <section class="fz-card" id="gnv-placas">
+          <h2>Consumo de GNV por placa · últimos 3 meses</h2>
+          <div class="fz-chart dash-skeleton" data-draw="gnv-placas" data-source="gnv_placa_mes"></div>
+          <p class="fz-note">El GNV se mide en m³ y no se suma con los galones de diésel de las demás vistas. Los filtros de arriba no aplican a esta vista.</p>
+        </section>
       </section>
       <section class="fz-page" data-page="alertas" id="vista-alertas" hidden>
         <section class="fz-card" id="alertas">
@@ -671,8 +690,99 @@
     copyText(txt, b.parentElement.querySelector('.fz-copied'));
   }));
 
+
+  // ---------- GNV ----------
+  const gnvRows = () => dash.data('gnv_mensual').data.map((r) => ({ mes: String(r.mes), d: toD(String(r.mes) + '-01'), m3: +r.m3 || 0, costo: +r.costo || 0, precio: +r.precio || null, cons: +r.m3_consumo || 0, placas: +r.placas || 0 })).sort((a, b) => a.d - b.d);
+  const mesL = (d) => MESL[d.getUTCMonth()] + ' ' + d.getUTCFullYear();
+  dash.draw('gnv-kpis', (el) => {
+    if (!gate(el, ['gnv_mensual'])) return;
+    const R = gnvRows(); if (!R.length) return;
+    const lc = [...R].reverse().find((r) => r.cons > 0), lp = R.filter((r) => r.precio);
+    const p1 = lp[lp.length - 1], p0 = lp[lp.length - 2];
+    const full = lp.filter((r) => r.m3 > 0.8 * (d3.median(lp.slice(-6), (q) => q.m3) || 0));
+    const cm = full[full.length - 1];
+    const card = (lab, val, unit, sub) => { const c = document.createElement('div'); c.className = 'fz-card'; const a = document.createElement('span'); a.className = 'fz-kpi-label'; a.textContent = lab; const v = document.createElement('span'); v.className = 'fz-kpi-val'; const b = document.createElement('b'); b.textContent = val; v.append(b, ' '); const u = document.createElement('span'); u.className = 'fz-unit'; u.textContent = unit; v.append(u); const s2 = document.createElement('span'); s2.className = 'fz-kpi-sub'; if (sub instanceof Node) s2.append(sub); else s2.textContent = sub; c.append(a, v, s2); el.append(c); };
+    if (lc) card('Consumo GNV · ' + mesL(lc.d), nf0.format(lc.cons), 'm³', lc.placas + ' placas cargaron');
+    if (p1) { const f = document.createDocumentFragment(); if (p0) { const b = document.createElement('b'); const ch = p1.precio / p0.precio - 1; b.className = ch > 0 ? 'fz-bad' : ch < 0 ? 'fz-good' : ''; b.textContent = pct(ch); f.append(b, ' vs ' + mesL(p0.d)); } card('Precio por m³ · ' + mesL(p1.d), 'S/ ' + nf2.format(p1.precio), '', f); }
+    if (cm) card('Costo GNV · ' + mesL(cm.d), 'S/ ' + nf0.format(cm.costo), '', nf0.format(cm.m3) + ' m³ comprados');
+    const y12 = lp.slice(-12); if (y12.length) card('Precio promedio · últimos 12 meses', 'S/ ' + nf2.format(d3.sum(y12, (q) => q.costo) / d3.sum(y12, (q) => q.m3)), '', 'mín. S/ ' + nf2.format(d3.min(y12, (q) => q.precio)) + ' · máx. S/ ' + nf2.format(d3.max(y12, (q) => q.precio)));
+  });
+  dash.draw('gnv-precio-chart', (el) => {
+    if (!gate(el, ['gnv_mensual', 'gnv_estacion_mes'])) return;
+    const R = gnvRows().filter((r) => r.precio && r.m3 > 0 && r.mes >= '2024-01');
+    const E = d3.groups(dash.data('gnv_estacion_mes').data.filter((r) => r.estacion !== 'Otras' && +r.m3 > 0), (r) => r.estacion)
+      .map(([n, v]) => ({ n, tot: d3.sum(v, (q) => +q.m3), pts: v.map((q) => ({ d: toD(String(q.mes) + '-01'), v: +q.precio, m3: +q.m3 })).sort((a, b) => a.d - b.d) }))
+      .sort((a, b) => b.tot - a.tot).slice(0, 4);
+    if (asTable.has('gnv-precio-chart')) {
+      const rows = R.map((r) => [r.mes, Math.round(r.precio * 1000) / 1000, Math.round(r.m3), Math.round(r.costo)]);
+      renderTable(el, ['Mes', 'Precio S/ por m³', 'm³ comprados', 'Costo S/'], rows, [1, 2, 3]); return;
+    }
+    if (!R.length) return;
+    const W = Math.max(280, el.clientWidth), H = big(el, 300), mt = 14, mb = 28, mr = 16;
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+    const all = [...R.map((r) => r.precio), ...E.flatMap((e) => e.pts.map((q) => q.v))];
+    const y = d3.scaleLinear([d3.min(all) * 0.95, d3.max(all) * 1.03], [H - mb, mt]).nice();
+    const ticks = y.ticks(5), fmt = (t) => 'S/ ' + nf2.format(t);
+    const ml = measure(svg, ticks.map(fmt)) + 12;
+    const x = d3.scaleUtc([R[0].d, R[R.length - 1].d], [ml, W - mr]);
+    gridY(svg, y, ml, W - mr, ticks, fmt);
+    const span = (R[R.length - 1].d - R[0].d) / D;
+    svg.append('g').selectAll('text').data(x.ticks(d3.utcMonth.every(span > 500 ? (W < 520 ? 6 : 3) : (W < 520 ? 3 : 2)))).join('text').attr('x', (d) => x(d)).attr('y', H - 8).attr('text-anchor', 'middle').text(mesTxt);
+    const line = d3.line().x((q) => x(q.d)).y((q) => y(q.v));
+    for (const e of E) svg.append('path').datum(e.pts.filter((q) => q.d >= R[0].d)).attr('fill', 'none').attr('stroke', 'var(--fz-sky)').attr('stroke-opacity', 0.35).attr('stroke-width', 1.25).attr('d', line);
+    const main = R.map((r) => ({ d: r.d, v: r.precio }));
+    svg.append('path').datum(main).attr('fill', 'none').attr('stroke', 'var(--fz-orange)').attr('stroke-width', 2.5).attr('stroke-linejoin', 'round').attr('d', line);
+    const lq = main[main.length - 1]; svg.append('circle').attr('cx', x(lq.d)).attr('cy', y(lq.v)).attr('r', 4).attr('fill', 'var(--fz-orange)').attr('stroke', 'var(--color-panel)').attr('stroke-width', 1.5);
+    const rule = svg.append('line').attr('y1', mt).attr('y2', H - mb).attr('stroke', 'var(--cds-chart-axis)').attr('visibility', 'hidden');
+    const dot = svg.append('circle').attr('r', 4).attr('fill', 'var(--fz-orange)').attr('visibility', 'hidden');
+    const tip = tipBox(el);
+    svg.append('rect').attr('x', ml).attr('y', mt).attr('width', W - mr - ml).attr('height', H - mb - mt).attr('fill', 'transparent')
+      .on('pointermove', (ev) => {
+        const [px] = d3.pointer(ev); const d = x.invert(px);
+        const r = d3.least(R, (q) => Math.abs(q.d - d)); if (!r) return;
+        const lines = [['var(--fz-orange)', 'Promedio: S/ ' + nf2.format(r.precio) + ' por m³ (' + nf0.format(r.m3) + ' m³)']];
+        for (const e of E) { const q = e.pts.find((z) => +z.d === +r.d); if (q) lines.push(['var(--fz-sky)', e.n + ': S/ ' + nf2.format(q.v)]); }
+        rule.attr('x1', x(r.d)).attr('x2', x(r.d)).attr('visibility', 'visible'); dot.attr('cx', x(r.d)).attr('cy', y(r.precio)).attr('visibility', 'visible');
+        tipLine(tip, mesL(r.d), lines); const k = W / el.clientWidth; placeTip(tip, el, x(r.d) / k, mt / k + 20);
+      })
+      .on('pointerleave', () => { tip.hidden = true; rule.attr('visibility', 'hidden'); dot.attr('visibility', 'hidden'); });
+  });
+  dash.draw('gnv-consumo-chart', (el) => {
+    if (!gate(el, ['gnv_mensual'])) return;
+    const R = gnvRows().filter((r) => r.cons > 0);
+    if (asTable.has('gnv-consumo-chart')) { renderTable(el, ['Mes', 'm³ consumidos', 'Placas', 'm³ comprados', 'Costo S/'], R.map((r) => [r.mes, Math.round(r.cons), r.placas, Math.round(r.m3), Math.round(r.costo)]), [1, 2, 3, 4]); return; }
+    if (!R.length) return;
+    const W = Math.max(280, el.clientWidth), H = big(el, 260), mt = 14, mb = 28, mr = 8;
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+    const y = d3.scaleLinear([0, d3.max(R, (r) => r.cons) * 1.08], [H - mb, mt]).nice();
+    const ticks = y.ticks(4), fmt = (t) => nf0.format(t / 1000) + ' mil';
+    const ml = measure(svg, ticks.map(fmt)) + 12;
+    const x = d3.scaleBand(R.map((r) => r.mes), [ml, W - mr]).padding(0.2);
+    gridY(svg, y, ml, W - mr, ticks, fmt);
+    const every = Math.ceil(R.length / (W < 520 ? 6 : 12));
+    svg.append('g').selectAll('text').data(R.filter((_, i) => (R.length - 1 - i) % every === 0)).join('text').attr('x', (r) => x(r.mes) + x.bandwidth() / 2).attr('y', H - 8).attr('text-anchor', 'middle').text((r) => mesTxt(r.d));
+    const tip = tipBox(el);
+    svg.append('g').selectAll('rect').data(R).join('rect').attr('x', (r) => x(r.mes)).attr('width', x.bandwidth()).attr('y', (r) => y(r.cons)).attr('height', (r) => y(0) - y(r.cons)).attr('rx', 2).attr('fill', 'var(--fz-navy)')
+      .on('pointermove', function (ev, r) {
+        d3.select(this).attr('fill', 'var(--fz-orange)');
+        const lines = [['var(--fz-navy)', nf0.format(r.cons) + ' m³ consumidos · ' + r.placas + ' placas']];
+        if (r.costo) lines.push(['var(--fz-orange)', 'Costo S/ ' + nf0.format(r.costo) + ' · S/ ' + nf2.format(r.precio) + ' por m³']);
+        tipLine(tip, mesL(r.d), lines); const k = W / el.clientWidth; placeTip(tip, el, (x(r.mes) + x.bandwidth() / 2) / k, y(r.cons) / k);
+      })
+      .on('pointerleave', function () { d3.select(this).attr('fill', 'var(--fz-navy)'); tip.hidden = true; });
+  });
+  dash.draw('gnv-placas', (el) => {
+    if (!gate(el, ['gnv_placa_mes'])) return;
+    const rows = dash.data('gnv_placa_mes').data; if (!rows.length) return;
+    const meses = [...new Set(rows.map((r) => String(r.mes)))].sort().slice(-3);
+    const m = new Map();
+    for (const r of rows) { const k = String(r.mes); if (!meses.includes(k)) continue; const key = r.placa + '|' + r.tipo; if (!m.has(key)) m.set(key, { placa: r.placa, tipo: r.tipo, v: {} }); m.get(key).v[k] = (m.get(key).v[k] || 0) + +r.m3; }
+    const out = [...m.values()].map((o) => [o.placa, o.tipo, ...meses.map((k) => Math.round(o.v[k] || 0)), Math.round(d3.sum(meses, (k) => o.v[k] || 0))]).sort((a, b) => b[b.length - 1] - a[a.length - 1]);
+    renderTable(el, ['Placa', 'Tipo', ...meses.map((k) => mesTxt(toD(k + '-01'))), 'Total m³'], out, [2, 3, 4, 5]);
+  });
+
   // ---------- Views (sidebar) ----------
-  const VIEWS = ['resumen', 'precios', 'consumo', 'activos', 'alertas'];
+  const VIEWS = ['resumen', 'precios', 'consumo', 'activos', 'gnv', 'alertas'];
   const show = (v) => {
     if (!VIEWS.includes(v)) v = 'resumen';
     if (typeof focusName !== 'undefined' && focusName) setFocus(null);
@@ -682,6 +792,7 @@
     if (v === 'precios' && dash.params().tipo) dash.setParams({ tipo: null });
     document.querySelectorAll('.fz-only-precios').forEach((el) => { el.hidden = v !== 'precios'; });
     if (v !== 'precios' && dash.params().sede === 'Otros') dash.setParams({ sede: null });
+    const fl = document.getElementById('filtros'); if (fl) fl.hidden = v === 'gnv';
     dash.setLink(v);
   };
   document.querySelectorAll('.fz-navbtn[data-view]').forEach((b) => b.addEventListener('click', () => show(b.dataset.view)));
