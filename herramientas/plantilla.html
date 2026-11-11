@@ -100,6 +100,7 @@
   .fz-unit { font-size: var(--cds-font-size-body); color: var(--color-fg-muted); font-family: 'Montserrat', var(--font-anthropic-sans); }
   .fz-kpi-sub { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-variant-numeric: tabular-nums; }
   .fz .fz-kpi-sub b { font-weight: 600; }
+  #impacto .fz-table tr > :first-child { position: sticky; left: 0; z-index: 1; background: var(--color-panel); min-width: 210px; white-space: normal; }
   .fz-good { color: var(--color-ok); } .fz-bad { color: var(--color-bad); } .fz-warn { color: var(--color-warn); }
   .fz-grid2 { display: grid; gap: var(--cds-gap-md); grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); }
   .fz-sec { display: grid; gap: var(--cds-gap-md); }
@@ -291,7 +292,7 @@
     </section>
         <section class="fz-card" id="impacto">
       <div class="fz-cardhead"><h2>Impacto diésel</h2><div class="fz-tools"><div class="fz-seg" id="imp-anio"></div><div class="fz-seg" id="imp-met"><button type="button" data-m="dif" aria-pressed="true">Diferencia S/</button><button type="button" data-m="cr" aria-pressed="false">Costo real S/</button><button type="button" data-m="cb" aria-pressed="false">Costo base S/</button><button type="button" data-m="gal" aria-pressed="false">Galones</button></div></div></div>
-      <p class="fz-note">Cuánto más (o menos) se pagó por el diésel consumido frente al precio base de cada grupo (sin IGV por galón): Externo Coesti S/ 11.47 · Grifo interno S/ 10.58 · IBC S/ 12.53. Costo real = galones × tarifario del día; diferencia = costo real − costo base. Haz clic en un grupo para ver el detalle por tipo de activo.</p>
+      <p class="fz-note">Cuánto más (o menos) se pagó por el diésel consumido frente al precio base de cada grupo (sin IGV por galón): Externo Coesti S/ 11.47 · Grifo interno S/ 10.58 · IBC S/ 12.53. Costo real = galones × tarifario del día; diferencia = costo real − costo base. Haz clic en un grupo para ver el detalle por tipo de activo. Puedes marcar varias columnas a la vez (galones, costos y diferencia).</p>
       <div class="fz-chart dash-skeleton" data-draw="impacto" data-source="dia_seg"></div>
     </section>
       </section>
@@ -1367,7 +1368,8 @@
   const IMP_ORD = ['Externo (Coesti)', 'Grifo interno (Argentina, Gambetta 1, Paita 1)', 'Interno IBC (Gambetta 2-3, Paita 2)'];
   const impTipo = (t) => { const u = String(t || '').toUpperCase(); if (u.startsWith('TRUCKS')) return 'Trucks'; if (u === 'REACH STACKER') return 'Reach Stacker'; if (u === 'TERCERO DPWL') return 'Tercero DPWL'; if (u.startsWith('UNDERLAND')) return 'Underland DPWL'; return 'Otros'; };
   const IMP_MET = { dif: 'Diferencia S/', cr: 'Costo real S/', cb: 'Costo base S/', gal: 'Galones' };
-  const impSt = { anio: null, met: 'dif', open: new Set() };
+  const impSt = { anio: null, mets: new Set(['dif']), open: new Set() };
+  const IMP_MORD = ['gal', 'cb', 'cr', 'dif'], IMP_CORTO = { gal: 'Galones', cb: 'Costo base', cr: 'Costo real', dif: 'Diferencia' };
   const impData = () => {
     const B = base(); if (!B) return null;
     const T = new Map();
@@ -1422,33 +1424,46 @@
     const segA = document.getElementById('imp-anio');
     segA.replaceChildren(...anios.map((a) => { const b = mkEl('button', '', a); b.type = 'button'; b.setAttribute('aria-pressed', String(a === impSt.anio)); b.addEventListener('click', () => { impSt.anio = a; impSt.open.clear(); renderImpacto(el); }); return b; }));
     el.replaceChildren();
-    const meses = D0.meses.filter((m) => m.startsWith(impSt.anio)), M = impSt.met;
+    const meses = D0.meses.filter((m) => m.startsWith(impSt.anio)), MS = IMP_MORD.filter((m) => impSt.mets.has(m)), multi = MS.length > 1;
     const lastLbl = D0.last.startsWith(impSt.anio) ? ' (hasta ' + D0.last.slice(8, 10) + '/' + D0.last.slice(5, 7) + ')' : '';
-    const cols = ['Grupo / tipo', ...meses.map((m) => MESL[+m.slice(5, 7) - 1].slice(0, 3) + (D0.last.startsWith(m) ? '*' : '')), 'Total ' + impSt.anio];
+    const mlab = (m) => MESL[+m.slice(5, 7) - 1].slice(0, 3) + (D0.last.startsWith(m) ? '*' : '');
+    const grp = [...meses.map(mlab), 'Total ' + impSt.anio];
+    const cols = ['Grupo / tipo', ...grp.flatMap((g) => MS.map((m) => (multi ? g + ' ' + IMP_CORTO[m] : g)))];
     const box = mkEl('div', 'fz-tablebox'); const t = mkEl('table', 'fz-table');
-    const hr = document.createElement('tr'); cols.forEach((c, i) => hr.append(mkEl('th', i ? 'fz-num' : '', c))); const th = document.createElement('thead'); th.append(hr); t.append(th);
+    const th = document.createElement('thead');
+    if (multi) {
+      const h1 = document.createElement('tr'); h1.append(mkEl('th', '', ''));
+      grp.forEach((g, gi) => { const c = mkEl('th', 'fz-num', g); c.colSpan = MS.length; c.style.textAlign = 'center'; c.style.borderLeft = '1px solid var(--color-border-line)'; h1.append(c); });
+      const h2 = document.createElement('tr'); h2.append(mkEl('th', '', 'Grupo / tipo'));
+      grp.forEach(() => MS.forEach((m, mi) => { const c = mkEl('th', 'fz-num', IMP_CORTO[m]); if (!mi) c.style.borderLeft = '1px solid var(--color-border-line)'; h2.append(c); }));
+      th.append(h1, h2);
+    } else { const hr = document.createElement('tr'); ['Grupo / tipo', ...grp].forEach((c, i) => hr.append(mkEl('th', i ? 'fz-num' : '', c))); th.append(hr); }
+    t.append(th);
     const tb = document.createElement('tbody'); t.append(tb);
-    const fmt = (v) => (M === 'gal' ? nf0.format(v) : (v < 0 ? '−' : '') + nf0.format(Math.abs(v)));
+    const fmt = (v, M) => (M === 'gal' ? nf0.format(v) : (v < 0 ? '−' : '') + nf0.format(Math.abs(v)));
+    const cell = (v, M, first, bold) => { const td = mkEl('td', 'fz-num', fmt(v, M)); if (M === 'dif' && v > 0.5) td.classList.add('fz-bad'); if (M === 'dif' && v < -0.5) td.classList.add('fz-good'); if (multi && first) td.style.borderLeft = '1px solid var(--color-border-line)'; if (bold) td.style.fontWeight = '600'; return td; };
     const flat = [];
     const row = (lv, label, key, kids, id) => {
-      const vals = meses.map((m) => impVal(D0.T.get(m + '|' + key), M)); const tot = d3.sum(vals);
+      const vals = MS.map((M) => { const v = meses.map((m) => impVal(D0.T.get(m + '|' + key), M)); return [...v, d3.sum(v)]; });
       const tr = document.createElement('tr'); const td0 = mkEl('td', '', ''); td0.style.paddingLeft = (8 + lv * 18) + 'px';
       if (kids) td0.append(mkEl('span', '', impSt.open.has(id) ? '▾ ' : '▸ ')); td0.append(label); tr.append(td0);
-      [...vals, tot].forEach((v, i) => { const td = mkEl('td', 'fz-num', fmt(v)); if (M === 'dif' && v > 0.5) td.classList.add('fz-bad'); if (M === 'dif' && v < -0.5) td.classList.add('fz-good'); if (i === vals.length) td.style.fontWeight = '600'; tr.append(td); });
+      const out = [];
+      for (let gi = 0; gi <= meses.length; gi++) MS.forEach((M, mi) => { const v = vals[mi][gi]; out.push(v); tr.append(cell(v, M, mi === 0, gi === meses.length)); });
       if (lv === 0) tr.style.fontWeight = '600';
       if (kids) { tr.dataset.id = id; tr.style.cursor = 'pointer'; tr.tabIndex = 0; tr.setAttribute('aria-expanded', String(impSt.open.has(id))); }
       else if (lv) { tr.dataset.parent = id; tr.hidden = !impSt.open.has(id); }
-      tb.append(tr); flat.push([('  '.repeat(lv)) + label, ...vals, tot]); return vals;
+      tb.append(tr); flat.push([('  '.repeat(lv)) + label, ...out]); return vals;
     };
-    const totals = meses.map(() => 0);
+    const totals = MS.map(() => meses.map(() => 0).concat(0));
     for (const g of IMP_ORD) {
       if (!meses.some((m) => D0.T.has(m + '|' + g + '|'))) continue;
-      const v = row(0, g, g + '|', true, g); v.forEach((x, i) => (totals[i] += x));
+      const v = row(0, g, g + '|', true, g); v.forEach((arr, mi) => arr.forEach((x, i) => (totals[mi][i] += x)));
       for (const tp of ['Trucks', 'Reach Stacker', 'Tercero DPWL', 'Underland DPWL', 'Otros']) if (D0.tipos[g] && D0.tipos[g].has(tp) && meses.some((m) => D0.T.has(m + '|' + g + '|' + tp))) row(1, tp, g + '|' + tp, false, g);
     }
     const trT = document.createElement('tr'); trT.style.fontWeight = '700'; trT.append(mkEl('td', '', 'Total'));
-    [...totals, d3.sum(totals)].forEach((v) => { const td = mkEl('td', 'fz-num', fmt(v)); if (M === 'dif' && v > 0.5) td.classList.add('fz-bad'); if (M === 'dif' && v < -0.5) td.classList.add('fz-good'); trT.append(td); });
-    tb.append(trT); flat.push(['Total', ...totals, d3.sum(totals)]);
+    const outT = [];
+    for (let gi = 0; gi <= meses.length; gi++) MS.forEach((M, mi) => { const v = totals[mi][gi]; outT.push(v); trT.append(cell(v, M, mi === 0, false)); });
+    tb.append(trT); flat.push(['Total', ...outT]);
     tb.addEventListener('click', (e) => { const tr = e.target.closest('tr[aria-expanded]'); if (!tr) return; const id = tr.dataset.id; if (impSt.open.has(id)) impSt.open.delete(id); else impSt.open.add(id); renderImpacto(el); });
     tb.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('tr[aria-expanded]')) { e.preventDefault(); e.target.click(); } });
     const bar = mkEl('div', 'fz-tools fz-tools-end');
@@ -1463,14 +1478,15 @@
         for (const g of IMP_ORD) { if (!meses.some((m) => D0.T.has(m + '|' + g + '|'))) continue; const v = meses.map((m) => impVal(D0.T.get(m + '|' + g + '|'), mm)); v.forEach((x, i) => (tot[i] += x)); bold.add(rows.length); rows.push([g, ...v, d3.sum(v)]);
           for (const tp of ['Trucks', 'Reach Stacker', 'Tercero DPWL', 'Underland DPWL', 'Otros']) { if (!meses.some((m) => D0.T.has(m + '|' + g + '|' + tp))) continue; const w = meses.map((m) => impVal(D0.T.get(m + '|' + g + '|' + tp), mm)); rows.push(['   ' + tp, ...w, d3.sum(w)]); } }
         bold.add(rows.length); rows.push(['Total', ...tot, d3.sum(tot)]); return { rows, bold: (i) => bold.has(i) }; };
-      const sheets = [{ name: 'Diferencia ' + impSt.anio, ...piv('dif') }, { name: 'Costo real ' + impSt.anio, ...piv('cr') }, { name: 'Costo base ' + impSt.anio, ...piv('cb') }, { name: 'Galones ' + impSt.anio, ...piv('gal') }, { name: 'Detalle', rows: det, bold: (i) => i === 0 }];
+      const vistaRows = [cols.map((c) => c.replace('*', '')), ...flat.map((r) => [String(r[0]).replace(/^ +/, '   '), ...r.slice(1)])];
+      const sheets = [{ name: 'Vista ' + impSt.anio, rows: vistaRows, bold: (i) => i === 0 || i === vistaRows.length - 1 || !String(vistaRows[i][0]).startsWith('   ') }, { name: 'Diferencia ' + impSt.anio, ...piv('dif') }, { name: 'Costo real ' + impSt.anio, ...piv('cr') }, { name: 'Costo base ' + impSt.anio, ...piv('cb') }, { name: 'Galones ' + impSt.anio, ...piv('gal') }, { name: 'Detalle', rows: det, bold: (i) => i === 0 }];
       dl.disabled = true; const okd = await saveBlob(makeXlsx(sheets), 'Impacto_diesel_' + impSt.anio + '.xlsx'); dl.disabled = false;
       ok.textContent = okd ? 'Descargado' : 'No se descargó'; ok.hidden = false; setTimeout(() => { ok.hidden = true; ok.textContent = 'Copiado'; }, 2500);
     });
     bar.append(ok, cp, dl); box.append(t); el.append(bar, box);
-    el.append(mkEl('p', 'fz-note', 'Métrica: ' + IMP_MET[M] + '. ' + (lastLbl ? '* Mes en curso' + lastLbl + '. ' : '') + 'Rojo: se pagó más que el precio base; verde: menos. Respeta los filtros de sede, tipo de grifo y tipo de activo de arriba (no las fechas).'));
+    el.append(mkEl('p', 'fz-note', (multi ? 'Columnas: ' + MS.map((m) => IMP_MET[m]).join(', ') : 'Métrica: ' + IMP_MET[MS[0]]) + '. ' + (lastLbl ? '* Mes en curso' + lastLbl + '. ' : '') + 'Rojo: se pagó más que el precio base; verde: menos. Respeta los filtros de sede, tipo de grifo y tipo de activo de arriba (no las fechas).'));
   };
-  document.querySelectorAll('#imp-met button').forEach((b) => b.addEventListener('click', () => { impSt.met = b.dataset.m; document.querySelectorAll('#imp-met button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); const el = document.querySelector('[data-draw="impacto"]'); if (el) renderImpacto(el); }));
+  document.querySelectorAll('#imp-met button').forEach((b) => b.addEventListener('click', () => { const m = b.dataset.m; if (impSt.mets.has(m)) { if (impSt.mets.size > 1) impSt.mets.delete(m); } else impSt.mets.add(m); document.querySelectorAll('#imp-met button').forEach((x) => x.setAttribute('aria-pressed', String(impSt.mets.has(x.dataset.m)))); const el = document.querySelector('[data-draw="impacto"]'); if (el) renderImpacto(el); }));
   dash.draw('impacto', renderImpacto);
   // ---------- Mirror ----------
   dash.draw('mirror', (el) => {
