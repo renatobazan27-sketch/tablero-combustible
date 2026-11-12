@@ -11,7 +11,7 @@ html = open(tpl, encoding='utf-8').read()
 html = html.replace('<meta name="dash-one-writer">\n', '').replace('<link rel="stylesheet" href="fonts.css">\n', '')
 
 DATA = {k: k + '.csv' for k in ('consumo', 'compras', 'tarifarios', 'flota_mensual', 'error_proyeccion',
-                               'gnv_mensual', 'gnv_estacion_mes', 'gnv_placa_mes', 'tarifa_compras')}
+                               'gnv_mensual', 'gnv_estacion_mes', 'gnv_placa_mes', 'tarifa_compras', 'tipo_cambio')}
 raw = {k: open(os.path.join(csvdir, f), encoding='utf-8').read() for k, f in DATA.items() if os.path.exists(os.path.join(csvdir, f))}
 
 fonts = ''
