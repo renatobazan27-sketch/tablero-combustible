@@ -220,17 +220,19 @@
     <main class="fz-main">
       <div class="fz-focusbar" hidden><button type="button" class="fz-tbtn fz-exitfocus">← Volver al tablero</button><span class="fz-date">Esc para salir</span></div>
       <div class="fz-filters" id="filtros" role="group" aria-label="Filtros">
-    <span class="fz-date">Proyección:</span>
-    <div class="fz-seg">
+    <span class="fz-date fz-no-tarif">Proyección:</span>
+    <div class="fz-seg fz-no-tarif">
       <button type="button" class="fz-hzg" data-m="1" aria-pressed="false">1 mes</button>
       <button type="button" class="fz-hzg" data-m="3" aria-pressed="true">3 meses</button>
       <button type="button" class="fz-hzg" data-m="6" aria-pressed="false">6 meses</button>
       <button type="button" class="fz-hzg" data-m="12" aria-pressed="false">12 meses</button>
     </div>
+    <span class="fz-date fz-only-tarif" style="display:none">Periodo:</span>
+    <div class="fz-seg fz-only-tarif" id="tar-pre" style="display:none"><button type="button" data-p="mes" aria-pressed="false">Este mes</button><button type="button" data-p="3m" aria-pressed="false">Últimos 3 meses</button><button type="button" data-p="anio" aria-pressed="false">Este año</button><button type="button" data-p="todo" aria-pressed="false">Todo</button></div>
     <label class="fz-date">Desde <input class="fz-desde" type="date" min="2000-01-01" max="2099-12-31"></label>
     <label class="fz-date">Hasta <input class="fz-hasta" type="date" min="2000-01-01" max="2099-12-31"></label>
-    <select class="fz-sel fz-tg" aria-label="Tipo de grifo"><option value="">Grifos internos y externos</option><option value="Interno">Grifo interno</option><option value="Externo">Grifo externo</option></select>
-    <select class="fz-sel fz-sede" aria-label="Ubicación"><option value="">Todas las ubicaciones</option><option value="Callao">Callao</option><option value="Paita">Paita</option><option value="Otros" class="fz-only-precios">Otros</option></select>
+    <select class="fz-sel fz-tg fz-no-tarif" aria-label="Tipo de grifo"><option value="">Grifos internos y externos</option><option value="Interno">Grifo interno</option><option value="Externo">Grifo externo</option></select>
+    <select class="fz-sel fz-sede fz-no-tarif" aria-label="Ubicación"><option value="">Todas las ubicaciones</option><option value="Callao">Callao</option><option value="Paita">Paita</option><option value="Otros" class="fz-only-precios">Otros</option></select>
     <select class="fz-sel fz-tipo fz-no-precios" aria-label="Tipo de activo" data-draw="tipo-sel" data-source="dia_seg"></select>
     <button type="button" class="fz-clear" hidden>Borrar filtros</button>
     <span class="fz-range-lbl" data-draw="rango-lbl" data-source="dia_seg">—</span>
@@ -281,8 +283,8 @@
       </section>
       <section class="fz-page" data-page="precios" id="vista-precios" hidden>
         <section class="fz-card" id="precio-ubic">
-          <div class="fz-cardhead"><h2>Comparar por ubicación: externo, interno e IBC</h2><div class="fz-tools"><div class="fz-seg" id="ubic-modo"><button type="button" data-m="cambios" aria-pressed="true">Solo cambios de precio</button><button type="button" data-m="todos" aria-pressed="false">Todos los días</button></div></div></div>
-          <p class="fz-note">Precio sin IGV por galón en el rango de fechas elegido arriba. En Callao y Piura/Paita se comparan los tres abastecimientos; en Otros solo hay grifo externo. La diferencia es contra el grifo interno de la misma ubicación (rojo: más caro que el interno; verde: más barato). Lo más reciente va arriba.</p>
+          <h2>Tarifarios por ubicación: externo, interno e IBC</h2>
+          <p class="fz-note">Precio sin IGV por galón vigente en cada fecha, entre las fechas Desde y Hasta de arriba. Solo aparecen los días en que cambió algún precio (el precio se mantiene igual hasta la siguiente fecha de la tabla). Las columnas "Ext. − Int." e "IBC − Int." dicen cuánto más caro (rojo) o más barato (verde) estuvo ese abastecimiento frente al grifo interno de la misma ubicación. La última fila es el promedio del periodo.</p>
           <div class="fz-chart dash-skeleton" data-draw="precio-ubic" data-source="tarifarios"></div>
         </section>
       </section>
@@ -817,6 +819,8 @@
     if (PRECIO_V.has(v) && dash.params().tipo) dash.setParams({ tipo: null });
     document.querySelectorAll('.fz-only-precios').forEach((el) => { el.hidden = !PRECIO_V.has(v); });
     if (!PRECIO_V.has(v) && dash.params().sede === 'Otros') dash.setParams({ sede: null });
+    document.querySelectorAll('.fz-no-tarif').forEach((el) => { el.style.display = v === 'precios' ? 'none' : ''; });
+    document.querySelectorAll('.fz-only-tarif').forEach((el) => { el.style.display = v === 'precios' ? '' : 'none'; el.hidden = false; });
     const fl = document.getElementById('filtros'); if (fl) fl.hidden = v === 'gnv';
     dash.setLink(v);
   };
@@ -1095,8 +1099,14 @@
 
   // ---------- Comparar por ubicación ----------
   const UBIC = [['Callao', 'Callao'], ['Piura / Paita', 'Paita'], ['Otros', 'Otros']];
-  const ubicSt = { modo: 'cambios' };
-  document.querySelectorAll('#ubic-modo button').forEach((b) => b.addEventListener('click', () => { ubicSt.modo = b.dataset.m; document.querySelectorAll('#ubic-modo button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); dash.draw('precio-ubic'); }));
+  // presets de periodo (solo Tarifarios)
+  document.querySelectorAll('#tar-pre button').forEach((b) => b.addEventListener('click', () => {
+    const t = dash.data('tarifarios'); if (t.status !== 'ok' || !t.data.length) return;
+    const last = toD(d3.max(t.data, (x) => x.fecha)), first = toD(d3.min(t.data, (x) => x.fecha));
+    const y = last.getUTCFullYear(), m = last.getUTCMonth();
+    const from = { mes: new Date(Date.UTC(y, m, 1)), '3m': new Date(Date.UTC(y, m - 2, 1)), anio: new Date(Date.UTC(y, 0, 1)), todo: first }[b.dataset.p];
+    dash.setParams({ desde: iso(from < first ? first : from), hasta: iso(last) });
+  }));
   dash.draw('precio-ubic', (el) => {
     if (!gate(el, ['tarifarios', 'dia_seg'])) return;
     const B = base(); if (!B) return;
@@ -1111,42 +1121,45 @@
     }).filter((u) => u.gs.length && u.rows.length);
     if (!data.length) { el.append(mkEl('p', 'fz-note', 'No hay tarifarios en el rango elegido.')); return; }
     const grid = mkEl('div', 'fz-ubic'); el.append(grid);
-    const r2 = (v) => (v == null ? '' : Math.round(v * 100) / 100);
-    const copyCols = ['Ubicación', 'Fecha', ...GRUPOS, 'Externo − Interno', 'IBC − Interno'], copyRows = [];
+    const fdt = (f) => { const d = toD(f); return String(d.getUTCDate()).padStart(2, '0') + '/' + String(d.getUTCMonth() + 1).padStart(2, '0') + '/' + d.getUTCFullYear(); };
+    const nm = (g) => (g === 'Externo (Coesti)' ? 'Externo' : g);
     for (const u of data) {
-      const box = document.createElement('div'); grid.append(box);
-      box.append(mkEl('h3', '', u.lab));
       const hasInt = u.gs.includes('Interno');
-      const last = u.rows[u.rows.length - 1];
-      for (const g of u.gs) {
-        const vals = u.rows.map((r) => r.v[g]).filter((v) => v != null); const avg = d3.mean(vals);
-        const rr = mkEl('div', 'fz-urow'); const a = document.createElement('span'); const sw = mkEl('i', 'fz-sw'); sw.style.background = gcol(g); a.append(sw, g);
-        const bb = document.createElement('span'); bb.append(mkEl('b', '', 'S/ ' + nf2.format(last.v[g] ?? vals[vals.length - 1])), ' hoy · prom. ' + nf2.format(avg));
-        if (hasInt && g !== 'Interno') { const ia = d3.mean(u.rows.map((r) => r.v.Interno).filter((v) => v != null)); const dd = avg - ia; bb.append(mkEl('b', dd > 0 ? 'fz-bad' : 'fz-good', ' (' + (dd > 0 ? '+' : '−') + nf2.format(Math.abs(dd)) + ' vs interno)')); }
-        rr.append(a, bb); box.append(rr);
-      }
-      let rows = u.rows;
-      if (ubicSt.modo === 'cambios') rows = rows.filter((r, i) => i === 0 || u.gs.some((g) => r.v[g] != null && rows[i - 1].v[g] != null && Math.abs(r.v[g] - rows[i - 1].v[g]) > 0.00005));
-      rows = [...rows].reverse();
       const difCols = hasInt ? u.gs.filter((g) => g !== 'Interno') : [];
-      const tbx = mkEl('div', 'fz-tablebox'); tbx.style.maxHeight = '340px'; tbx.style.overflow = 'auto';
+      const dif = (r, g) => (r.v[g] != null && r.v.Interno != null ? r.v[g] - r.v.Interno : null);
+      const cambios = u.rows.filter((r, i) => i === 0 || u.gs.some((g) => r.v[g] != null && u.rows[i - 1].v[g] != null && Math.abs(r.v[g] - u.rows[i - 1].v[g]) > 0.00005));
+      const avg = Object.fromEntries(u.gs.map((g) => [g, d3.mean(u.rows, (r) => r.v[g])]));
+      const avgDif = Object.fromEntries(difCols.map((g) => [g, d3.mean(u.rows, (r) => dif(r, g))]));
+      const cols = ['Fecha', ...u.gs.map(nm), ...difCols.map((g) => (g === 'IBC' ? 'IBC − Int.' : 'Ext. − Int.'))];
+      const box = document.createElement('div'); grid.append(box);
+      const head = mkEl('div', 'fz-cardhead'); head.append(mkEl('h3', '', u.lab));
+      const dl = mkEl('button', 'fz-tbtn', 'Descargar Excel'); dl.type = 'button'; head.append(dl); box.append(head);
+      const tbx = mkEl('div', 'fz-tablebox'); tbx.style.maxHeight = '360px'; tbx.style.overflow = 'auto';
       const t = mkEl('table', 'fz-table'); const hr = document.createElement('tr');
-      ['Fecha', ...u.gs.map((g) => (g === 'Externo (Coesti)' ? 'Externo' : g)), ...difCols.map((g) => (g === 'IBC' ? 'IBC − Int.' : 'Ext. − Int.'))].forEach((c, i) => { const th = mkEl('th', i ? 'fz-num' : '', c); th.style.position = 'sticky'; th.style.top = '0'; th.style.background = 'var(--color-bg)'; hr.append(th); });
+      cols.forEach((c, i) => { const th = mkEl('th', i ? 'fz-num' : '', c); th.style.position = 'sticky'; th.style.top = '0'; th.style.background = 'var(--color-bg)'; hr.append(th); });
       const th = document.createElement('thead'); th.append(hr); t.append(th); const tb = document.createElement('tbody'); t.append(tb);
-      for (const r of rows) {
-        const tr = document.createElement('tr'); const dd = toD(r.f);
-        tr.append(mkEl('td', '', String(dd.getUTCDate()).padStart(2, '0') + '/' + String(dd.getUTCMonth() + 1).padStart(2, '0') + '/' + dd.getUTCFullYear()));
+      const difTd = (d, bold) => { const td = mkEl('td', 'fz-num' + (d > 0.005 ? ' fz-bad' : d < -0.005 ? ' fz-good' : ''), d == null ? '—' : (d > 0.005 ? '+' : d < -0.005 ? '−' : '') + nf2.format(Math.abs(d))); if (bold) td.style.fontWeight = '700'; return td; };
+      for (const r of [...cambios].reverse()) {
+        const tr = document.createElement('tr'); tr.append(mkEl('td', '', fdt(r.f)));
         for (const g of u.gs) tr.append(mkEl('td', 'fz-num', r.v[g] == null ? '—' : nf2.format(r.v[g])));
-        for (const g of difCols) { const d = r.v[g] != null && r.v.Interno != null ? r.v[g] - r.v.Interno : null; const td = mkEl('td', 'fz-num' + (d > 0.005 ? ' fz-bad' : d < -0.005 ? ' fz-good' : ''), d == null ? '—' : (d > 0.005 ? '+' : d < -0.005 ? '−' : '') + nf2.format(Math.abs(d))); tr.append(td); }
+        for (const g of difCols) tr.append(difTd(dif(r, g)));
         tb.append(tr);
-        copyRows.push([u.lab, r.f, ...GRUPOS.map((g) => r2(r.v[g])), r2(r.v['Externo (Coesti)'] != null && r.v.Interno != null ? r.v['Externo (Coesti)'] - r.v.Interno : null), r2(r.v.IBC != null && r.v.Interno != null ? r.v.IBC - r.v.Interno : null)]);
       }
+      const tf = document.createElement('tr'); tf.style.fontWeight = '700'; tf.append(mkEl('td', '', 'Promedio del periodo'));
+      for (const g of u.gs) tf.append(mkEl('td', 'fz-num', nf2.format(avg[g])));
+      for (const g of difCols) tf.append(difTd(avgDif[g], true));
+      const tfoot = document.createElement('tfoot'); tfoot.append(tf); t.append(tfoot);
       tbx.append(t); box.append(tbx);
-      box.append(mkEl('p', 'fz-note', rows.length + (ubicSt.modo === 'cambios' ? ' días con cambio de precio' : ' días') + ' en el rango.'));
+      box.append(mkEl('p', 'fz-note', cambios.length + ' cambios de precio entre el ' + fdt(u.rows[0].f) + ' y el ' + fdt(u.rows[u.rows.length - 1].f) + '.'));
+      dl.addEventListener('click', async () => {
+        const r2 = (v) => (v == null ? '' : Math.round(v * 10000) / 10000);
+        const mk = (rs) => [cols, ...rs.map((r) => [fdt(r.f), ...u.gs.map((g) => r2(r.v[g])), ...difCols.map((g) => r2(dif(r, g)))]), ['Promedio del periodo', ...u.gs.map((g) => r2(avg[g])), ...difCols.map((g) => r2(avgDif[g]))]];
+        const a = mk(cambios), b = mk(u.rows);
+        dl.disabled = true;
+        const ok = await saveBlob(makeXlsx([{ name: 'Cambios de precio', rows: a, bold: (i) => i === 0 || i === a.length - 1 }, { name: 'Todos los días', rows: b, bold: (i) => i === 0 || i === b.length - 1 }]), 'Tarifarios_' + u.lab.replace(/[^A-Za-z]+/g, '_') + '_' + u.rows[0].f + '_al_' + u.rows[u.rows.length - 1].f + '.xlsx');
+        dl.disabled = false; dl.textContent = ok ? 'Descargado ✓' : 'No se descargó'; setTimeout(() => { dl.textContent = 'Descargar Excel'; }, 2500);
+      });
     }
-    const bar = mkEl('div', 'fz-tools fz-tools-end'); const ok = mkEl('span', 'fz-copied', 'Copiado'); ok.hidden = true;
-    const cp = mkEl('button', 'fz-tbtn', 'Copiar para Excel'); cp.type = 'button'; cp.addEventListener('click', () => copyText(toTSV(copyCols, copyRows), ok));
-    bar.append(ok, cp); el.prepend(bar);
   });
 
   // ---------- Simulator ----------
