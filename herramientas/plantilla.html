@@ -1160,6 +1160,41 @@
         dl.disabled = false; dl.textContent = ok ? 'Descargado ✓' : 'No se descargó'; setTimeout(() => { dl.textContent = 'Descargar Excel'; }, 2500);
       });
     }
+    // promedio general por tipo (todas las ubicaciones)
+    {
+      const byG = new Map();
+      for (const x of T) { const d = toD(x.fecha); if (!B.inR(d)) continue; const m = byG.get(x.grupo) || new Map(); const o = m.get(x.fecha) || { s: 0, n: 0 }; o.s += Number(x.suma); o.n += Number(x.n); m.set(x.fecha, o); byG.set(x.grupo, m); }
+      const st = GRUPOS.filter((g) => byG.has(g)).map((g) => { const pts = [...byG.get(g).entries()].sort().map(([f, o]) => ({ f, v: o.s / o.n })); return { g, pts, avg: d3.mean(pts, (q) => q.v), min: d3.min(pts, (q) => q.v), max: d3.max(pts, (q) => q.v), hoy: pts[pts.length - 1].v, ini: pts[0].v }; });
+      if (st.length) {
+        const intA = (st.find((x) => x.g === 'Interno') || {}).avg;
+        const box = document.createElement('div'); grid.append(box);
+        const head = mkEl('div', 'fz-cardhead'); head.append(mkEl('h3', '', 'Promedio por tipo · todas las ubicaciones'));
+        const dl = mkEl('button', 'fz-tbtn', 'Descargar Excel'); dl.type = 'button'; head.append(dl); box.append(head);
+        const cols = ['Tipo', 'Promedio', 'Mínimo', 'Máximo', 'Al inicio', 'Hoy', 'Variación', 'vs Interno'];
+        const t = mkEl('table', 'fz-table'); const hr = document.createElement('tr'); cols.forEach((c, i) => hr.append(mkEl('th', i ? 'fz-num' : '', c)));
+        const th = document.createElement('thead'); th.append(hr); t.append(th); const tb = document.createElement('tbody'); t.append(tb);
+        for (const x of st) {
+          const tr = document.createElement('tr'); const a = document.createElement('td'); a.style.whiteSpace = 'nowrap'; const sw = mkEl('i', 'fz-sw'); sw.style.display = 'inline-block'; sw.style.marginRight = '6px'; sw.style.background = gcol(x.g); a.append(sw, ' ' + (x.g === 'Externo (Coesti)' ? 'Externo' : x.g)); tr.append(a);
+          const avg = mkEl('td', 'fz-num', nf2.format(x.avg)); avg.style.fontWeight = '700'; tr.append(avg);
+          [x.min, x.max, x.ini, x.hoy].forEach((v) => tr.append(mkEl('td', 'fz-num', nf2.format(v))));
+          const ch = x.hoy / x.ini - 1; tr.append(mkEl('td', 'fz-num' + (ch > 0.0005 ? ' fz-bad' : ch < -0.0005 ? ' fz-good' : ''), pct(ch)));
+          const dv = x.g === 'Interno' || intA == null ? null : x.avg - intA;
+          tr.append(mkEl('td', 'fz-num' + (dv > 0.005 ? ' fz-bad' : dv < -0.005 ? ' fz-good' : ''), dv == null ? '—' : (dv > 0 ? '+' : '−') + nf2.format(Math.abs(dv))));
+          tb.append(tr);
+        }
+        box.append(t);
+        box.append(mkEl('p', 'fz-note', 'Promedio diario de todas las ubicaciones de cada tipo (Externo: Callao, Otros y Piura · Interno: Callao, Gambetta y Piura · IBC: Callao y Paita), entre el ' + fdt(st[0].pts[0].f) + ' y el ' + fdt(st[0].pts[st[0].pts.length - 1].f) + '. "vs Interno" es la diferencia del promedio contra el grifo interno.'));
+        dl.addEventListener('click', async () => {
+          const r2 = (v) => (v == null ? '' : Math.round(v * 10000) / 10000);
+          const rows = [cols, ...st.map((x) => [x.g, r2(x.avg), r2(x.min), r2(x.max), r2(x.ini), r2(x.hoy), r2(x.hoy / x.ini - 1), x.g === 'Interno' || intA == null ? '' : r2(x.avg - intA)])];
+          const fechas = [...new Set(st.flatMap((x) => x.pts.map((q) => q.f)))].sort();
+          const diario = [['Fecha', ...st.map((x) => x.g)], ...fechas.map((f) => [fdt(f), ...st.map((x) => { const q = x.pts.find((z) => z.f === f); return q ? r2(q.v) : ''; })])];
+          dl.disabled = true;
+          const ok = await saveBlob(makeXlsx([{ name: 'Promedio por tipo', rows, bold: (i) => i === 0 }, { name: 'Diario por tipo', rows: diario, bold: (i) => i === 0 }]), 'Tarifarios_promedio_por_tipo_' + fechas[0] + '_al_' + fechas[fechas.length - 1] + '.xlsx');
+          dl.disabled = false; dl.textContent = ok ? 'Descargado ✓' : 'No se descargó'; setTimeout(() => { dl.textContent = 'Descargar Excel'; }, 2500);
+        });
+      }
+    }
   });
 
   // ---------- Simulator ----------
