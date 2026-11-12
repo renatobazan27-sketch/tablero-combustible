@@ -173,6 +173,10 @@
   .fz-tog { font: inherit; font-size: var(--cds-font-size-caption); display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--color-border-line); background: var(--color-bg); color: var(--color-fg); border-radius: 999px; padding: 3px 10px; cursor: pointer; }
   .fz-tog[aria-pressed=false] { opacity: .45; }
   .fz-ptools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cds-gap-sm); }
+  .fz-ubic { display: grid; gap: var(--cds-gap-md, 12px); grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr)); }
+  .fz-ubic > div { border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-sm) var(--cds-pad-md); background: var(--color-bg); display: grid; gap: 6px; align-content: start; }
+  .fz-ubic h3 { margin: 0; font-size: var(--cds-font-size-body); }
+  .fz-ubic .fz-urow { display: flex; justify-content: space-between; gap: 8px; font-size: var(--cds-font-size-caption); }
   .fz-ptiles { display: grid; gap: var(--cds-gap-sm); grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); min-height: 84px; }
   .fz-ptile { border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-sm) var(--cds-pad-md); background: var(--color-bg); display: grid; gap: 2px; }
   .fz-ptile .fz-kpi-sub span { white-space: nowrap; }
@@ -207,6 +211,7 @@
       <button type="button" class="fz-navbtn" data-view="precios" aria-current="false"><svg class="fz-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 17l5-5 4 4 7-8"/><path d="M15 8h5v5"/></svg><span>Precios y tarifarios</span></button>
       <button type="button" class="fz-navbtn" data-view="consumo" aria-current="false"><svg class="fz-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c3 4 6 7.5 6 11a6 6 0 0 1-12 0c0-3.5 3-7 6-11z"/></svg><span>Consumo e ingresos</span></button>
       <button type="button" class="fz-navbtn" data-view="activos" aria-current="false"><svg class="fz-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="9" width="13" height="8" rx="1"/><path d="M15 12h4l3 3v2h-7"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg><span>Grifos y activos</span></button>
+      <button type="button" class="fz-navbtn" data-view="simulador" aria-current="false"><svg class="fz-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h2M12 12h2M16 12h0M8 16h2M12 16h2"/></svg><span>Simulador</span></button>
       <button type="button" class="fz-navbtn" data-view="gnv" aria-current="false"><svg class="fz-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7v18H7z"/><path d="M14 8h3l2 3v7a1.5 1.5 0 0 1-3 0v-4h-2"/><path d="M9 7h3"/></svg><span>GNV</span></button>
       <button type="button" class="fz-navbtn" data-view="alertas" aria-current="false"><svg class="fz-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.5"/></svg><span>Alertas</span></button>
     </nav>
@@ -285,11 +290,11 @@
     <div class="fz-chartwrap"><button type="button" class="fz-focusbtn" data-focus="precio-chart" aria-label="Ver en pantalla completa" title="Ver en pantalla completa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button><div class="fz-chart fz-pchart dash-skeleton" data-draw="precio-chart" data-source="tarifarios"></div></div>
     <p class="fz-note">Línea continua: tarifario de cada día. Punto: precio de hoy. Línea punteada: escenario conservador para el plazo de proyección elegido arriba; en 4 de cada 5 casos el precio no lo supera. Pasa el cursor para ver los valores.</p>
   </section>
-        <section class="fz-card" id="simulador">
-      <h2>Simulador de costo del diésel</h2>
-      <p class="fz-note">Elige un mes (pasado o proyectado), cambia el precio por galón y mira cuánto se habría pagado o se pagaría. Los galones son los consumidos (despachados a los equipos). La segunda tabla muestra el ahorro si el consumo del grifo externo se hubiera cargado en los internos.</p>
-      <div class="fz-chart fz-sim-out dash-skeleton" data-draw="sim" data-source="dia_seg tarifarios"></div>
-    </section>
+        <section class="fz-card" id="precio-ubic">
+          <div class="fz-cardhead"><h2>Comparar por ubicación: externo, interno e IBC</h2><div class="fz-tools"><button type="button" class="fz-tbtn" data-tabla="precio-ubic" aria-pressed="false">Ver tabla</button></div></div>
+          <p class="fz-note">Precio sin IGV por galón en el rango de fechas elegido arriba. En Callao y Piura/Paita se comparan los tres abastecimientos; en Otros solo hay grifo externo. La diferencia es contra el grifo interno de la misma ubicación.</p>
+          <div class="fz-chart dash-skeleton" data-draw="precio-ubic" data-source="tarifarios"></div>
+        </section>
         <section class="fz-card" id="impacto">
       <div class="fz-cardhead"><h2>Impacto diésel</h2><div class="fz-tools"><div class="fz-seg" id="imp-anio"></div><div class="fz-seg" id="imp-met"><button type="button" data-m="dif" aria-pressed="true">Diferencia S/</button><button type="button" data-m="cr" aria-pressed="false">Costo real S/</button><button type="button" data-m="cb" aria-pressed="false">Costo base S/</button><button type="button" data-m="gal" aria-pressed="false">Galones</button></div></div></div>
       <p class="fz-note">Cuánto más (o menos) se pagó por el diésel consumido frente al precio base de cada grupo (sin IGV por galón): Externo Coesti S/ 11.47 · Grifo interno S/ 10.58 · IBC S/ 12.53. Costo real = galones × tarifario del día; diferencia = costo real − costo base. Haz clic en un grupo para ver el detalle por tipo de activo. Puedes marcar varias columnas a la vez (galones, costos y diferencia).</p>
@@ -330,6 +335,13 @@
     <p class="fz-note">El anillo compara el consumo de cada tipo de activo en el periodo con su promedio fuera de ese periodo, para la misma cantidad de días: 100 % es lo normal, en rojo si supera 115 %. Haz clic en uno para filtrar todo el tablero.</p>
     <div class="fz-chart fz-rings dash-skeleton" data-draw="rings" data-source="dia_seg anomalias"></div>
   </section>
+      </section>
+      <section class="fz-page" data-page="simulador" id="vista-simulador" hidden>
+        <section class="fz-card" id="simulador">
+      <h2>Simulador de costo del diésel</h2>
+      <p class="fz-note">Elige un mes (pasado o proyectado), cambia el precio por galón y mira cuánto se habría pagado o se pagaría. Los galones son los consumidos (despachados a los equipos). La segunda tabla muestra el ahorro si el consumo del grifo externo se hubiera cargado en los internos.</p>
+      <div class="fz-chart fz-sim-out dash-skeleton" data-draw="sim" data-source="dia_seg tarifarios"></div>
+    </section>
       </section>
       <section class="fz-page" data-page="gnv" id="vista-gnv" hidden>
         <section class="fz-kpis" data-draw="gnv-kpis" data-source="gnv_mensual"></section>
@@ -788,7 +800,7 @@
   });
 
   // ---------- Views (sidebar) ----------
-  const VIEWS = ['resumen', 'precios', 'consumo', 'activos', 'gnv', 'alertas'];
+  const VIEWS = ['resumen', 'precios', 'consumo', 'activos', 'simulador', 'gnv', 'alertas'];
   const show = (v) => {
     if (!VIEWS.includes(v)) v = 'resumen';
     if (typeof focusName !== 'undefined' && focusName) setFocus(null);
@@ -999,9 +1011,12 @@
       const sub = document.createElement('span'); sub.className = 'fz-kpi-sub';
       const det = document.createElement('span'); det.className = 'fz-kpi-sub';
       det.textContent = last.det.length > 1 ? last.det.map(([u, pv]) => u + ' ' + nf2.format(pv)).join(' · ') : last.det.map(([u]) => u).join('');
-      if (prev) { const ch = last.v / prev.v - 1; const b = document.createElement('b'); b.className = ch > 0 ? 'fz-bad' : ch < 0 ? 'fz-good' : ''; b.textContent = pct(ch); sub.append(b, ' en 30 días'); }
+      const first = s.pts[0];
+      if (first && +first.d !== +last.d) { const ch = last.v / first.v - 1; const b = document.createElement('b'); b.className = ch > 0 ? 'fz-bad' : ch < 0 ? 'fz-good' : ''; b.textContent = pct(ch); sub.append(b, ' desde el ' + diaTxt(first.d) + ' (S/ ' + nf2.format(first.v) + ')'); }
+      const rg = document.createElement('span'); rg.className = 'fz-kpi-sub';
+      rg.textContent = 'En el rango: mín. S/ ' + nf2.format(d3.min(s.pts, (q) => q.v)) + ' · máx. S/ ' + nf2.format(d3.max(s.pts, (q) => q.v)) + ' · prom. S/ ' + nf2.format(d3.mean(s.pts, (q) => q.v));
       if (s.tr) { const tz = document.createElement('span'); const e = s.tr[s.tr.length - 1]; tz.textContent = ' · escenario conservador en ' + horizTxt() + ': S/ ' + nf2.format(e.v); sub.append(tz); }
-      t.append(h, v, det, sub); el.append(t);
+      t.append(h, v, det, rg, sub); el.append(t);
     }
   });
   dash.draw('precio-chart', (el) => {
@@ -1070,6 +1085,60 @@
       .on('pointerleave', () => { tip.hidden = true; rule.attr('visibility', 'hidden'); dots.selectAll('*').remove(); });
   });
 
+
+  // ---------- Comparar por ubicación ----------
+  const UBIC = [['Callao', 'Callao'], ['Piura / Paita', 'Paita'], ['Otros', 'Otros']];
+  dash.draw('precio-ubic', (el) => {
+    if (!gate(el, ['tarifarios', 'dia_seg'])) return;
+    const B = base(); if (!B) return;
+    const T = dash.data('tarifarios').data;
+    const data = UBIC.map(([lab, sede]) => {
+      const by = new Map();
+      for (const x of T) { if (x.sede !== sede) continue; const d = toD(x.fecha); if (!B.inR(d)) continue; const m = by.get(x.grupo) || new Map(); const o = m.get(x.fecha) || { s: 0, n: 0 }; o.s += Number(x.suma); o.n += Number(x.n); m.set(x.fecha, o); by.set(x.grupo, m); }
+      const series = GRUPOS.filter((g) => by.has(g)).map((g) => ({ g, pts: [...by.get(g).entries()].map(([f, o]) => ({ d: toD(f), f, v: o.s / o.n })).sort((a, b) => a.d - b.d) }));
+      return { lab, sede, series };
+    }).filter((u) => u.series.length);
+    if (!data.length) { el.append(mkEl('p', 'fz-note', 'No hay tarifarios en el rango elegido.')); return; }
+    if (asTable.has('precio-ubic')) {
+      const rows = [];
+      for (const u of data) { const fechas = [...new Set(u.series.flatMap((s) => s.pts.map((q) => q.f)))].sort(); for (const f of fechas) rows.push([f, u.lab, ...GRUPOS.map((g) => { const s = u.series.find((z) => z.g === g); const q = s && s.pts.find((z) => z.f === f); return q ? Math.round(q.v * 10000) / 10000 : ''; })]); }
+      renderTable(el, ['Fecha', 'Ubicación', ...GRUPOS.map((g) => g + ' S/ por gal')], rows, [2, 3, 4]); return;
+    }
+    const grid = mkEl('div', 'fz-ubic'); el.append(grid);
+    const yAll = data.flatMap((u) => u.series.flatMap((s) => s.pts.map((q) => q.v)));
+    const y0 = d3.min(yAll) * 0.97, y1 = d3.max(yAll) * 1.03;
+    for (const u of data) {
+      const box = document.createElement('div'); grid.append(box);
+      box.append(mkEl('h3', '', u.lab));
+      const ref = u.series.find((s) => s.g === 'Interno');
+      for (const s of u.series) {
+        const last = s.pts[s.pts.length - 1], avg = d3.mean(s.pts, (q) => q.v);
+        const r = mkEl('div', 'fz-urow'); const a = document.createElement('span'); const sw = mkEl('i', 'fz-sw'); sw.style.background = gcol(s.g); a.append(sw, s.g);
+        const b = document.createElement('span'); b.append(mkEl('b', '', 'S/ ' + nf2.format(last.v)), ' hoy · prom. ' + nf2.format(avg));
+        if (ref && s !== ref) { const ra = d3.mean(ref.pts, (q) => q.v), dd = avg - ra; const c = mkEl('b', dd > 0 ? 'fz-bad' : 'fz-good', ' (' + (dd > 0 ? '+' : '−') + nf2.format(Math.abs(dd)) + ' vs interno)'); b.append(c); }
+        r.append(a, b); box.append(r);
+      }
+      const ch = document.createElement('div'); ch.style.position = 'relative'; box.append(ch); u.ch = ch;
+    }
+    for (const u of data) {
+      const ch = u.ch;
+      const W = Math.max(240, ch.clientWidth || 300), H = 170, mt = 8, mb = 22;
+      const svg = d3.select(ch).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+      const y = d3.scaleLinear([y0, y1], [H - mb, mt]).nice(); const ticks = y.ticks(4), fmt = (t) => 'S/ ' + nf0.format(t);
+      const ml = measure(svg, ticks.map(fmt)) + 8;
+      const x = d3.scaleUtc([B.r.s, d3.max(u.series, (s) => s.pts[s.pts.length - 1].d)], [ml, W - 8]);
+      gridY(svg, y, ml, W - 8, ticks, fmt);
+      svg.append('g').selectAll('text').data(x.ticks(4)).join('text').attr('x', (d) => x(d)).attr('y', H - 6).attr('text-anchor', 'middle').text(mesTxt);
+      for (const s of u.series) svg.append('path').datum(s.pts).attr('fill', 'none').attr('stroke', gcol(s.g)).attr('stroke-width', 2).attr('d', d3.line().curve(d3.curveStepAfter).x((q) => x(q.d)).y((q) => y(q.v)));
+      const rule = svg.append('line').attr('y1', mt).attr('y2', H - mb).attr('stroke', 'var(--cds-chart-axis)').attr('visibility', 'hidden');
+      const tip = tipBox(ch);
+      svg.append('rect').attr('x', ml).attr('y', mt).attr('width', W - 8 - ml).attr('height', H - mb - mt).attr('fill', 'transparent')
+        .on('pointermove', (ev) => { const [px] = d3.pointer(ev); const d = x.invert(px); const lines = [];
+          for (const s of u.series) { const q = d3.least(s.pts.filter((z) => z.d <= d), (z) => -z.d) || s.pts[0]; lines.push([gcol(s.g), s.g + ': S/ ' + nf2.format(q.v)]); }
+          rule.attr('x1', px).attr('x2', px).attr('visibility', 'visible'); tipLine(tip, u.lab + ' · ' + diaTxt(d3.utcDay.round(d)), lines); const k = W / ch.clientWidth; placeTip(tip, ch, px / k, 10); })
+        .on('pointerleave', () => { tip.hidden = true; rule.attr('visibility', 'hidden'); });
+    }
+  });
   // ---------- Simulator ----------
   // Prices start from what was paid in the last 30 days per grifo type; changes are in soles per gallon.
   // The conservative button adds, per type, the gap between today's tariff and its conservative scenario.
