@@ -1153,8 +1153,10 @@
       cols.forEach((c, i) => { const th = mkEl('th', i ? 'fz-num' : '', c); th.style.position = 'sticky'; th.style.top = '0'; th.style.background = 'var(--color-bg)'; hr.append(th); });
       const th = document.createElement('thead'); th.append(hr); t.append(th); const tb = document.createElement('tbody'); t.append(tb);
       const difTd = (d, bold) => { const td = mkEl('td', 'fz-num' + (d > 0.005 ? ' fz-bad' : d < -0.005 ? ' fz-good' : ''), d == null ? '—' : (d > 0.005 ? '+' : d < -0.005 ? '−' : '') + nf2.format(Math.abs(d))); if (bold) td.style.fontWeight = '700'; return td; };
-      for (const r of [...cambios].reverse()) {
-        const tr = document.createElement('tr'); tr.append(mkEl('td', '', fdt(r.f)));
+      const lastR = u.rows[u.rows.length - 1];
+      const filas = cambios[cambios.length - 1] === lastR ? cambios : [...cambios, { ...lastR, hoy: true }];
+      for (const r of [...filas].reverse()) {
+        const tr = document.createElement('tr'); if (r.hoy) tr.style.fontStyle = 'italic'; tr.append(mkEl('td', '', fdt(r.f) + (r.hoy ? ' · vigente (sin cambio)' : '')));
         for (const g of u.gs) tr.append(mkEl('td', 'fz-num', r.v[g] == null ? '—' : nf2.format(r.v[g])));
         for (const g of difCols) tr.append(difTd(dif(r, g)));
         tb.append(tr);
