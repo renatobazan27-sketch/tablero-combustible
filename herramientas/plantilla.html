@@ -170,6 +170,7 @@
   .fz-seg button[aria-pressed=true] { background: var(--fz-navy); color: #fff; box-shadow: none; }
   .fz-clear { border-color: var(--fz-orange) !important; color: var(--fz-orange) !important; font-weight: var(--cds-font-weight-medium); background: var(--color-panel) !important; }
   .fz-grifos { min-height: 240px; } .fz-ring { cursor: pointer; } .fz-ring:hover { border-color: var(--color-fg-muted); }
+  .fz-subh { font-size: var(--cds-font-size-body); font-weight: 600; margin: var(--cds-gap-md) 0 var(--cds-gap-xs); }
   .fz-tog { font: inherit; font-size: var(--cds-font-size-caption); display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--color-border-line); background: var(--color-bg); color: var(--color-fg); border-radius: 999px; padding: 3px 10px; cursor: pointer; }
   .fz-tog[aria-pressed=false] { opacity: .45; }
   .fz-ptools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cds-gap-sm); }
@@ -302,7 +303,7 @@
           <p class="fz-note">Cada punto es el precio promedio de compra del mes: valorizado (S/ sin IGV) ÷ galones comprados. Grifo externo = Primax/Coesti; grifo interno = Argentina, Gambetta 1 y Paita; IBC = Gambetta 2, Gambetta 3 y Paita 2. El mes en curso se muestra por semanas (SEM) hasta que termina: mientras no estén cargadas sus compras en DPWL Precio Combustible, cada semana sale del tarifario diario ajustado al nivel de compra del último mes cerrado (factor compra ÷ tarifario); al cargar las compras se reemplaza por el precio real. Línea punteada: proyección de los próximos meses (plazo según "Proyección" de arriba): parte del último precio de compra y le aplica la tendencia conservadora del tarifario de cada tipo.</p>
         </section>
         <section class="fz-card" id="tarifa-calc">
-          <div class="fz-cardhead"><h2>¿Cómo sale cada precio?</h2><div class="fz-tools"><select class="fz-sel" id="tc-per" aria-label="Periodo"></select><select class="fz-sel" id="tc-g" aria-label="Tipo"><option value="Externo">Grifo externo</option><option value="Interno">Grifo interno</option><option value="IBC">IBC</option></select></div></div>
+          <div class="fz-cardhead"><h2>¿Cómo sale cada precio?</h2><div class="fz-tools"><label class="fz-date">Desde <select class="fz-sel" id="tc-d" aria-label="Desde"></select></label><label class="fz-date">Hasta <select class="fz-sel" id="tc-h" aria-label="Hasta"></select></label><select class="fz-sel" id="tc-g" aria-label="Tipo"><option value="Todos">Todos los tipos</option><option value="Externo">Grifo externo</option><option value="Interno">Grifo interno</option><option value="IBC">IBC</option></select></div></div>
           <div class="fz-chart dash-skeleton" data-draw="tarifa-calc" data-source="tarifa_compras"></div>
         </section>
       </section>
@@ -1275,7 +1276,7 @@
   const tval = (o, g) => (!o || !o.g[g] ? null : o.proy || o.est ? o.g[g].v : o.g[g].gal ? o.g[g].tot / o.g[g].gal : null);
   document.querySelectorAll('#tar-rng button').forEach((b) => b.addEventListener('click', () => { tarSt.y = b.dataset.y; document.querySelectorAll('#tar-rng button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); dash.draw('tarifa'); }));
   document.querySelectorAll('#tar-g .fz-tog').forEach((b) => b.addEventListener('click', () => { const g = b.dataset.g; if (tarSt.gs.has(g)) { if (tarSt.gs.size > 1) tarSt.gs.delete(g); } else tarSt.gs.add(g); document.querySelectorAll('#tar-g .fz-tog').forEach((x) => x.setAttribute('aria-pressed', String(tarSt.gs.has(x.dataset.g)))); dash.draw('tarifa'); }));
-  const tcOpts = (TD) => [...TD.est].reverse().concat([...TD.pers].reverse()).map((o) => { const op = document.createElement('option'); op.value = o.key; op.textContent = o.lab + (o.sem ? ' (' + o.d0.slice(8, 10) + '/' + o.d0.slice(5, 7) + '–' + o.d1.slice(8, 10) + '/' + o.d1.slice(5, 7) + ')' : '') + (o.est ? ' · tarifario' : ''); return op; });
+  const tcOpts = (TD) => [...TD.pers, ...TD.est].map((o) => { const op = document.createElement('option'); op.value = o.key; op.textContent = o.lab + (o.sem ? ' (' + o.d0.slice(8, 10) + '/' + o.d0.slice(5, 7) + '–' + o.d1.slice(8, 10) + '/' + o.d1.slice(5, 7) + ')' : '') + (o.est ? ' · tarifario' : ''); return op; });
   dash.draw('tarifa', (el) => {
     if (!gate(el, ['tarifa_compras', 'tarifarios'])) return;
     const TD = tarData(); if (!TD) return;
@@ -1309,8 +1310,7 @@
       .on('pointermove', (ev, o) => { const lines = gs.map((g) => { const v = tval(o, g); return [TG_COL[g], TG_LBL[g] + ': ' + (v == null ? '—' : 'S/ ' + nf2.format(v)) + (o.proy || !o.g[g] ? '' : o.est ? ' (tarifario ' + nf2.format(o.g[g].tar) + ' × ' + o.g[g].fac.toFixed(3) + ')' : ' (' + nf0.format(o.g[g].gal) + ' gal)')]; }); tipLine(tip, o.proy ? o.lab + ' · escenario conservador' : o.est ? o.lab + ' (' + o.d0.slice(8, 10) + '/' + o.d0.slice(5, 7) + '–' + o.d1.slice(8, 10) + '/' + o.d1.slice(5, 7) + ') · estimado con tarifario' : o.sem ? o.lab + ' (' + o.d0.slice(8, 10) + '/' + o.d0.slice(5, 7) + '–' + o.d1.slice(8, 10) + '/' + o.d1.slice(5, 7) + ')' : o.lab, lines); const k = W / el.clientWidth; placeTip(tip, el, x(o.key) / k, mt / k + 10); })
       .on('pointerleave', () => { tip.hidden = true; });
     // selector de periodo del cálculo
-    const sel = document.getElementById('tc-per');
-    if (sel && sel.options.length !== TD.pers.length + TD.est.length) { const cur = sel.value; sel.replaceChildren(...tcOpts(TD)); if (cur) sel.value = cur; }
+    tcFill(TD);
   });
   document.getElementById('tar-xls')?.addEventListener('click', async (ev) => {
     const TD = tarData(); if (!TD) return; const b = ev.currentTarget;
@@ -1327,34 +1327,50 @@
     b.disabled = true; const ok = await saveBlob(makeXlsx([{ name: 'Tarifa grifos', rows: tab, bold: (i) => i === 0 }, { name: 'Factor semanas', rows: fx, bold: (i) => i === 0 }, { name: 'Cálculo por grifo', rows: det, bold: (i) => i === 0 || det[i][4] === 'TOTAL' }]), 'Tarifa_grifos_' + TD.last + '.xlsx'); b.disabled = false;
     b.textContent = ok ? 'Descargado ✓' : 'No se descargó'; setTimeout(() => { b.textContent = 'Descargar Excel'; }, 2500);
   });
-  ['tc-per', 'tc-g'].forEach((id) => document.getElementById(id)?.addEventListener('change', () => dash.draw('tarifa-calc')));
+  const tcFill = (TD) => {
+    const d = document.getElementById('tc-d'), h = document.getElementById('tc-h'); if (!d || !h) return;
+    const n = TD.pers.length + TD.est.length; if (d.options.length === n) return;
+    const cd = d.value, ch = h.value; d.replaceChildren(...tcOpts(TD)); h.replaceChildren(...tcOpts(TD));
+    const keys = [...d.options].map((o) => o.value);
+    d.value = keys.includes(cd) ? cd : (keys.find((k) => k >= new Date().getFullYear() + '-01') || keys[0]);
+    h.value = keys.includes(ch) ? ch : keys[keys.length - 1];
+  };
+  ['tc-d', 'tc-h', 'tc-g'].forEach((id) => document.getElementById(id)?.addEventListener('change', () => dash.draw('tarifa-calc')));
   dash.draw('tarifa-calc', (el) => {
     if (!gate(el, ['tarifa_compras'])) return;
     const TD = tarData(); if (!TD) return;
-    const sel = document.getElementById('tc-per');
-    if (sel && sel.options.length !== TD.pers.length + TD.est.length) { const cur = sel.value; sel.replaceChildren(...tcOpts(TD)); if (cur) sel.value = cur; }
-    const o = [...TD.pers, ...TD.est].find((z) => z.key === sel.value) || TD.pers[TD.pers.length - 1]; const g = document.getElementById('tc-g').value;
-    const q = o.g[g];
-    if (o.est) {
-      const fd2 = (f) => f.slice(8, 10) + '/' + f.slice(5, 7);
-      if (!q) { el.append(mkEl('p', 'fz-note', 'Sin tarifario de ' + TG_LBL[g] + ' en ' + o.lab + '.')); return; }
-      const lr = [...TD.pers].reverse().find((z) => z.g[g] && z.g[g].gal);
-      renderTable(el, ['Concepto', 'Valor'], [
-        ['Tarifario promedio de la semana (S/ sin IGV)', nf2.format(q.tar)],
-        ['Precio de compra de ' + (lr ? lr.lab : '—') + ' (valorizado ÷ galones)', lr ? nf2.format(lr.g[g].tot / lr.g[g].gal) : '—'],
-        ['Factor = compra ÷ tarifario de ese mes', q.fac.toFixed(3)],
-        ['Precio estimado de la semana', nf2.format(q.v)]], [1]);
-      el.prepend(mkEl('p', 'fz-take', TG_LBL[g] + ' · ' + o.lab + ' (' + fd2(o.d0) + ' al ' + fd2(o.d1) + '): estimado = tarifario promedio S/ ' + nf2.format(q.tar) + ' × factor ' + q.fac.toFixed(3) + ' = S/ ' + nf2.format(q.v) + ' por galón.'));
-      el.append(mkEl('p', 'fz-note', 'Todavía no hay compras de esta semana en DPWL Precio Combustible. Cuando las cargues, aquí saldrán los galones y el valorizado reales.'));
-      return;
-    }
-    if (!q) { el.append(mkEl('p', 'fz-note', 'No hubo compras de ' + TG_LBL[g] + ' en ' + o.lab + '.')); return; }
+    tcFill(TD);
+    let k0 = document.getElementById('tc-d').value, k1 = document.getElementById('tc-h').value; if (k0 > k1) [k0, k1] = [k1, k0];
+    const gsel = document.getElementById('tc-g').value; const gs = gsel === 'Todos' ? ['Externo', 'Interno', 'IBC'] : [gsel];
+    const sel = [...TD.pers, ...TD.est].filter((o) => o.key >= k0 && o.key <= k1);
+    if (!sel.length) { el.append(mkEl('p', 'fz-note', 'Sin periodos en ese rango.')); return; }
     const fd = (f) => f.slice(8, 10) + '/' + f.slice(5, 7) + '/' + f.slice(0, 4);
-    const rows = Object.entries(q.gr).sort((a, b) => b[1].gal - a[1].gal).map(([gr, r]) => [GRIFO_LBL[gr] || gr, nf0.format(r.gal), nf2.format(r.tot), nf2.format(r.tot / r.gal), pct(r.gal / q.gal).replace('+', '')]);
-    rows.push(['Total ' + TG_LBL[g], nf0.format(q.gal), nf2.format(q.tot), nf2.format(q.tot / q.gal), '100.0%']);
-    renderTable(el, ['Grifo', 'Galones comprados', 'Valorizado S/ (sin IGV)', 'Precio S/ por galón', '% de los galones'], rows, [1, 2, 3, 4]);
-    el.prepend(mkEl('p', 'fz-take', TG_LBL[g] + ' · ' + o.lab + ' (' + fd(o.d0) + ' al ' + fd(o.d1) + '): S/ ' + nf0.format(q.tot) + ' valorizado ÷ ' + nf0.format(q.gal) + ' galones comprados = S/ ' + nf2.format(q.tot / q.gal) + ' por galón.'));
-    el.append(mkEl('p', 'fz-note', 'El precio del mes no es el promedio simple de los precios: es el total pagado entre el total de galones, así las compras grandes pesan más.'));
+    const real = sel.filter((o) => !o.est), est = sel.filter((o) => o.est);
+    // 1) resumen por grifo (solo compras reales)
+    const byGr = new Map(); const tot = {};
+    for (const o of real) for (const g of gs) { const q = o.g[g]; if (!q) continue; const t = tot[g] || (tot[g] = { gal: 0, tot: 0 }); t.gal += q.gal; t.tot += q.tot; for (const gr in q.gr) { const k = g + '|' + gr; const a = byGr.get(k) || { g, gr, gal: 0, tot: 0 }; a.gal += q.gr[gr].gal; a.tot += q.gr[gr].tot; byGr.set(k, a); } }
+    const take = gs.filter((g) => tot[g]).map((g) => TG_LBL[g] + ': S/ ' + nf0.format(tot[g].tot) + ' ÷ ' + nf0.format(tot[g].gal) + ' gal = S/ ' + nf2.format(tot[g].tot / tot[g].gal));
+    const rng = sel[0].lab + ' a ' + sel[sel.length - 1].lab;
+    el.append(mkEl('p', 'fz-take', real.length ? 'Compras de ' + real[0].lab + ' a ' + real[real.length - 1].lab + ' (' + fd(real[0].d0) + ' al ' + fd(real[real.length - 1].d1) + ') · ' + take.join(' · ') : 'El rango ' + rng + ' solo tiene semanas estimadas con tarifario (aún sin compras cargadas).'));
+    if (real.length) {
+      el.append(mkEl('h3', 'fz-subh', 'Por grifo en el rango'));
+      const t1 = document.createElement('div'); el.append(t1);
+      const rows = [];
+      for (const g of gs) { if (!tot[g]) continue; const list = [...byGr.values()].filter((a) => a.g === g).sort((a, b) => b.gal - a.gal); for (const a of list) rows.push([TG_LBL[g], GRIFO_LBL[a.gr] || a.gr, nf0.format(a.gal), nf2.format(a.tot), nf2.format(a.tot / a.gal), pct(a.gal / tot[g].gal).replace('+', '')]); rows.push([TG_LBL[g], 'Total ' + TG_LBL[g], nf0.format(tot[g].gal), nf2.format(tot[g].tot), nf2.format(tot[g].tot / tot[g].gal), '100.0%']); }
+      renderTable(t1, ['Tipo', 'Grifo', 'Galones comprados', 'Valorizado S/ (sin IGV)', 'Precio S/ por galón', '% de los galones del tipo'], rows, [2, 3, 4, 5]);
+    }
+    // 2) detalle por periodo
+    el.append(mkEl('h3', 'fz-subh', 'Por periodo'));
+    const t2 = document.createElement('div'); el.append(t2);
+    const rows2 = [];
+    for (const o of sel) for (const g of gs) {
+      const q = o.g[g]; if (!q) continue;
+      const per = o.lab + (o.sem ? ' (' + o.d0.slice(8, 10) + '/' + o.d0.slice(5, 7) + '–' + o.d1.slice(8, 10) + '/' + o.d1.slice(5, 7) + ')' : '');
+      if (o.est) rows2.push([per, TG_LBL[g], 'Estimado: tarifario ' + nf2.format(q.tar) + ' × factor ' + q.fac.toFixed(3), '—', '—', nf2.format(q.v)]);
+      else rows2.push([per, TG_LBL[g], 'Compra real', nf0.format(q.gal), nf2.format(q.tot), nf2.format(q.tot / q.gal)]);
+    }
+    renderTable(t2, ['Periodo', 'Tipo', 'Cómo sale', 'Galones comprados', 'Valorizado S/ (sin IGV)', 'Precio S/ por galón'], rows2, [3, 4, 5]);
+    el.append(mkEl('p', 'fz-note', 'El precio de un rango no es el promedio de los precios mensuales: es el total pagado entre el total de galones, así los meses y grifos con más compras pesan más.' + (est.length ? ' Las semanas estimadas (sin compras cargadas aún) no entran en los totales; salen del tarifario × factor (compra ÷ tarifario del último mes cerrado).' : '')));
   });
 
   // ---------- Simulator ----------
