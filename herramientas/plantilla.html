@@ -1230,7 +1230,7 @@
     const pers = [...per.values()].sort((a, b) => (a.ord < b.ord ? -1 : 1));
     // semanas sin compras cargadas: tarifario diario × factor de calibración (compra ÷ tarifario del último mes con compras)
     // proyección: promedio mensual del escenario conservador del tarifario
-    const proy = [], est = [];
+    const proy = [], est = []; let allT = {};
     const t = dash.data('tarifarios');
     if (t.status === 'ok') {
       const H = horiz();
@@ -1241,6 +1241,7 @@
         all[g] = [...mm.entries()].map(([f, o]) => ({ f, d: toD(f), v: o.s / o.n })).sort((a, b) => a.d - b.d);
         tr[g] = trend(all[g], H * 30 + 31);
       }
+      allT = all;
       const lastReal = (g) => [...pers].reverse().find((z) => z.g[g] && z.g[g].gal);
       const fac = {};
       for (const g in all) { const lr = lastReal(g); if (!lr) continue; const tv = d3.mean(all[g].filter((q) => q.f.slice(0, 7) === lr.m), (q) => q.v); if (tv) fac[g] = (lr.g[g].tot / lr.g[g].gal) / tv; }
@@ -1268,7 +1269,8 @@
         proy.push(o);
       }
     }
-    return { pers, est, proy, last, enCurso };
+    const tarPer = (o, g) => { if (o.est) return o.g[g] ? o.g[g].tar : null; const a = (allT[g] || []).filter((q) => q.f >= o.d0 && q.f <= o.d1 && (o.sem || q.f.slice(0, 7) === o.m)); return a.length ? d3.mean(a, (q) => q.v) : null; };
+    return { pers, est, proy, last, enCurso, tarPer };
   };
   const tval = (o, g) => (!o || !o.g[g] ? null : o.proy || o.est ? o.g[g].v : o.g[g].gal ? o.g[g].tot / o.g[g].gal : null);
   document.querySelectorAll('#tar-rng button').forEach((b) => b.addEventListener('click', () => { tarSt.y = b.dataset.y; document.querySelectorAll('#tar-rng button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); dash.draw('tarifa'); }));
@@ -1314,10 +1316,15 @@
     const TD = tarData(); if (!TD) return; const b = ev.currentTarget;
     const gsA = ['Externo', 'Interno', 'IBC'];
     const r2 = (v) => (v == null ? '' : Math.round(v * 100) / 100);
-    const tab = [['Periodo', ...gsA.map((g) => TG_LBL[g] + ' (S/.)')], ...[...TD.pers, ...TD.est, ...TD.proy].map((o) => [o.lab + (o.est ? ' (tarifario)' : ''), ...gsA.map((g) => r2(tval(o, g)))])];
+    const mesIni = (o) => (o.sem || o.proy ? o : { ...o, d0: o.m + '-01', d1: o.m + '-31' });
+    const tab = [['Periodo', 'Origen', ...gsA.map((g) => TG_LBL[g] + ' precio usado (S/.)'), ...gsA.map((g) => TG_LBL[g] + ' tarifario puro (S/.)'), ...gsA.map((g) => TG_LBL[g] + ' factor')],
+      ...[...TD.pers, ...TD.est, ...TD.proy].map((o) => { const oo = mesIni(o); return [o.lab, o.proy ? 'Proyección' : o.est ? 'Estimado: tarifario × factor' : 'Compra real (valorizado ÷ galones)', ...gsA.map((g) => r2(tval(o, g))), ...gsA.map((g) => (o.proy ? '' : r2(TD.tarPer(oo, g)))), ...gsA.map((g) => { const v = tval(o, g), t = o.proy ? null : TD.tarPer(oo, g); return v != null && t ? Math.round((v / t) * 1000) / 1000 : ''; })]; })];
+    const lb = (g) => [...TD.pers].reverse().find((z) => z.g[g] && z.g[g].gal);
+    const fx = [['Semana', 'Desde', 'Hasta', 'Tipo', 'Tarifario promedio de la semana', 'Mes base', 'Compra del mes base (valorizado ÷ galones)', 'Tarifario del mes base', 'Factor = compra ÷ tarifario', 'Precio estimado = tarifario × factor']];
+    for (const o of TD.est) for (const g of gsA) { const q = o.g[g]; if (!q) continue; const b = lb(g); fx.push([o.lab, o.d0, o.d1, TG_LBL[g], r2(q.tar), b ? b.lab : '', b ? r2(b.g[g].tot / b.g[g].gal) : '', b ? r2(TD.tarPer({ ...b, d0: b.m + '-01', d1: b.m + '-31' }, g)) : '', Math.round(q.fac * 1000) / 1000, r2(q.v)]); }
     const det = [['Periodo', 'Desde', 'Hasta', 'Tipo', 'Grifo', 'Galones comprados', 'Valorizado S/ sin IGV', 'Precio S/ por galón']];
     for (const o of TD.pers) for (const g of gsA) { const q = o.g[g]; if (!q) continue; for (const gr in q.gr) det.push([o.lab, o.d0, o.d1, TG_LBL[g], GRIFO_LBL[gr] || gr, r2(q.gr[gr].gal), r2(q.gr[gr].tot), r2(q.gr[gr].tot / q.gr[gr].gal)]); det.push([o.lab, o.d0, o.d1, TG_LBL[g], 'TOTAL', r2(q.gal), r2(q.tot), r2(q.tot / q.gal)]); }
-    b.disabled = true; const ok = await saveBlob(makeXlsx([{ name: 'Tarifa grifos', rows: tab, bold: (i) => i === 0 }, { name: 'Cálculo por grifo', rows: det, bold: (i) => i === 0 || det[i][4] === 'TOTAL' }]), 'Tarifa_grifos_' + TD.last + '.xlsx'); b.disabled = false;
+    b.disabled = true; const ok = await saveBlob(makeXlsx([{ name: 'Tarifa grifos', rows: tab, bold: (i) => i === 0 }, { name: 'Factor semanas', rows: fx, bold: (i) => i === 0 }, { name: 'Cálculo por grifo', rows: det, bold: (i) => i === 0 || det[i][4] === 'TOTAL' }]), 'Tarifa_grifos_' + TD.last + '.xlsx'); b.disabled = false;
     b.textContent = ok ? 'Descargado ✓' : 'No se descargó'; setTimeout(() => { b.textContent = 'Descargar Excel'; }, 2500);
   });
   ['tc-per', 'tc-g'].forEach((id) => document.getElementById(id)?.addEventListener('change', () => dash.draw('tarifa-calc')));
