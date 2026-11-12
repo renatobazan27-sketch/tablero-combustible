@@ -1946,7 +1946,7 @@
     const D = opvRows(); if (!D || !D.rows.length) return; const b = ev.currentTarget;
     const r2 = (v) => (v == null || !isFinite(v) ? '' : Math.round(v * 100) / 100);
     const GR = (g) => 'GRIFO ' + String(g).toUpperCase();
-    const isoW = (f) => { const d = toD(f), j1 = Date.UTC(d.getUTCFullYear(), 0, 1); return Math.floor(((d - j1) / 86400000 + new Date(j1).getUTCDay()) / 7) + 1; }; // = Date.WeekOfYear de Power Query (semana empieza domingo)
+    const isoW = (f) => { const d = toD(f), j1 = Date.UTC(d.getUTCFullYear(), 0, 1); return Math.floor(((d - j1) / 86400000 + (new Date(j1).getUTCDay() + 6) % 7) / 7) + 1; }; // = Date.WeekOfYear([FECHA], Day.Monday): semana de lunes a domingo
     const ACT = new Map(); const ad = dash.data('activos'); if (ad.status === 'ok') for (const a of ad.data) ACT.set(String(a.placa), a);
     const MESC2 = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
     const det = [['GRIFO', 'FECHA', 'NombreMes', 'AÑO', 'PLACA', 'TIPO ACTIVO', 'OLD ACTIVO', 'MODELO', 'ACTIVO', 'DESCRIPCION', 'CANTIDAD', 'UMD', 'NumeroMes', 'PERIODO', 'NUMERO SEMANA', 'PRECIO PROMEDIO', 'VALORIZADO', 'SEDE']];
