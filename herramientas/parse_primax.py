@@ -46,14 +46,19 @@ def leer(path):
 if __name__ == '__main__':
     carpeta, out = sys.argv[1], sys.argv[2]
     filas, errores = [], []
-    for f in sorted(os.listdir(carpeta)):
+    import re
+    def orden(f):
+        # nombres nuevos: Carta_DPWL_<dd-mm-aaaa>_<aaaammdd-hhmmss>.pdf (hora de recepción del correo)
+        m = re.search(r'_(\d{8}-\d{6})\.pdf$', f, re.I)
+        return (1, m.group(1)) if m else (0, f)
+    for f in sorted(os.listdir(carpeta), key=orden):
         if not f.lower().endswith('.pdf') or 'DPWL' not in f:
             continue
         try:
             filas.append(leer(os.path.join(carpeta, f)))
         except Exception as e:
             errores.append((f, str(e)))
-    # una fila por fecha de vigencia (si hay duplicados, se queda la última por nombre)
+    # una fila por fecha de vigencia: si Primax reenvía una carta con la misma fecha, se queda la recibida más tarde
     por_fecha = {}
     for r in filas:
         por_fecha[r['fecha']] = r
