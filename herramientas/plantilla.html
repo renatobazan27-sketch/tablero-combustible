@@ -557,7 +557,7 @@
     if (lm && lastC < new Date(Date.UTC(lm.d.getUTCFullYear(), lm.d.getUTCMonth() + 1, 0))) mens = mens.slice(0, -1);
     const precio = l30g ? l30c / l30g : (gal ? cr / gal : 0);
     const proy = forecast(mens, precio, gh.data, ge.data, horiz());
-    memo = { r, inR, rows, daily, lastC, gal, cr, cb, dc: ps >= first && gp ? gal / gp - 1 : null, precio, mens, proy };
+    memo = { r, inR, rows, daily, lastC, lastD: last, gal, cr, cb, dc: ps >= first && gp ? gal / gp - 1 : null, precio, mens, proy };
     memoKey = key;
     return memo;
   };
@@ -606,8 +606,9 @@
     const apply = () => {
       if (!inp.value || !inp.validity.valid || inp.value < '2000-01-01') return;
       const B = base();
-      const next = { desde: B ? iso(B.r.s) : null, hasta: B ? iso(B.r.e) : null };
+      const next = { desde: B ? iso(B.r.s) : null, hasta: B && +B.r.e < +B.lastD ? iso(B.r.e) : null };
       next[key] = inp.value;
+      if (B && next.hasta && next.hasta >= iso(B.lastD)) next.hasta = null; // hasta = último dato: queda "siempre hasta hoy"
       if (dash.params()[key] === inp.value) return;
       dash.setParams(next);
     };
@@ -1118,7 +1119,7 @@
     const last = toD(d3.max(t.data, (x) => x.fecha)), first = toD(d3.min(t.data, (x) => x.fecha));
     const y = last.getUTCFullYear(), m = last.getUTCMonth();
     const from = { mes: new Date(Date.UTC(y, m, 1)), '3m': new Date(Date.UTC(y, m - 2, 1)), anio: new Date(Date.UTC(y, 0, 1)), todo: first }[b.dataset.p];
-    dash.setParams({ desde: iso(from < first ? first : from), hasta: iso(last) });
+    dash.setParams({ desde: iso(from < first ? first : from), hasta: null });
   }));
   dash.draw('precio-ubic', (el) => {
     if (!gate(el, ['tarifarios', 'dia_seg'])) return;
