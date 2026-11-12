@@ -228,8 +228,8 @@
     <main class="fz-main">
       <div class="fz-focusbar" hidden><button type="button" class="fz-tbtn fz-exitfocus">← Volver al tablero</button><span class="fz-date">Esc para salir</span></div>
       <div class="fz-filters" id="filtros" role="group" aria-label="Filtros">
-    <span class="fz-date fz-no-tarif">Proyección:</span>
-    <div class="fz-seg fz-no-tarif">
+    <span class="fz-date fz-no-tarif fz-hzw">Proyección:</span>
+    <div class="fz-seg fz-no-tarif fz-hzw">
       <button type="button" class="fz-hzg" data-m="1" aria-pressed="false">1 mes</button>
       <button type="button" class="fz-hzg" data-m="3" aria-pressed="true">3 meses</button>
       <button type="button" class="fz-hzg" data-m="6" aria-pressed="false">6 meses</button>
@@ -316,9 +316,9 @@
       </section>
       <section class="fz-page" data-page="impacto" id="vista-impacto" hidden>
         <section class="fz-card" id="impacto">
-      <div class="fz-cardhead"><h2>Impacto diésel</h2><div class="fz-tools"><div class="fz-seg" id="imp-anio"></div><div class="fz-seg" id="imp-met"><button type="button" data-m="dif" aria-pressed="true">Diferencia S/</button><button type="button" data-m="cr" aria-pressed="false">Costo real S/</button><button type="button" data-m="cb" aria-pressed="false">Costo base S/</button><button type="button" data-m="gal" aria-pressed="false">Galones</button></div></div></div>
+      <div class="fz-cardhead"><h2>Impacto diésel</h2><div class="fz-tools"><div class="fz-seg" id="imp-cur"><button type="button" data-c="PEN" aria-pressed="true">S/</button><button type="button" data-c="USD" aria-pressed="false">US$</button></div><div class="fz-seg" id="imp-anio"></div><div class="fz-seg" id="imp-met"><button type="button" data-m="dif" aria-pressed="true">Diferencia</button><button type="button" data-m="cr" aria-pressed="false">Costo real</button><button type="button" data-m="cb" aria-pressed="false">Costo base</button><button type="button" data-m="gal" aria-pressed="false">Galones</button></div></div></div>
       <p class="fz-note">Cuánto más (o menos) se pagó por el diésel consumido frente al precio base de cada grupo (sin IGV por galón): Externo Coesti S/ 11.47 · Grifo interno S/ 10.58 · IBC S/ 12.53. Costo real = galones × tarifario del día; diferencia = costo real − costo base. Haz clic en un grupo para ver el detalle por tipo de activo. Puedes marcar varias columnas a la vez (galones, costos y diferencia).</p>
-      <div class="fz-chart dash-skeleton" data-draw="impacto" data-source="dia_seg"></div>
+      <div class="fz-chart dash-skeleton" data-draw="impacto" data-source="dia_seg tipo_cambio"></div>
     </section>
       </section>
       <section class="fz-page" data-page="consumo" id="vista-consumo" hidden>
@@ -338,6 +338,12 @@
     <div class="fz-legend"><span><i class="fz-sw fz-sw-0"></i>Compras</span><span><i class="fz-sw fz-sw-1"></i>Consumo</span></div>
     <div class="fz-chartwrap"><button type="button" class="fz-focusbtn" data-focus="mirror" aria-label="Ver en pantalla completa" title="Ver en pantalla completa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button><div class="fz-chart fz-mirror dash-skeleton" data-draw="mirror" data-source="dia_seg compras"></div></div>
   </section>
+        <section class="fz-card" id="opval">
+          <div class="fz-cardhead"><h2>Consumo operaciones valorizado</h2><div class="fz-tools"><div class="fz-seg" id="opv-cur"><button type="button" data-c="PEN" aria-pressed="true">S/</button><button type="button" data-c="USD" aria-pressed="false">US$</button></div><button type="button" class="fz-tbtn" id="opv-xls">Descargar Excel</button></div></div>
+          <div class="fz-ptools" id="opv-tipos"></div>
+          <div class="fz-chart dash-skeleton" data-draw="opval" data-source="consumo tipo_cambio"></div>
+          <p class="fz-note">Galones despachados a los equipos de operaciones en el periodo de arriba, valorizados con el precio promedio del día de cada grifo (sin IGV), igual que la tabla "Consumo_Operaciones Valorizado" del Power BI: valorizado = galones × precio promedio del día. Por defecto Reach Stacker, Rubber Tired Gantry y Tercero DPWL; puedes sumar otros tipos. Respeta fechas, sede y tipo de grifo de arriba. Haz clic en ▸ para ver las placas.</p>
+        </section>
         <section class="fz-card" id="calendario">
     <div class="fz-cardhead"><h2>Calendario de consumo</h2><div class="fz-tools"><button type="button" class="fz-tbtn" data-tabla="cal" aria-pressed="false">Ver tabla</button></div></div>
     <p class="fz-note">Cada cuadro es un día del periodo elegido (hasta 53 semanas); más intenso, más galones despachados.</p>
@@ -835,6 +841,7 @@
     document.querySelectorAll('.fz-no-tarif').forEach((el) => { el.style.display = v === 'precios' ? 'none' : ''; });
     document.querySelectorAll('.fz-only-tarif').forEach((el) => { el.style.display = v === 'precios' ? '' : 'none'; el.hidden = false; });
     document.querySelectorAll('.fz-no-tarifa').forEach((el) => { if (v === 'precio') el.style.display = 'none'; else if (!(v === 'precios' && el.classList.contains('fz-no-tarif'))) el.style.display = ''; });
+    if (v === 'impacto') { document.querySelectorAll('.fz-hzw, label.fz-date.fz-no-tarifa, .fz-range-lbl').forEach((el) => { el.style.display = 'none'; }); } else document.querySelectorAll('.fz-hzw, .fz-range-lbl').forEach((el) => { if (v !== 'precios' || !el.classList.contains('fz-no-tarif')) el.style.display = ''; });
     const fl = document.getElementById('filtros'); if (fl) fl.hidden = v === 'gnv';
     dash.setLink(v);
   };
@@ -1742,8 +1749,12 @@
   const IMP_GRUPO = { Primax: 'Externo (Coesti)', Argentina: 'Grifo interno (Argentina, Gambetta 1, Paita 1)', Gambetta1: 'Grifo interno (Argentina, Gambetta 1, Paita 1)', Paita: 'Grifo interno (Argentina, Gambetta 1, Paita 1)', Gambetta2: 'Interno IBC (Gambetta 2-3, Paita 2)', Gambetta3: 'Interno IBC (Gambetta 2-3, Paita 2)', Paita2: 'Interno IBC (Gambetta 2-3, Paita 2)' };
   const IMP_ORD = ['Externo (Coesti)', 'Grifo interno (Argentina, Gambetta 1, Paita 1)', 'Interno IBC (Gambetta 2-3, Paita 2)'];
   const impTipo = (t) => { const u = String(t || '').toUpperCase(); if (u.startsWith('TRUCKS')) return 'Trucks'; if (u === 'REACH STACKER') return 'Reach Stacker'; if (u === 'TERCERO DPWL') return 'Tercero DPWL'; if (u.startsWith('UNDERLAND')) return 'Underland DPWL'; return 'Otros'; };
-  const IMP_MET = { dif: 'Diferencia S/', cr: 'Costo real S/', cb: 'Costo base S/', gal: 'Galones' };
-  const impSt = { anio: null, mets: new Set(['dif']), open: new Set() };
+  const IMP_MET = { dif: 'Diferencia', cr: 'Costo real', cb: 'Costo base', gal: 'Galones' };
+  const impMetL = (m) => IMP_MET[m] + (m === 'gal' ? '' : ' ' + impCur());
+  const impSt = { anio: null, mets: new Set(['dif']), open: new Set(), cur: 'PEN' };
+  const impUSD = () => impSt.cur === 'USD' && !!tcData();
+  const impTC = (mes) => { const T = tcData(); if (!T) return null; return T.mon.get(mes) ?? T.mon.get(T.last.f.slice(0, 7)); };
+  const impCur = () => (impUSD() ? 'US$' : 'S/');
   const IMP_MORD = ['gal', 'cb', 'cr', 'dif'], IMP_CORTO = { gal: 'Galones', cb: 'Costo base', cr: 'Costo real', dif: 'Diferencia' };
   const impData = () => {
     const B = base(); if (!B) return null;
@@ -1758,6 +1769,7 @@
     return { T, meses, tipos, last: B.rows.length ? String(d3.max(B.rows, (x) => x.fecha)) : '' };
   };
   const impVal = (o, m) => (!o ? 0 : m === 'dif' ? o.cr - o.cb : o[m]);
+  const impValC = (mes, o, m) => { const v = impVal(o, m); if (m === 'gal' || !impUSD()) return v; const t = impTC(mes); return t ? v / t : 0; };
   // xlsx mínimo (zip sin compresión)
   const crcT = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
   const crc32 = (u) => { let c = 0xFFFFFFFF; for (let i = 0; i < u.length; i++) c = crcT[(c ^ u[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
@@ -1819,7 +1831,7 @@
     const cell = (v, M, first, bold) => { const td = mkEl('td', 'fz-num', fmt(v, M)); if (M === 'dif' && v > 0.5) td.classList.add('fz-bad'); if (M === 'dif' && v < -0.5) td.classList.add('fz-good'); if (multi && first) td.style.borderLeft = '1px solid var(--color-border-line)'; if (bold) td.style.fontWeight = '600'; return td; };
     const flat = [];
     const row = (lv, label, key, kids, id) => {
-      const vals = MS.map((M) => { const v = meses.map((m) => impVal(D0.T.get(m + '|' + key), M)); return [...v, d3.sum(v)]; });
+      const vals = MS.map((M) => { const v = meses.map((m) => impValC(m, D0.T.get(m + '|' + key), M)); return [...v, d3.sum(v)]; });
       const tr = document.createElement('tr'); const td0 = mkEl('td', '', ''); td0.style.paddingLeft = (8 + lv * 18) + 'px';
       if (kids) td0.append(mkEl('span', '', impSt.open.has(id) ? '▾ ' : '▸ ')); td0.append(label); tr.append(td0);
       const out = [];
@@ -1847,22 +1859,99 @@
     cp.addEventListener('click', () => copyText(toTSV(cols, flat.map((r) => r.map((v) => (typeof v === 'number' ? String(Math.round(v * 100) / 100) : v)))), ok));
     const dl = mkEl('button', 'fz-tbtn', 'Descargar Excel'); dl.type = 'button';
     dl.addEventListener('click', async () => {
-      const det = [['Año', 'Mes', 'Grupo', 'Tipo', 'Galones', 'Costo base S/', 'Costo real S/', 'Diferencia S/']];
-      for (const m of D0.meses) for (const g of IMP_ORD) for (const tp of ['Trucks', 'Reach Stacker', 'Tercero DPWL', 'Underland DPWL', 'Otros']) { const o = D0.T.get(m + '|' + g + '|' + tp); if (o) det.push([+m.slice(0, 4), MESL[+m.slice(5, 7) - 1], g, tp, o.gal, o.cb, o.cr, o.cr - o.cb]); }
+      const det = [['Año', 'Mes', 'Grupo', 'Tipo', 'Galones', 'Costo base S/', 'Costo real S/', 'Diferencia S/', 'TC venta SBS', 'Costo base US$', 'Costo real US$', 'Diferencia US$']];
+      for (const m of D0.meses) for (const g of IMP_ORD) for (const tp of ['Trucks', 'Reach Stacker', 'Tercero DPWL', 'Underland DPWL', 'Otros']) { const o = D0.T.get(m + '|' + g + '|' + tp); if (o) { const t = impTC(m); det.push([+m.slice(0, 4), MESL[+m.slice(5, 7) - 1], g, tp, o.gal, o.cb, o.cr, o.cr - o.cb, t ? Math.round(t * 1000) / 1000 : '', t ? o.cb / t : '', t ? o.cr / t : '', t ? (o.cr - o.cb) / t : '']); } }
       const piv = (mm) => { const rows = [['Grupo / tipo', ...meses.map((m) => MESL[+m.slice(5, 7) - 1]), 'Total ' + impSt.anio]]; const tot = meses.map(() => 0); const bold = new Set([0]);
-        for (const g of IMP_ORD) { if (!meses.some((m) => D0.T.has(m + '|' + g + '|'))) continue; const v = meses.map((m) => impVal(D0.T.get(m + '|' + g + '|'), mm)); v.forEach((x, i) => (tot[i] += x)); bold.add(rows.length); rows.push([g, ...v, d3.sum(v)]);
-          for (const tp of ['Trucks', 'Reach Stacker', 'Tercero DPWL', 'Underland DPWL', 'Otros']) { if (!meses.some((m) => D0.T.has(m + '|' + g + '|' + tp))) continue; const w = meses.map((m) => impVal(D0.T.get(m + '|' + g + '|' + tp), mm)); rows.push(['   ' + tp, ...w, d3.sum(w)]); } }
+        for (const g of IMP_ORD) { if (!meses.some((m) => D0.T.has(m + '|' + g + '|'))) continue; const v = meses.map((m) => impValC(m, D0.T.get(m + '|' + g + '|'), mm)); v.forEach((x, i) => (tot[i] += x)); bold.add(rows.length); rows.push([g, ...v, d3.sum(v)]);
+          for (const tp of ['Trucks', 'Reach Stacker', 'Tercero DPWL', 'Underland DPWL', 'Otros']) { if (!meses.some((m) => D0.T.has(m + '|' + g + '|' + tp))) continue; const w = meses.map((m) => impValC(m, D0.T.get(m + '|' + g + '|' + tp), mm)); rows.push(['   ' + tp, ...w, d3.sum(w)]); } }
         bold.add(rows.length); rows.push(['Total', ...tot, d3.sum(tot)]); return { rows, bold: (i) => bold.has(i) }; };
       const vistaRows = [cols.map((c) => c.replace('*', '')), ...flat.map((r) => [String(r[0]).replace(/^ +/, '   '), ...r.slice(1)])];
-      const sheets = [{ name: 'Vista ' + impSt.anio, rows: vistaRows, bold: (i) => i === 0 || i === vistaRows.length - 1 || !String(vistaRows[i][0]).startsWith('   ') }, { name: 'Diferencia ' + impSt.anio, ...piv('dif') }, { name: 'Costo real ' + impSt.anio, ...piv('cr') }, { name: 'Costo base ' + impSt.anio, ...piv('cb') }, { name: 'Galones ' + impSt.anio, ...piv('gal') }, { name: 'Detalle', rows: det, bold: (i) => i === 0 }];
-      dl.disabled = true; const okd = await saveBlob(makeXlsx(sheets), 'Impacto_diesel_' + impSt.anio + '.xlsx'); dl.disabled = false;
+      const sheets = [{ name: 'Vista ' + impSt.anio, rows: vistaRows, bold: (i) => i === 0 || i === vistaRows.length - 1 || !String(vistaRows[i][0]).startsWith('   ') }, { name: 'Diferencia ' + impCur() + ' ' + impSt.anio, ...piv('dif') }, { name: 'Costo real ' + impCur() + ' ' + impSt.anio, ...piv('cr') }, { name: 'Costo base ' + impCur() + ' ' + impSt.anio, ...piv('cb') }, { name: 'Galones ' + impSt.anio, ...piv('gal') }, { name: 'Detalle', rows: det, bold: (i) => i === 0 }];
+      dl.disabled = true; const okd = await saveBlob(makeXlsx(sheets), 'Impacto_diesel_' + impSt.anio + (impUSD() ? '_USD' : '') + '.xlsx'); dl.disabled = false;
       ok.textContent = okd ? 'Descargado' : 'No se descargó'; ok.hidden = false; setTimeout(() => { ok.hidden = true; ok.textContent = 'Copiado'; }, 2500);
     });
     bar.append(ok, cp, dl); box.append(t); el.append(bar, box);
-    el.append(mkEl('p', 'fz-note', (multi ? 'Columnas: ' + MS.map((m) => IMP_MET[m]).join(', ') : 'Métrica: ' + IMP_MET[MS[0]]) + '. ' + (lastLbl ? '* Mes en curso' + lastLbl + '. ' : '') + 'Rojo: se pagó más que el precio base; verde: menos. Respeta los filtros de sede, tipo de grifo y tipo de activo de arriba (no las fechas).'));
+    el.append(mkEl('p', 'fz-note', (multi ? 'Columnas: ' + MS.map(impMetL).join(', ') : 'Métrica: ' + impMetL(MS[0])) + '. ' + (impUSD() ? 'En dólares: cada mes con el tipo de cambio venta SBS promedio de ese mes (BCRP). ' : '') + (lastLbl ? '* Mes en curso' + lastLbl + '. ' : '') + 'Rojo: se pagó más que el precio base; verde: menos. Respeta los filtros de sede, tipo de grifo y tipo de activo de arriba.'));
   };
   document.querySelectorAll('#imp-met button').forEach((b) => b.addEventListener('click', () => { const m = b.dataset.m; if (impSt.mets.has(m)) { if (impSt.mets.size > 1) impSt.mets.delete(m); } else impSt.mets.add(m); document.querySelectorAll('#imp-met button').forEach((x) => x.setAttribute('aria-pressed', String(impSt.mets.has(x.dataset.m)))); const el = document.querySelector('[data-draw="impacto"]'); if (el) renderImpacto(el); }));
+  document.querySelectorAll('#imp-cur button').forEach((b) => b.addEventListener('click', () => { impSt.cur = b.dataset.c; document.querySelectorAll('#imp-cur button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); const el = document.querySelector('[data-draw="impacto"]'); if (el) renderImpacto(el); }));
   dash.draw('impacto', renderImpacto);
+
+  // ---------- Consumo operaciones valorizado ----------
+  const opvSt = { tipos: new Set(['Reach Stacker', 'Rubber Tired Gantry', 'Tercero DPWL']), cur: 'PEN', open: new Set() };
+  const opvRows = () => {
+    const c = dash.data('consumo'); const B = base(); if (c.status !== 'ok' || !B) return null;
+    const p = dash.params();
+    const all = c.data.filter((r) => B.inR(toD(String(r.fecha).slice(0, 10))) && (!p.sede || r.sede === p.sede) && (!p.tgrifo || (p.tgrifo === 'Externo' ? r.grifo === 'Primax' : r.grifo !== 'Primax')));
+    return { all, rows: all.filter((r) => opvSt.tipos.has(r.tipo)), B };
+  };
+  const opvTC = (f) => { const T = tcData(); if (!T) return null; return T.mon.get(String(f).slice(0, 7)) ?? T.mon.get(T.last.f.slice(0, 7)); };
+  const opvUSD = () => opvSt.cur === 'USD' && !!tcData();
+  dash.draw('opval', (el) => {
+    if (!gate(el, ['consumo', 'dia_seg'])) return;
+    const D = opvRows(); if (!D) return;
+    // botones de tipo
+    const tot = d3.rollup(D.all, (a) => d3.sum(a, (r) => +r.galones), (r) => r.tipo);
+    const tipos = [...tot.keys()].sort((a, b) => tot.get(b) - tot.get(a));
+    const bx = document.getElementById('opv-tipos');
+    bx.replaceChildren(...tipos.map((t) => { const b = mkEl('button', 'fz-tog', t); b.type = 'button'; b.setAttribute('aria-pressed', String(opvSt.tipos.has(t))); b.addEventListener('click', () => { if (opvSt.tipos.has(t)) { if (opvSt.tipos.size > 1) opvSt.tipos.delete(t); } else opvSt.tipos.add(t); dash.draw('opval'); }); return b; }));
+    const U = opvUSD(), S = U ? 'US$' : 'S/';
+    const val = (r) => (U ? +r.costo_real / (opvTC(r.fecha) || NaN) : +r.costo_real);
+    if (!D.rows.length) { el.append(mkEl('p', 'fz-note', 'Sin despachos de esos tipos en el periodo.')); return; }
+    const byT = d3.rollup(D.rows, (a) => ({ gal: d3.sum(a, (r) => +r.galones), v: d3.sum(a, val), placas: d3.rollup(a, (b) => ({ gal: d3.sum(b, (r) => +r.galones), v: d3.sum(b, val), n: b.length }), (r) => r.placa) }), (r) => r.tipo);
+    const G = d3.sum([...byT.values()], (o) => o.gal), V = d3.sum([...byT.values()], (o) => o.v);
+    el.append(mkEl('p', 'fz-take', 'Del ' + diaTxt(D.B.r.s) + ' al ' + diaTxt(D.B.r.e) + ': ' + nf0.format(G) + ' galones valorizados en ' + S + ' ' + nf0.format(V) + ' (' + S + ' ' + nf2.format(V / G) + ' por galón en promedio).'));
+    const head = ['Tipo de activo / placa', 'Placas', 'Despachos', 'Galones', 'Valorizado ' + S + ' (sin IGV)', 'Precio prom. ' + S + ' por galón', '% de galones'];
+    const box = mkEl('div', 'fz-tablebox fz-pivot'); const t = mkEl('table', 'fz-table');
+    const trh = document.createElement('tr'); head.forEach((c, k) => trh.append(mkEl('th', k ? 'fz-num' : '', c))); const th = document.createElement('thead'); th.append(trh); t.append(th);
+    const tb = document.createElement('tbody'); t.append(tb); box.append(t);
+    const flat = [];
+    const paint = () => {
+      tb.replaceChildren(); flat.length = 0;
+      for (const [tp, o] of [...byT.entries()].sort((a, b) => b[1].gal - a[1].gal)) {
+        const nd = d3.sum([...o.placas.values()], (q) => q.n);
+        const tr = document.createElement('tr'); tr.className = 'fz-pv-l0';
+        const td = document.createElement('td'); const b = mkEl('button', 'fz-pv-btn', opvSt.open.has(tp) ? '▾' : '▸'); b.type = 'button'; b.setAttribute('aria-expanded', String(opvSt.open.has(tp))); b.setAttribute('aria-label', 'Ver placas de ' + tp);
+        b.addEventListener('click', () => { if (opvSt.open.has(tp)) opvSt.open.delete(tp); else opvSt.open.add(tp); paint(); });
+        td.append(b, tp); tr.append(td);
+        const cells = [nf0.format(o.placas.size), nf0.format(nd), nf0.format(o.gal), nf2.format(o.v), nf2.format(o.v / o.gal), pct(o.gal / G).replace('+', '')];
+        cells.forEach((v) => tr.append(mkEl('td', 'fz-num', v))); tb.append(tr); flat.push([tp, ...cells]);
+        if (opvSt.open.has(tp)) for (const [pl, q] of [...o.placas.entries()].sort((a, b) => b[1].gal - a[1].gal)) {
+          const r = document.createElement('tr'); const c0 = mkEl('td', '', ''); c0.style.paddingLeft = '48px'; c0.append(pl); r.append(c0);
+          const cc = ['', nf0.format(q.n), nf0.format(q.gal), nf2.format(q.v), nf2.format(q.v / q.gal), pct(q.gal / o.gal).replace('+', '')];
+          cc.forEach((v) => r.append(mkEl('td', 'fz-num', v))); tb.append(r); flat.push(['   ' + pl, ...cc]);
+        }
+      }
+      const tr = document.createElement('tr'); tr.className = 'fz-pv-l0 fz-pv-tot';
+      const cells = ['Total', nf0.format(d3.sum([...byT.values()], (o) => o.placas.size)), nf0.format(D.rows.length), nf0.format(G), nf2.format(V), nf2.format(V / G), '100.0%'];
+      cells.forEach((v, k) => tr.append(mkEl('td', k ? 'fz-num' : '', v))); tb.append(tr); flat.push(cells);
+    };
+    paint();
+    const bar = mkEl('div', 'fz-tools fz-tools-end'); const ok = mkEl('span', 'fz-copied', 'Copiado'); ok.hidden = true;
+    const cp = mkEl('button', 'fz-tbtn', 'Copiar para Excel'); cp.type = 'button'; cp.addEventListener('click', () => copyText(toTSV(head, flat), ok));
+    bar.append(ok, cp); el.append(bar, box);
+  });
+  document.querySelectorAll('#opv-cur button').forEach((b) => b.addEventListener('click', () => { opvSt.cur = b.dataset.c; document.querySelectorAll('#opv-cur button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); dash.draw('opval'); }));
+  document.getElementById('opv-xls')?.addEventListener('click', async (ev) => {
+    const D = opvRows(); if (!D || !D.rows.length) return; const b = ev.currentTarget;
+    const r2 = (v) => (v == null || !isFinite(v) ? '' : Math.round(v * 100) / 100);
+    const GR = (g) => 'GRIFO ' + String(g).toUpperCase();
+    const isoW = (f) => isoWeek(f);
+    const det = [['GRIFO', 'SEDE', 'FECHA', 'NombreMes', 'AÑO', 'PLACA', 'TIPO ACTIVO', 'CANTIDAD', 'UMD', 'NumeroMes', 'PERIODO', 'NUMERO SEMANA', 'PRECIO PROMEDIO', 'VALORIZADO', 'TC VENTA SBS', 'VALORIZADO US$']];
+    for (const r of [...D.rows].sort((a, b) => (a.fecha < b.fecha ? -1 : 1))) { const f = String(r.fecha).slice(0, 10), g = +r.galones, v = +r.costo_real, tc = opvTC(f); det.push([GR(r.grifo), String(r.sede).toUpperCase(), f, MESL[+f.slice(5, 7) - 1], +f.slice(0, 4), r.placa, String(r.tipo).toUpperCase(), g, 'GAL', +f.slice(5, 7), +(f.slice(0, 4) + f.slice(5, 7)), isoW(f), g ? Math.round((v / g) * 10000) / 10000 : '', r2(v), tc ? Math.round(tc * 1000) / 1000 : '', tc ? r2(v / tc) : '']); }
+    const res = [['Tipo de activo', 'Placa', 'Despachos', 'Galones', 'Valorizado S/', 'Precio prom. S/', 'Valorizado US$', 'Precio prom. US$']];
+    const byT = d3.group(D.rows, (r) => r.tipo);
+    let tg = 0, tv = 0, tu = 0, tn = 0;
+    for (const [tp, a] of [...byT.entries()].sort()) {
+      const gal = d3.sum(a, (r) => +r.galones), v = d3.sum(a, (r) => +r.costo_real), u = d3.sum(a, (r) => +r.costo_real / (opvTC(r.fecha) || NaN));
+      res.push([tp, 'Total', a.length, r2(gal), r2(v), r2(v / gal), r2(u), r2(u / gal)]); tg += gal; tv += v; tu += u; tn += a.length;
+      for (const [pl, c] of [...d3.group(a, (r) => r.placa).entries()].sort()) { const g2 = d3.sum(c, (r) => +r.galones), v2 = d3.sum(c, (r) => +r.costo_real), u2 = d3.sum(c, (r) => +r.costo_real / (opvTC(r.fecha) || NaN)); res.push(['   ' + tp, pl, c.length, r2(g2), r2(v2), r2(v2 / g2), r2(u2), r2(u2 / g2)]); }
+    }
+    res.push(['Total', '', tn, r2(tg), r2(tv), r2(tv / tg), r2(tu), r2(tu / tg)]);
+    b.disabled = true;
+    const ok = await saveBlob(makeXlsx([{ name: 'Resumen', rows: res, bold: (i) => i === 0 || res[i][1] === 'Total' || res[i][0] === 'Total' }, { name: 'Consumo_Operaciones Valorizado', rows: det, bold: (i) => i === 0 }]), 'Consumo_operaciones_valorizado_' + iso(D.B.r.s) + '_a_' + iso(D.B.r.e) + '.xlsx');
+    b.disabled = false; b.textContent = ok ? 'Descargado ✓' : 'No se descargó'; setTimeout(() => { b.textContent = 'Descargar Excel'; }, 2500);
+  });
   // ---------- Mirror ----------
   dash.draw('mirror', (el) => {
     if (!gate(el, ['dia_seg', 'compras'])) return;
