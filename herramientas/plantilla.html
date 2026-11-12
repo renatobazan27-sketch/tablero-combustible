@@ -208,7 +208,9 @@
   <div class="fz-shell">
     <nav class="fz-nav" aria-label="Vistas">
       <button type="button" class="fz-navbtn" data-view="resumen" aria-current="false"><svg class="fz-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13h4v8H3zM10 8h4v13h-4zM17 3h4v18h-4z"/></svg><span>Resumen</span></button>
-      <button type="button" class="fz-navbtn" data-view="precios" aria-current="false"><svg class="fz-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 17l5-5 4 4 7-8"/><path d="M15 8h5v5"/></svg><span>Precios y tarifarios</span></button>
+      <button type="button" class="fz-navbtn" data-view="precios" aria-current="false"><svg class="fz-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 17l5-5 4 4 7-8"/><path d="M15 8h5v5"/></svg><span>Tarifarios</span></button>
+      <button type="button" class="fz-navbtn" data-view="precio" aria-current="false"><svg class="fz-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16"/><path d="M4 15l4-4 3 3 5-6 4 3"/></svg><span>Precio diario</span></button>
+      <button type="button" class="fz-navbtn" data-view="impacto" aria-current="false"><svg class="fz-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18"/><path d="M16 7H10a3 3 0 0 0 0 6h4a3 3 0 0 1 0 6H8"/></svg><span>Impacto diésel</span></button>
       <button type="button" class="fz-navbtn" data-view="consumo" aria-current="false"><svg class="fz-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c3 4 6 7.5 6 11a6 6 0 0 1-12 0c0-3.5 3-7 6-11z"/></svg><span>Consumo e ingresos</span></button>
       <button type="button" class="fz-navbtn" data-view="activos" aria-current="false"><svg class="fz-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="9" width="13" height="8" rx="1"/><path d="M15 12h4l3 3v2h-7"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg><span>Grifos y activos</span></button>
       <button type="button" class="fz-navbtn" data-view="simulador" aria-current="false"><svg class="fz-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h2M12 12h2M16 12h0M8 16h2M12 16h2"/></svg><span>Simulador</span></button>
@@ -283,6 +285,8 @@
           <p class="fz-note">Precio sin IGV por galón en el rango de fechas elegido arriba. En Callao y Piura/Paita se comparan los tres abastecimientos; en Otros solo hay grifo externo. La diferencia es contra el grifo interno de la misma ubicación (rojo: más caro que el interno; verde: más barato). Lo más reciente va arriba.</p>
           <div class="fz-chart dash-skeleton" data-draw="precio-ubic" data-source="tarifarios"></div>
         </section>
+      </section>
+      <section class="fz-page" data-page="precio" id="vista-precio" hidden>
         <section class="fz-card" id="precios">
     <div class="fz-cardhead"><h2>Precio diario del diésel: externo, interno e IBC</h2><div class="fz-tools"><button type="button" class="fz-tbtn" data-tabla="precio-chart" aria-pressed="false">Ver tabla</button></div></div>
     <p class="fz-note">Tarifario del día (precio sin IGV por galón).</p>
@@ -295,6 +299,8 @@
     <div class="fz-chartwrap"><button type="button" class="fz-focusbtn" data-focus="precio-chart" aria-label="Ver en pantalla completa" title="Ver en pantalla completa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button><div class="fz-chart fz-pchart dash-skeleton" data-draw="precio-chart" data-source="tarifarios"></div></div>
     <p class="fz-note">Línea continua: tarifario de cada día. Punto: precio de hoy. Línea punteada: escenario conservador para el plazo de proyección elegido arriba; en 4 de cada 5 casos el precio no lo supera. Pasa el cursor para ver los valores.</p>
   </section>
+      </section>
+      <section class="fz-page" data-page="impacto" id="vista-impacto" hidden>
         <section class="fz-card" id="impacto">
       <div class="fz-cardhead"><h2>Impacto diésel</h2><div class="fz-tools"><div class="fz-seg" id="imp-anio"></div><div class="fz-seg" id="imp-met"><button type="button" data-m="dif" aria-pressed="true">Diferencia S/</button><button type="button" data-m="cr" aria-pressed="false">Costo real S/</button><button type="button" data-m="cb" aria-pressed="false">Costo base S/</button><button type="button" data-m="gal" aria-pressed="false">Galones</button></div></div></div>
       <p class="fz-note">Cuánto más (o menos) se pagó por el diésel consumido frente al precio base de cada grupo (sin IGV por galón): Externo Coesti S/ 11.47 · Grifo interno S/ 10.58 · IBC S/ 12.53. Costo real = galones × tarifario del día; diferencia = costo real − costo base. Haz clic en un grupo para ver el detalle por tipo de activo. Puedes marcar varias columnas a la vez (galones, costos y diferencia).</p>
@@ -800,16 +806,17 @@
   });
 
   // ---------- Views (sidebar) ----------
-  const VIEWS = ['resumen', 'precios', 'consumo', 'activos', 'simulador', 'gnv', 'alertas'];
+  const VIEWS = ['resumen', 'precios', 'precio', 'impacto', 'consumo', 'activos', 'simulador', 'gnv', 'alertas'];
+  const PRECIO_V = new Set(['precios', 'precio']);
   const show = (v) => {
     if (!VIEWS.includes(v)) v = 'resumen';
     if (typeof focusName !== 'undefined' && focusName) setFocus(null);
     document.querySelectorAll('.fz-page[data-page]').forEach((p) => { p.hidden = p.dataset.page !== v; });
     document.querySelectorAll('.fz-navbtn[data-view]').forEach((b) => b.setAttribute('aria-current', b.dataset.view === v ? 'page' : 'false'));
-    document.querySelectorAll('.fz-no-precios').forEach((el) => { el.hidden = v === 'precios'; });
-    if (v === 'precios' && dash.params().tipo) dash.setParams({ tipo: null });
-    document.querySelectorAll('.fz-only-precios').forEach((el) => { el.hidden = v !== 'precios'; });
-    if (v !== 'precios' && dash.params().sede === 'Otros') dash.setParams({ sede: null });
+    document.querySelectorAll('.fz-no-precios').forEach((el) => { el.hidden = PRECIO_V.has(v); });
+    if (PRECIO_V.has(v) && dash.params().tipo) dash.setParams({ tipo: null });
+    document.querySelectorAll('.fz-only-precios').forEach((el) => { el.hidden = !PRECIO_V.has(v); });
+    if (!PRECIO_V.has(v) && dash.params().sede === 'Otros') dash.setParams({ sede: null });
     const fl = document.getElementById('filtros'); if (fl) fl.hidden = v === 'gnv';
     dash.setLink(v);
   };
