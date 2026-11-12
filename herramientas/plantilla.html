@@ -170,6 +170,13 @@
   .fz-seg button[aria-pressed=true] { background: var(--fz-navy); color: #fff; box-shadow: none; }
   .fz-clear { border-color: var(--fz-orange) !important; color: var(--fz-orange) !important; font-weight: var(--cds-font-weight-medium); background: var(--color-panel) !important; }
   .fz-grifos { min-height: 240px; } .fz-ring { cursor: pointer; } .fz-ring:hover { border-color: var(--color-fg-muted); }
+  .fz-pivot { max-height: 32rem; }
+  .fz-pivot .fz-pv-l0 td { font-weight: 600; background: color-mix(in srgb, var(--fz-navy) 6%, var(--color-panel)); }
+  .fz-pivot .fz-pv-l1 td { font-weight: 500; }
+  .fz-pivot .fz-pv-tot td { background: color-mix(in srgb, var(--fz-navy) 14%, var(--color-panel)); }
+  .fz-pivot .fz-pv-est td { font-style: italic; }
+  .fz-pv-btn { font: inherit; border: 0; background: none; color: var(--color-fg); cursor: pointer; width: 18px; padding: 0; margin-right: 4px; }
+  .fz-pv-sp { display: inline-block; width: 22px; }
   .fz-subh { font-size: var(--cds-font-size-body); font-weight: 600; margin: var(--cds-gap-md) 0 var(--cds-gap-xs); }
   .fz-tog { font: inherit; font-size: var(--cds-font-size-caption); display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--color-border-line); background: var(--color-bg); color: var(--color-fg); border-radius: 999px; padding: 3px 10px; cursor: pointer; }
   .fz-tog[aria-pressed=false] { opacity: .45; }
@@ -1374,25 +1381,63 @@
     const take = gs.filter((g) => tot[g]).map((g) => TG_LBL[g] + ': ' + S + ' ' + nf0.format(tot[g].tot) + ' ÷ ' + nf0.format(tot[g].gal) + ' gal = ' + S + ' ' + nf2.format(tot[g].tot / tot[g].gal));
     const rng = sel[0].lab + ' a ' + sel[sel.length - 1].lab;
     el.append(mkEl('p', 'fz-take', real.length ? 'Compras de ' + real[0].lab + ' a ' + real[real.length - 1].lab + ' (' + fd(real[0].d0) + ' al ' + fd(real[real.length - 1].d1) + ') · ' + take.join(' · ') : 'El rango ' + rng + ' solo tiene semanas estimadas con tarifario (aún sin compras cargadas).'));
-    if (real.length) {
-      el.append(mkEl('h3', 'fz-subh', 'Por grifo en el rango'));
-      const t1 = document.createElement('div'); el.append(t1);
-      const rows = [];
-      for (const g of gs) { if (!tot[g]) continue; const list = [...byGr.values()].filter((a) => a.g === g).sort((a, b) => b.gal - a.gal); for (const a of list) rows.push([TG_LBL[g], GRIFO_LBL[a.gr] || a.gr, nf0.format(a.gal), nf2.format(a.tot), nf2.format(a.tot / a.gal), pct(a.gal / tot[g].gal).replace('+', '')]); rows.push([TG_LBL[g], 'Total ' + TG_LBL[g], nf0.format(tot[g].gal), nf2.format(tot[g].tot), nf2.format(tot[g].tot / tot[g].gal), '100.0%']); }
-      renderTable(t1, ['Tipo', 'Grifo', 'Galones comprados', 'Valorizado ' + S + ' (sin IGV)', 'Precio ' + S + ' por galón', '% de los galones del tipo'], rows, [2, 3, 4, 5]);
-    }
-    // 2) detalle por periodo
-    el.append(mkEl('h3', 'fz-subh', 'Por periodo'));
-    const t2 = document.createElement('div'); el.append(t2);
-    const rows2 = [];
-    for (const o of sel) for (const g of gs) {
-      const q = o.g[g]; if (!q) continue;
+    // tabla dinámica: periodo ▸ tipo ▸ grifo, con subtotales y total del rango
+    const U = isUSD();
+    const head = ['Periodo / tipo / grifo', 'Galones comprados', 'Valorizado ' + S + ' (sin IGV)', ...(U ? ['TC venta SBS'] : []), 'Precio ' + S + ' por galón', '% de galones'];
+    const nodes = []; let nid = 0;
+    const add = (lvl, parent, label, gal, val, tc, price, share, extra) => { const id = ++nid; nodes.push({ id, lvl, parent, label, gal, val, tc, price, share, kids: 0, ...(extra || {}) }); const pn = nodes.find((n) => n.id === parent); if (pn) pn.kids++; return id; };
+    const pctS = (a, b) => (b ? pct(a / b).replace('+', '') : '');
+    for (const o of sel) {
+      const f = fx(o); const tc = U ? tcOf(o) : null;
       const per = o.lab + (o.sem ? ' (' + o.d0.slice(8, 10) + '/' + o.d0.slice(5, 7) + '–' + o.d1.slice(8, 10) + '/' + o.d1.slice(5, 7) + ')' : '');
-      const f = fx(o); const tcs = isUSD() ? (tcOf(o) ? tcOf(o).toFixed(3) : '—') : null;
-      if (o.est) rows2.push([per, TG_LBL[g], 'Estimado: tarifario S/ ' + nf2.format(q.tar) + ' × factor ' + q.fac.toFixed(3), '—', '—', ...(isUSD() ? [tcs] : []), nf2.format(q.v * f)]);
-      else rows2.push([per, TG_LBL[g], 'Compra real', nf0.format(q.gal), nf2.format(q.tot * f), ...(isUSD() ? [tcs] : []), nf2.format((q.tot / q.gal) * f)]);
+      const gsP = gs.filter((g) => o.g[g]); if (!gsP.length) continue;
+      if (o.est) {
+        const pid = add(0, 0, per + ' · estimado con tarifario', null, null, tc, gsP.length === 1 ? o.g[gsP[0]].v * f : null, '', { est: true });
+        for (const g of gsP) { const q = o.g[g]; add(1, pid, TG_LBL[g] + ' — tarifario S/ ' + nf2.format(q.tar) + ' × factor ' + q.fac.toFixed(3), null, null, tc, q.v * f, ''); }
+        continue;
+      }
+      const G = d3.sum(gsP, (g) => o.g[g].gal), V = d3.sum(gsP, (g) => o.g[g].tot) * f;
+      const pid = add(0, 0, per, G, V, tc, G ? V / G : null, '');
+      for (const g of gsP) {
+        const q = o.g[g]; const tid = add(1, pid, TG_LBL[g], q.gal, q.tot * f, tc, (q.tot * f) / q.gal, pctS(q.gal, G));
+        for (const [gr, r] of Object.entries(q.gr).sort((a, b) => b[1].gal - a[1].gal)) add(2, tid, GRIFO_LBL[gr] || gr, r.gal, r.tot * f, tc, (r.tot * f) / r.gal, pctS(r.gal, q.gal));
+      }
     }
-    renderTable(t2, ['Periodo', 'Tipo', 'Cómo sale', 'Galones comprados', 'Valorizado ' + S + ' (sin IGV)', ...(isUSD() ? ['TC venta SBS'] : []), 'Precio ' + S + ' por galón'], rows2, isUSD() ? [3, 4, 5, 6] : [3, 4, 5]);
+    if (real.length > 1) {
+      const G = d3.sum(gs, (g) => (tot[g] ? tot[g].gal : 0)), V = d3.sum(gs, (g) => (tot[g] ? tot[g].tot : 0));
+      const pid = add(0, 0, 'Total del rango (' + real[0].lab + ' a ' + real[real.length - 1].lab + ')', G, V, null, G ? V / G : null, '', { total: true });
+      for (const g of gs) { if (!tot[g]) continue; const tid = add(1, pid, TG_LBL[g], tot[g].gal, tot[g].tot, null, tot[g].tot / tot[g].gal, pctS(tot[g].gal, G));
+        for (const a of [...byGr.values()].filter((a) => a.g === g).sort((a, b) => b.gal - a.gal)) add(2, tid, GRIFO_LBL[a.gr] || a.gr, a.gal, a.tot, null, a.tot / a.gal, pctS(a.gal, tot[g].gal)); }
+    }
+    const open = new Set(sel.length === 1 ? nodes.filter((n) => n.kids).map((n) => n.id) : nodes.filter((n) => n.total).map((n) => n.id));
+    const cellv = (n) => [n.gal == null ? '—' : nf0.format(n.gal), n.val == null ? '—' : nf2.format(n.val), ...(U ? [n.tc ? n.tc.toFixed(3) : ''] : []), n.price == null ? '—' : nf2.format(n.price), n.share];
+    const bar = document.createElement('div'); bar.className = 'fz-tools fz-tools-end';
+    const bAll = document.createElement('button'); bAll.type = 'button'; bAll.className = 'fz-tbtn'; bAll.textContent = 'Expandir todo';
+    const bNone = document.createElement('button'); bNone.type = 'button'; bNone.className = 'fz-tbtn'; bNone.textContent = 'Contraer todo';
+    const bCp = document.createElement('button'); bCp.type = 'button'; bCp.className = 'fz-tbtn'; bCp.textContent = 'Copiar para Excel';
+    const ok = document.createElement('span'); ok.className = 'fz-copied'; ok.hidden = true; ok.textContent = 'Copiado';
+    bar.append(ok, bAll, bNone, bCp); el.append(bar);
+    bCp.addEventListener('click', () => copyText(toTSV(head, nodes.map((n) => ['   '.repeat(n.lvl) + n.label, ...cellv(n)])), ok));
+    const box = document.createElement('div'); box.className = 'fz-tablebox fz-pivot'; const t = document.createElement('table'); t.className = 'fz-table';
+    const trh = document.createElement('tr'); head.forEach((c, k) => { const th = document.createElement('th'); th.textContent = c; if (k) th.className = 'fz-num'; trh.append(th); });
+    const th0 = document.createElement('thead'); th0.append(trh); t.append(th0); const tb = document.createElement('tbody'); t.append(tb); box.append(t); el.append(box);
+    const paint = () => {
+      tb.replaceChildren();
+      const vis = (n) => { let p = n.parent; while (p) { if (!open.has(p)) return false; p = nodes.find((m) => m.id === p).parent; } return true; };
+      for (const n of nodes) {
+        if (!vis(n)) continue;
+        const tr = document.createElement('tr'); tr.className = 'fz-pv-l' + n.lvl + (n.total ? ' fz-pv-tot' : '') + (n.est ? ' fz-pv-est' : '');
+        const td = document.createElement('td'); td.style.paddingLeft = (8 + n.lvl * 20) + 'px';
+        if (n.kids) { const b = document.createElement('button'); b.type = 'button'; b.className = 'fz-pv-btn'; b.textContent = open.has(n.id) ? '▾' : '▸'; b.setAttribute('aria-expanded', String(open.has(n.id))); b.setAttribute('aria-label', (open.has(n.id) ? 'Contraer ' : 'Expandir ') + n.label); b.addEventListener('click', () => { if (open.has(n.id)) open.delete(n.id); else open.add(n.id); paint(); }); td.append(b); }
+        else { const sp = document.createElement('span'); sp.className = 'fz-pv-sp'; td.append(sp); }
+        td.append(n.label); tr.append(td);
+        for (const v of cellv(n)) { const c = document.createElement('td'); c.className = 'fz-num'; c.textContent = v; tr.append(c); }
+        tb.append(tr);
+      }
+    };
+    bAll.addEventListener('click', () => { nodes.forEach((n) => n.kids && open.add(n.id)); paint(); });
+    bNone.addEventListener('click', () => { open.clear(); paint(); });
+    paint();
     el.append(mkEl('p', 'fz-note', 'El precio de un rango no es el promedio de los precios mensuales: es el total pagado entre el total de galones, así los meses y grifos con más compras pesan más.' + (est.length ? ' Las semanas estimadas (sin compras cargadas aún) no entran en los totales; salen del tarifario × factor (compra ÷ tarifario del último mes cerrado).' : '') + (isUSD() ? ' En dólares, cada mes o semana se convierte con el tipo de cambio venta SBS promedio de ese periodo (BCRP), y los totales del rango suman esos montos ya convertidos.' : '')));
   });
 
