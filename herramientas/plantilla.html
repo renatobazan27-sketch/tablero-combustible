@@ -299,7 +299,7 @@
             <button type="button" class="fz-tog" data-g="IBC" aria-pressed="false"><i class="fz-sw fz-swg-2"></i>IBC</button>
           </div>
           <div class="fz-chartwrap"><button type="button" class="fz-focusbtn" data-focus="tarifa" aria-label="Ver en pantalla completa" title="Ver en pantalla completa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button><div class="fz-chart dash-skeleton" data-draw="tarifa" data-source="tarifa_compras tarifarios"></div></div>
-          <p class="fz-note">Cada punto es el precio promedio de compra del mes: valorizado (S/ sin IGV) ÷ galones comprados. Grifo externo = Primax/Coesti; grifo interno = Argentina, Gambetta 1 y Paita; IBC = Gambetta 2, Gambetta 3 y Paita 2. El mes en curso se muestra por semanas (SEM) hasta que termina. Línea punteada: proyección de los próximos meses (plazo según "Proyección" de arriba): parte del último precio de compra y le aplica la tendencia conservadora del tarifario de cada tipo.</p>
+          <p class="fz-note">Cada punto es el precio promedio de compra del mes: valorizado (S/ sin IGV) ÷ galones comprados. Grifo externo = Primax/Coesti; grifo interno = Argentina, Gambetta 1 y Paita; IBC = Gambetta 2, Gambetta 3 y Paita 2. El mes en curso se muestra por semanas (SEM) hasta que termina: mientras no estén cargadas sus compras en DPWL Precio Combustible, cada semana sale del tarifario diario ajustado al nivel de compra del último mes cerrado (factor compra ÷ tarifario); al cargar las compras se reemplaza por el precio real. Línea punteada: proyección de los próximos meses (plazo según "Proyección" de arriba): parte del último precio de compra y le aplica la tendencia conservadora del tarifario de cada tipo.</p>
         </section>
         <section class="fz-card" id="tarifa-calc">
           <div class="fz-cardhead"><h2>¿Cómo sale cada precio?</h2><div class="fz-tools"><select class="fz-sel" id="tc-per" aria-label="Periodo"></select><select class="fz-sel" id="tc-g" aria-label="Tipo"><option value="Externo">Grifo externo</option><option value="Interno">Grifo interno</option><option value="IBC">IBC</option></select></div></div>
@@ -1228,34 +1228,56 @@
       q.gal += gal; q.tot += tot; const r = q.gr[x.grifo] || (q.gr[x.grifo] = { gal: 0, tot: 0 }); r.gal += gal; r.tot += tot;
     }
     const pers = [...per.values()].sort((a, b) => (a.ord < b.ord ? -1 : 1));
+    // semanas sin compras cargadas: tarifario diario × factor de calibración (compra ÷ tarifario del último mes con compras)
     // proyección: promedio mensual del escenario conservador del tarifario
-    const proy = [];
+    const proy = [], est = [];
     const t = dash.data('tarifarios');
     if (t.status === 'ok') {
-      const H = horiz(); const base = toD(lastM + '-01');
-      const tr = {};
+      const H = horiz();
+      const tr = {}, all = {};
       for (const g of ['Externo', 'Interno', 'IBC']) {
         const mm = new Map();
         for (const x of t.data) { if (x.grupo !== TG_TAR[g]) continue; if (g === 'Interno' && !['Callao', 'Gambetta', 'Piura'].includes(x.ubicacion)) continue; const o = mm.get(x.fecha) || { s: 0, n: 0 }; o.s += +x.suma; o.n += +x.n; mm.set(x.fecha, o); }
-        const all = [...mm.entries()].map(([f, o]) => ({ d: toD(f), v: o.s / o.n })).sort((a, b) => a.d - b.d);
-        tr[g] = trend(all, H * 30 + 31);
+        all[g] = [...mm.entries()].map(([f, o]) => ({ f, d: toD(f), v: o.s / o.n })).sort((a, b) => a.d - b.d);
+        tr[g] = trend(all[g], H * 30 + 31);
       }
+      const lastReal = (g) => [...pers].reverse().find((z) => z.g[g] && z.g[g].gal);
+      const fac = {};
+      for (const g in all) { const lr = lastReal(g); if (!lr) continue; const tv = d3.mean(all[g].filter((q) => q.f.slice(0, 7) === lr.m), (q) => q.v); if (tv) fac[g] = (lr.g[g].tot / lr.g[g].gal) / tv; }
+      const wk = new Map();
+      for (const g in all) for (const q of all[g]) {
+        if (q.f <= last || fac[g] == null) continue;
+        const m = q.f.slice(0, 7), w = isoWeek(q.f), key = m + '-W' + String(w).padStart(2, '0');
+        let o = wk.get(key); if (!o) { o = { key, lab: 'SEM' + w, ord: key, m, sem: true, est: true, g: {}, d0: q.f, d1: q.f, acc: {} }; wk.set(key, o); }
+        if (q.f < o.d0) o.d0 = q.f; if (q.f > o.d1) o.d1 = q.f;
+        (o.acc[g] || (o.acc[g] = [])).push(q.v);
+      }
+      const wl = [...wk.values()].sort((a, b) => (a.ord < b.ord ? -1 : 1));
+      for (let i = wl.length - 2; i >= 0; i--) { const o = wl[i], nx = wl[i + 1]; if (o.m === nx.m && (toD(o.d1) - toD(o.d0)) / D < 2) { for (const g in o.acc) nx.acc[g] = [...o.acc[g], ...(nx.acc[g] || [])]; nx.d0 = o.d0; wl.splice(i, 1); } }
+      for (const o of wl) { for (const g in o.acc) o.g[g] = { v: d3.mean(o.acc[g]) * fac[g], tar: d3.mean(o.acc[g]), fac: fac[g] }; delete o.acc; est.push(o); }
+      const baseM = est.length ? est[est.length - 1].m : lastM; const base = toD(baseM + '-01');
       for (let k = 1; k <= H; k++) {
         const d = new Date(Date.UTC(base.getUTCFullYear(), base.getUTCMonth() + k, 1)); const m = iso(d).slice(0, 7);
         const o = { key: m + '-P', lab: MESC[d.getUTCMonth()] + '-' + m.slice(2, 4) + ' (proy.)', ord: m + '-P', m, proy: true, g: {} };
-        for (const g in tr) { const pts = (tr[g] || []).filter((q) => iso(q.d).slice(0, 7) === m); const lr = [...pers].reverse().find((z) => z.g[g] && z.g[g].gal); if (pts.length && lr) o.g[g] = { v: (lr.g[g].tot / lr.g[g].gal) * d3.mean(pts, (q) => q.v) / tr[g][0].v }; }
+        for (const g in tr) {
+          const pts = (tr[g] || []).filter((q) => iso(q.d).slice(0, 7) === m);
+          const le = [...est].reverse().find((z) => z.g[g]); const lr = lastReal(g);
+          const anchor = le ? le.g[g].v : lr ? lr.g[g].tot / lr.g[g].gal : null;
+          if (pts.length && anchor != null) o.g[g] = { v: anchor * d3.mean(pts, (q) => q.v) / tr[g][0].v };
+        }
         proy.push(o);
       }
     }
-    return { pers, proy, last, enCurso };
+    return { pers, est, proy, last, enCurso };
   };
-  const tval = (o, g) => (!o || !o.g[g] ? null : o.proy ? o.g[g].v : o.g[g].gal ? o.g[g].tot / o.g[g].gal : null);
+  const tval = (o, g) => (!o || !o.g[g] ? null : o.proy || o.est ? o.g[g].v : o.g[g].gal ? o.g[g].tot / o.g[g].gal : null);
   document.querySelectorAll('#tar-rng button').forEach((b) => b.addEventListener('click', () => { tarSt.y = b.dataset.y; document.querySelectorAll('#tar-rng button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); dash.draw('tarifa'); }));
   document.querySelectorAll('#tar-g .fz-tog').forEach((b) => b.addEventListener('click', () => { const g = b.dataset.g; if (tarSt.gs.has(g)) { if (tarSt.gs.size > 1) tarSt.gs.delete(g); } else tarSt.gs.add(g); document.querySelectorAll('#tar-g .fz-tog').forEach((x) => x.setAttribute('aria-pressed', String(tarSt.gs.has(x.dataset.g)))); dash.draw('tarifa'); }));
+  const tcOpts = (TD) => [...TD.est].reverse().concat([...TD.pers].reverse()).map((o) => { const op = document.createElement('option'); op.value = o.key; op.textContent = o.lab + (o.sem ? ' (' + o.d0.slice(8, 10) + '/' + o.d0.slice(5, 7) + '–' + o.d1.slice(8, 10) + '/' + o.d1.slice(5, 7) + ')' : '') + (o.est ? ' · tarifario' : ''); return op; });
   dash.draw('tarifa', (el) => {
     if (!gate(el, ['tarifa_compras', 'tarifarios'])) return;
     const TD = tarData(); if (!TD) return;
-    const real = TD.pers.filter((o) => o.m >= tarSt.y + '-01'); const pts = [...real, ...TD.proy];
+    const real = TD.pers.filter((o) => o.m >= tarSt.y + '-01'); const pts = [...real, ...TD.est, ...TD.proy];
     const gs = ['Externo', 'Interno', 'IBC'].filter((g) => tarSt.gs.has(g));
     if (asTable.has('tarifa')) { renderTable(el, ['Periodo', ...gs.map((g) => TG_LBL[g] + ' S/')], pts.map((o) => [o.lab, ...gs.map((g) => { const v = tval(o, g); return v == null ? '' : Math.round(v * 100) / 100; })]), gs.map((_, i) => i + 1)); return; }
     const W = Math.max(300, el.clientWidth), H = big(el, 380), mt = 24, mb = 52, mr = 12;
@@ -1271,28 +1293,28 @@
     if (TD.proy.length) { const xb = x(TD.proy[0].key) - (x.step() / 2); svg.append('line').attr('x1', xb).attr('x2', xb).attr('y1', mt).attr('y2', H - mb).attr('stroke', 'var(--cds-chart-reference)').attr('stroke-dasharray', '3 3'); svg.append('text').attr('x', xb + 4).attr('y', mt - 8).style('font-size', '10px').text('Proyección →'); }
     const showLab = pts.length <= 48;
     gs.forEach((g, gi) => {
-      const rp = real.map((o) => ({ o, v: tval(o, g) })).filter((q) => q.v != null);
+      const rp = [...real, ...TD.est].map((o) => ({ o, v: tval(o, g) })).filter((q) => q.v != null);
       const pp = [rp[rp.length - 1], ...TD.proy.map((o) => ({ o, v: tval(o, g) })).filter((q) => q.v != null)].filter(Boolean);
       const line = d3.line().x((q) => x(q.o.key)).y((q) => y(q.v));
       svg.append('path').datum(rp).attr('fill', 'none').attr('stroke', TG_COL[g]).attr('stroke-width', 2.2).attr('d', line);
       if (pp.length > 1) svg.append('path').datum(pp).attr('fill', 'none').attr('stroke', TG_COL[g]).attr('stroke-width', 2).attr('stroke-dasharray', '5 4').attr('d', line);
       const all = [...rp, ...pp.slice(1)];
-      svg.append('g').selectAll('circle').data(all).join('circle').attr('cx', (q) => x(q.o.key)).attr('cy', (q) => y(q.v)).attr('r', (q) => (q.o.sem || q.o.proy ? 3.5 : 2.5)).attr('fill', (q) => (q.o.proy ? 'var(--color-panel)' : TG_COL[g])).attr('stroke', TG_COL[g]).attr('stroke-width', 1.5);
+      svg.append('g').selectAll('circle').data(all).join('circle').attr('cx', (q) => x(q.o.key)).attr('cy', (q) => y(q.v)).attr('r', (q) => (q.o.sem || q.o.proy ? 3.5 : 2.5)).attr('stroke-dasharray', (q) => (q.o.est ? '2 1.5' : null)).attr('fill', (q) => (q.o.proy ? 'var(--color-panel)' : q.o.est ? 'color-mix(in srgb, ' + TG_COL[g] + ' 45%, var(--color-panel))' : TG_COL[g])).attr('stroke', TG_COL[g]).attr('stroke-width', 1.5);
       if (showLab) svg.append('g').selectAll('text').data(all).join('text').attr('x', (q) => x(q.o.key)).attr('y', (q) => { const vs = gs.map((h) => tval(q.o, h)).filter((v) => v != null); const mx = d3.max(vs), mn = d3.min(vs); const up = vs.length < 2 || q.v === mx || (q.v !== mn && (q.v - mn) < (mx - q.v)); return y(q.v) + (up ? -7 : 14); }).attr('text-anchor', 'middle').style('font-size', '9.5px').style('fill', TG_COL[g]).style('font-weight', 600).text((q) => nf2.format(q.v));
     });
     const tip = tipBox(el);
     svg.append('g').selectAll('rect').data(pts).join('rect').attr('x', (o) => x(o.key) - x.step() / 2).attr('width', x.step()).attr('y', mt).attr('height', H - mb - mt).attr('fill', 'transparent')
-      .on('pointermove', (ev, o) => { const lines = gs.map((g) => { const v = tval(o, g); return [TG_COL[g], TG_LBL[g] + ': ' + (v == null ? '—' : 'S/ ' + nf2.format(v)) + (o.proy || !o.g[g] ? '' : ' (' + nf0.format(o.g[g].gal) + ' gal)')]; }); tipLine(tip, o.proy ? o.lab + ' · escenario conservador' : o.sem ? o.lab + ' (' + o.d0.slice(8, 10) + '/' + o.d0.slice(5, 7) + '–' + o.d1.slice(8, 10) + '/' + o.d1.slice(5, 7) + ')' : o.lab, lines); const k = W / el.clientWidth; placeTip(tip, el, x(o.key) / k, mt / k + 10); })
+      .on('pointermove', (ev, o) => { const lines = gs.map((g) => { const v = tval(o, g); return [TG_COL[g], TG_LBL[g] + ': ' + (v == null ? '—' : 'S/ ' + nf2.format(v)) + (o.proy || o.est || !o.g[g] ? '' : ' (' + nf0.format(o.g[g].gal) + ' gal)')]; }); tipLine(tip, o.proy ? o.lab + ' · escenario conservador' : o.est ? o.lab + ' (' + o.d0.slice(8, 10) + '/' + o.d0.slice(5, 7) + '–' + o.d1.slice(8, 10) + '/' + o.d1.slice(5, 7) + ') · estimado con tarifario' : o.sem ? o.lab + ' (' + o.d0.slice(8, 10) + '/' + o.d0.slice(5, 7) + '–' + o.d1.slice(8, 10) + '/' + o.d1.slice(5, 7) + ')' : o.lab, lines); const k = W / el.clientWidth; placeTip(tip, el, x(o.key) / k, mt / k + 10); })
       .on('pointerleave', () => { tip.hidden = true; });
     // selector de periodo del cálculo
     const sel = document.getElementById('tc-per');
-    if (sel && sel.options.length !== TD.pers.length) { const cur = sel.value; sel.replaceChildren(...[...TD.pers].reverse().map((o) => { const op = document.createElement('option'); op.value = o.key; op.textContent = o.lab + (o.sem ? ' (' + o.d0.slice(8, 10) + '/' + o.d0.slice(5, 7) + '–' + o.d1.slice(8, 10) + '/' + o.d1.slice(5, 7) + ')' : ''); return op; })); if (cur) sel.value = cur; }
+    if (sel && sel.options.length !== TD.pers.length + TD.est.length) { const cur = sel.value; sel.replaceChildren(...tcOpts(TD)); if (cur) sel.value = cur; }
   });
   document.getElementById('tar-xls')?.addEventListener('click', async (ev) => {
     const TD = tarData(); if (!TD) return; const b = ev.currentTarget;
     const gsA = ['Externo', 'Interno', 'IBC'];
     const r2 = (v) => (v == null ? '' : Math.round(v * 100) / 100);
-    const tab = [['Periodo', ...gsA.map((g) => TG_LBL[g] + ' (S/.)')], ...[...TD.pers, ...TD.proy].map((o) => [o.lab, ...gsA.map((g) => r2(tval(o, g)))])];
+    const tab = [['Periodo', ...gsA.map((g) => TG_LBL[g] + ' (S/.)')], ...[...TD.pers, ...TD.est, ...TD.proy].map((o) => [o.lab + (o.est ? ' (tarifario)' : ''), ...gsA.map((g) => r2(tval(o, g)))])];
     const det = [['Periodo', 'Desde', 'Hasta', 'Tipo', 'Grifo', 'Galones comprados', 'Valorizado S/ sin IGV', 'Precio S/ por galón']];
     for (const o of TD.pers) for (const g of gsA) { const q = o.g[g]; if (!q) continue; for (const gr in q.gr) det.push([o.lab, o.d0, o.d1, TG_LBL[g], GRIFO_LBL[gr] || gr, r2(q.gr[gr].gal), r2(q.gr[gr].tot), r2(q.gr[gr].tot / q.gr[gr].gal)]); det.push([o.lab, o.d0, o.d1, TG_LBL[g], 'TOTAL', r2(q.gal), r2(q.tot), r2(q.tot / q.gal)]); }
     b.disabled = true; const ok = await saveBlob(makeXlsx([{ name: 'Tarifa grifos', rows: tab, bold: (i) => i === 0 }, { name: 'Cálculo por grifo', rows: det, bold: (i) => i === 0 || det[i][4] === 'TOTAL' }]), 'Tarifa_grifos_' + TD.last + '.xlsx'); b.disabled = false;
@@ -1303,9 +1325,22 @@
     if (!gate(el, ['tarifa_compras'])) return;
     const TD = tarData(); if (!TD) return;
     const sel = document.getElementById('tc-per');
-    if (sel && !sel.options.length) sel.replaceChildren(...[...TD.pers].reverse().map((o) => { const op = document.createElement('option'); op.value = o.key; op.textContent = o.lab; return op; }));
-    const o = TD.pers.find((z) => z.key === sel.value) || TD.pers[TD.pers.length - 1]; const g = document.getElementById('tc-g').value;
+    if (sel && sel.options.length !== TD.pers.length + TD.est.length) { const cur = sel.value; sel.replaceChildren(...tcOpts(TD)); if (cur) sel.value = cur; }
+    const o = [...TD.pers, ...TD.est].find((z) => z.key === sel.value) || TD.pers[TD.pers.length - 1]; const g = document.getElementById('tc-g').value;
     const q = o.g[g];
+    if (o.est) {
+      const fd2 = (f) => f.slice(8, 10) + '/' + f.slice(5, 7);
+      if (!q) { el.append(mkEl('p', 'fz-note', 'Sin tarifario de ' + TG_LBL[g] + ' en ' + o.lab + '.')); return; }
+      const lr = [...TD.pers].reverse().find((z) => z.g[g] && z.g[g].gal);
+      renderTable(el, ['Concepto', 'Valor'], [
+        ['Tarifario promedio de la semana (S/ sin IGV)', nf2.format(q.tar)],
+        ['Precio de compra de ' + (lr ? lr.lab : '—') + ' (valorizado ÷ galones)', lr ? nf2.format(lr.g[g].tot / lr.g[g].gal) : '—'],
+        ['Factor = compra ÷ tarifario de ese mes', q.fac.toFixed(3)],
+        ['Precio estimado de la semana', nf2.format(q.v)]], [1]);
+      el.prepend(mkEl('p', 'fz-take', TG_LBL[g] + ' · ' + o.lab + ' (' + fd2(o.d0) + ' al ' + fd2(o.d1) + '): estimado = tarifario promedio S/ ' + nf2.format(q.tar) + ' × factor ' + q.fac.toFixed(3) + ' = S/ ' + nf2.format(q.v) + ' por galón.'));
+      el.append(mkEl('p', 'fz-note', 'Todavía no hay compras de esta semana en DPWL Precio Combustible. Cuando las cargues, aquí saldrán los galones y el valorizado reales.'));
+      return;
+    }
     if (!q) { el.append(mkEl('p', 'fz-note', 'No hubo compras de ' + TG_LBL[g] + ' en ' + o.lab + '.')); return; }
     const fd = (f) => f.slice(8, 10) + '/' + f.slice(5, 7) + '/' + f.slice(0, 4);
     const rows = Object.entries(q.gr).sort((a, b) => b[1].gal - a[1].gal).map(([gr, r]) => [GRIFO_LBL[gr] || gr, nf0.format(r.gal), nf2.format(r.tot), nf2.format(r.tot / r.gal), pct(r.gal / q.gal).replace('+', '')]);
