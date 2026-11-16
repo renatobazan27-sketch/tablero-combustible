@@ -317,7 +317,7 @@
       <section class="fz-page" data-page="precios" id="vista-precios" hidden>
         <section class="fz-card" id="precio-ubic">
           <h2>Tarifarios por ubicación: externo, interno e IBC</h2>
-          <p class="fz-note">Precio sin IGV por galón vigente en cada fecha, entre las fechas Desde y Hasta de arriba. Solo aparecen los días en que cambió algún precio (el precio se mantiene igual hasta la siguiente fecha de la tabla). Las columnas "Ext. − Int." e "IBC − Int." dicen cuánto más caro (rojo) o más barato (verde) estuvo ese abastecimiento frente al grifo interno de la misma ubicación. La última fila es el promedio del periodo.</p>
+          <p class="fz-note">Precio sin IGV por galón vigente en cada fecha, entre las fechas Desde y Hasta de arriba. Aparecen todos los días; en gris los días sin carta o cambio nuevo, donde vale el último precio publicado. Las columnas "Ext. − Int." e "IBC − Int." dicen cuánto más caro (rojo) o más barato (verde) estuvo ese abastecimiento frente al grifo interno de la misma ubicación. La última fila es el promedio del periodo.</p>
           <div class="fz-chart dash-skeleton" data-draw="precio-ubic" data-source="tarifarios"></div>
         </section>
       </section>
@@ -1190,9 +1190,10 @@
       const th = document.createElement('thead'); th.append(hr); t.append(th); const tb = document.createElement('tbody'); t.append(tb);
       const difTd = (d, bold) => { const td = mkEl('td', 'fz-num' + (d > 0.005 ? ' fz-bad' : d < -0.005 ? ' fz-good' : ''), d == null ? '—' : (d > 0.005 ? '+' : d < -0.005 ? '−' : '') + nf2.format(Math.abs(d))); if (bold) td.style.fontWeight = '700'; return td; };
       const lastR = u.rows[u.rows.length - 1];
-      const filas = cambios[cambios.length - 1] === lastR ? cambios : [...cambios, { ...lastR, hoy: true }];
+      const cset = new Set(cambios); void lastR;
+      const filas = u.rows.map((r) => (cset.has(r) ? r : { ...r, hoy: true }));
       for (const r of [...filas].reverse()) {
-        const tr = document.createElement('tr'); if (r.hoy) tr.style.fontStyle = 'italic'; tr.append(mkEl('td', '', fdt(r.f) + (r.hoy ? ' · vigente (sin cambio)' : '')));
+        const tr = document.createElement('tr'); if (r.hoy) tr.style.color = 'var(--color-fg-muted)'; tr.append(mkEl('td', '', fdt(r.f) + (r.hoy ? ' · sin cambio' : '')));
         for (const g of u.gs) tr.append(mkEl('td', 'fz-num', r.v[g] == null ? '—' : nf2.format(r.v[g])));
         for (const g of difCols) tr.append(difTd(dif(r, g)));
         tb.append(tr);
