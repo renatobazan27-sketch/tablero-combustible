@@ -31,7 +31,7 @@ tokens = """
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--color-bg:#14181d;--color-panel:#1c2229;--color-fg:#e8ecf0;--color-fg-muted:#9aa5b1;--color-border-line:rgba(255,255,255,.10);
 --color-text-secondary:#9aa5b1;--cds-text-secondary:#9aa5b1;--cds-chart-grid:rgba(255,255,255,.08);--cds-chart-axis:#4a535d;--cds-chart-reference:#6b7682;--cds-chart-muted:#3a424b;
 --cds-surface-popover:#262d35;--cds-shadow-popover:0 8px 24px #00000052,0 2px 6px #0003;--cds-border:rgba(255,255,255,.06);color-scheme:dark}}
-html,body{margin:0;background:var(--color-bg);color:var(--color-fg);font-family:'Montserrat',var(--font-anthropic-sans);font-size:var(--cds-font-size-body)}
+html,body{margin:0;background:var(--color-bg);color:var(--color-fg);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI Variable Text','Segoe UI',system-ui,sans-serif;font-size:var(--cds-font-size-body)}
 body{padding:24px 16px;max-width:1400px;margin:0 auto;box-sizing:border-box}
 .fz-card,.fz-sec{background:var(--color-panel);border:1px solid var(--color-border-line);border-radius:12px;padding:16px}
 .dash-skeleton{min-height:120px;background:linear-gradient(90deg,transparent,var(--color-border-line),transparent);background-size:200% 100%;animation:sk 1.4s infinite}

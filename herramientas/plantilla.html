@@ -1,8 +1,8 @@
 <meta name="dash-one-writer">
 <link rel="stylesheet" href="fonts.css">
 <style>
-  .fz { font-family: 'Montserrat', var(--font-anthropic-sans); color: var(--color-fg); display: grid; gap: var(--cds-gap-xl); }
-  .fz { container-type: inline-size; --fz-navy: color-mix(in srgb, #004071 72%, var(--color-fg)); --fz-sky: #0092CF; --fz-orange: #F15922; --fz-tint: color-mix(in srgb, #004071 7%, var(--color-panel)); font-family: 'Montserrat', var(--font-anthropic-sans); }
+  .fz { font-family: var(--fz-font); color: var(--color-fg); display: grid; gap: var(--cds-gap-xl); }
+  .fz { container-type: inline-size; --fz-navy: color-mix(in srgb, #004071 72%, var(--color-fg)); --fz-sky: #0092CF; --fz-orange: #F15922; --fz-tint: color-mix(in srgb, #004071 7%, var(--color-panel)); font-family: var(--fz-font); }
   .fz .fz-title, .fz h2, .fz h3 { color: var(--fz-navy); }
   .fz-card { border-top: 3px solid var(--fz-navy); }
   .fz-kpis .fz-card { border-top-color: var(--fz-orange); }
@@ -23,7 +23,7 @@
   .fz-fact { display: flex; gap: var(--cds-gap-sm); align-items: flex-start; padding: var(--cds-pad-md); border-radius: var(--cds-radius); background: var(--color-bg); border: 1px solid var(--color-border-line); }
   .fz-fact p { margin: 0; font-size: var(--cds-font-size-body); line-height: 1.45; color: var(--color-fg-muted); }
   .fz .fz-fact b { color: var(--color-fg); font-weight: 600; }
-  .fz-fact b:first-child { font-family: 'Montserrat', var(--font-anthropic-sans); font-weight: 700; color: var(--fz-navy); font-size: var(--cds-font-size-heading); }
+  .fz-fact b:first-child { font-family: var(--fz-font); font-weight: 700; color: var(--fz-navy); font-size: var(--cds-font-size-heading); }
   .fz-fico { width: 34px; height: 34px; flex: none; padding: 7px; border-radius: 10px; fill: none; stroke: var(--fz-navy); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; background: var(--color-panel); border: 1px solid var(--color-border-line); }
   .fz-sankey { min-height: 320px; }
   .fz-card h3 { margin: var(--cds-gap-md) 0 0; font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); }
@@ -79,7 +79,7 @@
   .fz-sim-val { text-align: right; font-variant-numeric: tabular-nums; color: var(--fz-navy); font-weight: 500; }
   @container (max-width: 40rem) { .fz-sim-line { grid-template-columns: 1fr; } .fz-sim-val { text-align: left; } }
   .fz-head { display: grid; gap: var(--cds-gap-xs); }
-  .fz-title { font-family: 'Montserrat', var(--font-anthropic-sans); font-weight: 700; font-size: var(--cds-font-size-title); margin: 0; }
+  .fz-title { font-family: var(--fz-font); font-weight: 700; font-size: var(--cds-font-size-title); margin: 0; }
   .fz-take { margin: 0; font-size: var(--cds-font-size-body); color: var(--color-fg-muted); max-width: 52rem; line-height: 1.55; }
   .fz .fz-take b { color: var(--color-fg); font-weight: 600; }
   .fz-badge { justify-self: start; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); border: 1px dashed var(--color-border-line); border-radius: 999px; padding: 2px var(--cds-pad-sm); }
@@ -95,9 +95,9 @@
   .fz-card h2, .fz-card h3 { margin: 0; font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); }
   .fz-note { margin: 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); line-height: 1.45; }
   .fz-kpi-label { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
-  .fz-kpi-val { font-family: 'Montserrat', var(--font-anthropic-sans); font-weight: 700; color: var(--fz-navy); font-size: var(--cds-font-size-title); font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .fz-kpi-val { font-family: var(--fz-font); font-weight: 700; color: var(--fz-navy); font-size: var(--cds-font-size-title); font-variant-numeric: tabular-nums; line-height: 1.1; }
   .fz .fz-kpi-val b { font-weight: 700; }
-  .fz-unit { font-size: var(--cds-font-size-body); color: var(--color-fg-muted); font-family: 'Montserrat', var(--font-anthropic-sans); }
+  .fz-unit { font-size: var(--cds-font-size-body); color: var(--color-fg-muted); font-family: var(--fz-font); }
   .fz-kpi-sub { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-variant-numeric: tabular-nums; }
   .fz .fz-kpi-sub b { font-weight: 600; }
   #impacto .fz-table tr > :first-child { position: sticky; left: 0; z-index: 1; background: var(--color-panel); min-width: 210px; white-space: normal; }
@@ -108,7 +108,7 @@
   .fz-chart { position: relative; min-width: 0; }
   .fz-chart svg { display: block; overflow: visible; }
   .fz-fc { min-height: 320px; } .fz-mirror { min-height: 260px; } .fz-cal { min-height: 150px; } .fz-scatter { min-height: 260px; } .fz-rings { min-height: 180px; } .fz-sim-out { min-height: 170px; }
-  .fz-chart text { font-family: 'Montserrat', var(--font-anthropic-sans); font-size: var(--cds-font-size-caption); fill: var(--color-fg-muted); }
+  .fz-chart text { font-family: var(--fz-font); font-size: var(--cds-font-size-caption); fill: var(--color-fg-muted); }
   .fz-tip { position: absolute; z-index: 3; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-size: var(--cds-font-size-caption); pointer-events: none; white-space: nowrap; font-variant-numeric: tabular-nums; }
   .fz-tip .fz-tip-h { color: var(--cds-text-secondary); margin-bottom: 2px; }
   .fz-sw { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
@@ -122,12 +122,12 @@
   .fz-ring { display: grid; justify-items: center; gap: 4px; padding: var(--cds-pad-sm); border-radius: var(--cds-radius); border: 1px solid var(--color-border-line); background: var(--color-bg); text-align: center; }
   .fz-ring-name { font-weight: var(--cds-font-weight-medium); font-size: var(--cds-font-size-body); }
   .fz-ring-meta { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-variant-numeric: tabular-nums; }
-  .fz-ring svg text.fz-ring-pct { font-family: 'Montserrat', var(--font-anthropic-sans); font-size: 22px; fill: var(--color-fg); }
+  .fz-ring svg text.fz-ring-pct { font-family: var(--fz-font); font-size: 22px; fill: var(--color-fg); }
   .fz-ring svg text.fz-ring-lbl { font-size: 10px; }
   .fz-sim-row { display: flex; align-items: center; gap: var(--cds-gap-md); flex-wrap: wrap; }
   .fz-sim-row input { flex: 1 1 12rem; accent-color: var(--fz-orange); }
-  .fz-sim-pct { font-family: 'Montserrat', var(--font-anthropic-sans); font-size: var(--cds-font-size-title); min-width: 5ch; font-variant-numeric: tabular-nums; }
-  .fz-sim-big { font-family: 'Montserrat', var(--font-anthropic-sans); font-weight: 700; color: var(--fz-navy); font-size: var(--cds-font-size-title); font-variant-numeric: tabular-nums; }
+  .fz-sim-pct { font-family: var(--fz-font); font-size: var(--cds-font-size-title); min-width: 5ch; font-variant-numeric: tabular-nums; }
+  .fz-sim-big { font-family: var(--fz-font); font-weight: 700; color: var(--fz-navy); font-size: var(--cds-font-size-title); font-variant-numeric: tabular-nums; }
   .fz-sim-bars { display: grid; gap: 6px; margin-top: var(--cds-gap-sm); }
   .fz-sim-bar { display: grid; grid-template-columns: 6.5rem 1fr auto; gap: var(--cds-gap-sm); align-items: center; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-variant-numeric: tabular-nums; }
   .fz-sim-bar div { height: 14px; border-radius: 3px; transition: width var(--cds-dur-slow) var(--cds-ease-out); }
@@ -144,6 +144,30 @@
     @keyframes fz-grow { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
     .fz-in { animation: fz-grow var(--cds-dur-slow) var(--cds-ease-out) both; }
   }
+
+  /* ===== Estilo sobrio (v21): letra del sistema, tarjetas planas, menos bordes ===== */
+  .fz { --fz-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; -webkit-font-smoothing: antialiased; letter-spacing: -0.003em; }
+  .fz .fz-card { border: 1px solid color-mix(in srgb, var(--color-fg) 7%, transparent); border-top: 1px solid color-mix(in srgb, var(--color-fg) 7%, transparent); border-radius: 16px; box-shadow: 0 1px 2px rgb(0 0 0 / .03), 0 6px 20px rgb(0 0 0 / .04); background: var(--color-bg); }
+  .fz .fz-card h2, .fz .fz-title { font-weight: 650; letter-spacing: -0.015em; }
+  .fz .fz-card h2 { font-size: 1.12rem; }
+  .fz-nav { background: transparent; border: 0; padding: 0; }
+  .fz-navbtn { border-radius: 10px; }
+  .fz-navbtn[aria-current=page] { box-shadow: none; background: color-mix(in srgb, var(--fz-navy) 9%, transparent); color: var(--fz-navy); font-weight: 600; }
+  .fz-navbtn[aria-current=page] .fz-ico { stroke: var(--fz-orange); }
+  .fz .fz-filters, .fz .fz-sim2 > .fz-ptools { background: var(--color-bg); border: 1px solid color-mix(in srgb, var(--color-fg) 7%, transparent); border-left: 1px solid color-mix(in srgb, var(--color-fg) 7%, transparent); border-radius: 14px; box-shadow: 0 1px 2px rgb(0 0 0 / .03); }
+  .fz .fz-filters .fz-sel, .fz .fz-filters .fz-date input, .fz .fz-sim2 .fz-sel { border: 1px solid color-mix(in srgb, var(--color-fg) 12%, transparent); border-radius: 9px; background: var(--color-panel); }
+  .fz .fz-tbtn { border-color: color-mix(in srgb, var(--color-fg) 12%, transparent); background: transparent; }
+  .fz .fz-tbtn:hover { background: color-mix(in srgb, var(--fz-navy) 6%, transparent); }
+  .fz .fz-num, .fz table td, .fz .fz-kpi-val { font-variant-numeric: tabular-nums; }
+  .fz .fz-note { line-height: 1.5; }
+  .fz-more { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin-top: 2px; }
+  .fz-more summary { cursor: pointer; list-style: none; display: inline-flex; align-items: center; gap: 4px; color: var(--fz-navy); font-weight: 500; }
+  .fz-more summary::-webkit-details-marker { display: none; }
+  .fz-more summary::before { content: "ⓘ"; font-size: 1.05em; }
+  .fz-more[open] summary { margin-bottom: 4px; }
+  .fz-more p { margin: 0; line-height: 1.5; max-width: 72ch; }
+  .fz .fz-chart .domain { stroke: transparent; }
+  .fz .fz-chart .tick line { stroke: color-mix(in srgb, var(--color-fg) 7%, transparent); }
 </style>
 <style>
   .fz-sel { font: inherit; font-size: var(--cds-font-size-caption); color: var(--color-fg); background: var(--color-bg); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: 3px 6px; max-width: 12rem; }
@@ -188,7 +212,7 @@
   .fz-ptiles { display: grid; gap: var(--cds-gap-sm); grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); min-height: 84px; }
   .fz-ptile { border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-sm) var(--cds-pad-md); background: var(--color-bg); display: grid; gap: 2px; }
   .fz-ptile .fz-kpi-sub span { white-space: nowrap; }
-  .fz-ptile-v { font-family: 'Montserrat', var(--font-anthropic-sans); font-weight: 700; color: var(--fz-navy); font-size: var(--cds-font-size-title); font-variant-numeric: tabular-nums; }
+  .fz-ptile-v { font-family: var(--fz-font); font-weight: 700; color: var(--fz-navy); font-size: var(--cds-font-size-title); font-variant-numeric: tabular-nums; }
   .fz-pchart { min-height: 320px; }
   .fz-ring[aria-pressed=true] { box-shadow: 0 0 0 2px var(--color-fg); }
 </style>
@@ -1346,7 +1370,8 @@
       if (pp.length > 1) svg.append('path').datum(pp).attr('fill', 'none').attr('stroke', TG_COL[g]).attr('stroke-width', 2).attr('stroke-dasharray', '5 4').attr('d', line);
       const all = [...rp, ...pp.slice(1)];
       svg.append('g').selectAll('circle').data(all).join('circle').attr('cx', (q) => x(q.o.key)).attr('cy', (q) => y(q.v)).attr('r', (q) => (q.o.sem || q.o.proy ? 3.5 : 2.5)).attr('stroke-dasharray', (q) => (q.o.est ? '2 1.5' : null)).attr('fill', (q) => (q.o.proy ? 'var(--color-panel)' : q.o.est ? 'color-mix(in srgb, ' + TG_COL[g] + ' 45%, var(--color-panel))' : TG_COL[g])).attr('stroke', TG_COL[g]).attr('stroke-width', 1.5);
-      if (showLab) svg.append('g').selectAll('text').data(all).join('text').attr('x', (q) => x(q.o.key)).attr('y', (q) => { const vs = gs.map((h) => tvalC(q.o, h)).filter((v) => v != null); const mx = d3.max(vs), mn = d3.min(vs); const up = vs.length < 2 || q.v === mx || (q.v !== mn && (q.v - mn) < (mx - q.v)); return y(q.v) + (up ? -7 : 14); }).attr('text-anchor', 'middle').style('font-size', '9.5px').style('fill', TG_COL[g]).style('font-weight', 600).text((q) => nf2.format(q.v));
+      const kp = new Set(); if (rp.length) { kp.add(rp[rp.length - 1]); kp.add(d3.greatest(rp, (q) => q.v)); kp.add(d3.least(rp, (q) => q.v)); } if (pp.length > 1) kp.add(pp[pp.length - 1]);
+      svg.append('g').selectAll('text').data([...kp]).join('text').attr('x', (q) => x(q.o.key)).attr('y', (q) => { const vs = gs.map((h) => tvalC(q.o, h)).filter((v) => v != null); const mx = d3.max(vs), mn = d3.min(vs); const up = vs.length < 2 || q.v === mx || (q.v !== mn && (q.v - mn) < (mx - q.v)); return y(q.v) + (up ? -7 : 14); }).attr('text-anchor', 'middle').style('font-size', '11px').style('fill', TG_COL[g]).style('font-weight', 600).text((q) => nf2.format(q.v));
     });
     const tip = tipBox(el);
     svg.append('g').selectAll('rect').data(pts).join('rect').attr('x', (o) => x(o.key) - x.step() / 2).attr('width', x.step()).attr('y', mt).attr('height', H - mb - mt).attr('fill', 'transparent')
@@ -1838,7 +1863,7 @@
     t.append(th);
     const tb = document.createElement('tbody'); t.append(tb);
     const fmt = (v, M) => (M === 'gal' ? nf0.format(v) : (v < 0 ? '−' : '') + nf0.format(Math.abs(v)));
-    const cell = (v, M, first, bold) => { const td = mkEl('td', 'fz-num', fmt(v, M)); if (M === 'dif' && v > 0.5) td.classList.add('fz-bad'); if (M === 'dif' && v < -0.5) td.classList.add('fz-good'); if (multi && first) td.style.borderLeft = '1px solid var(--color-border-line)'; if (bold) td.style.fontWeight = '600'; return td; };
+    const cell = (v, M, first, bold, tot) => { const td = mkEl('td', 'fz-num', fmt(v, M)); const hue = bold || tot; if (hue && M === 'dif' && v > 0.5) td.classList.add('fz-bad'); if (M === 'dif' && v < -0.5) td.classList.add('fz-good'); if (multi && first) td.style.borderLeft = '1px solid var(--color-border-line)'; if (bold) td.style.fontWeight = '600'; return td; };
     const flat = [];
     const row = (lv, label, key, kids, id) => {
       const vals = MS.map((M) => { const v = meses.map((m) => impValC(m, D0.T.get(m + '|' + key), M)); return [...v, d3.sum(v)]; });
@@ -1859,7 +1884,7 @@
     }
     const trT = document.createElement('tr'); trT.style.fontWeight = '700'; trT.append(mkEl('td', '', 'Total'));
     const outT = [];
-    for (let gi = 0; gi <= meses.length; gi++) MS.forEach((M, mi) => { const v = totals[mi][gi]; outT.push(v); trT.append(cell(v, M, mi === 0, false)); });
+    for (let gi = 0; gi <= meses.length; gi++) MS.forEach((M, mi) => { const v = totals[mi][gi]; outT.push(v); trT.append(cell(v, M, mi === 0, false, true)); });
     tb.append(trT); flat.push(['Total', ...outT]);
     tb.addEventListener('click', (e) => { const tr = e.target.closest('tr[aria-expanded]'); if (!tr) return; const id = tr.dataset.id; if (impSt.open.has(id)) impSt.open.delete(id); else impSt.open.add(id); renderImpacto(el); });
     tb.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('tr[aria-expanded]')) { e.preventDefault(); e.target.click(); } });
@@ -2114,6 +2139,21 @@
       for (const [t, c] of cells) { const td = document.createElement('td'); td.textContent = t; if (c) td.className = c; tr.append(td); }
       tb.append(tr);
     }
+  });
+})();
+
+// v21: notas largas -> primera frase visible + "Más detalle" desplegable (no en Resumen)
+(function () {
+  document.querySelectorAll('.fz-page:not([data-page="resumen"]) .fz-card > p.fz-note').forEach((p) => {
+    const t = p.textContent.trim(); if (t.length < 170) return;
+    const m = t.slice(40).search(/\. /); if (m < 0) return;
+    const cut = 40 + m + 1;
+    const det = document.createElement('details'); det.className = 'fz-more';
+    const sm = document.createElement('summary'); sm.textContent = 'Más detalle';
+    const rest = document.createElement('p'); rest.textContent = t.slice(cut).trim();
+    det.append(sm, rest);
+    p.textContent = t.slice(0, cut);
+    p.after(det);
   });
 })();
 </script>
