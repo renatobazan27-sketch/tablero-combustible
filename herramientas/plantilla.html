@@ -1950,7 +1950,7 @@
   const opvRows = () => {
     const c = dash.data('consumo'); const B = base(); if (c.status !== 'ok' || !B) return null;
     const p = dash.params();
-    const all = c.data.filter((r) => B.inR(toD(String(r.fecha).slice(0, 10))) && (!p.sede || r.sede === p.sede) && (!p.tgrifo || (p.tgrifo === 'Externo' ? r.grifo === 'Primax' : r.grifo !== 'Primax')));
+    const all = c.data.filter((r) => B.inR(toD(String(r.fecha).slice(0, 10))) && (!p.sede || r.sede === p.sede) && (!p.tgrifo || (p.tgrifo === 'Externo' ? r.grifo === 'Primax' : r.grifo !== 'Primax'))).map((r) => (r.tipo === 'Trucks-V' ? { ...r, tipo: 'Tercero DPWL', tv: true } : r));
     return { all, rows: all.filter((r) => opvSt.tipos.has(r.tipo)), B };
   };
   const opvTC = (f) => { const T = tcData(); if (!T) return null; return T.mon.get(String(f).slice(0, 7)) ?? T.mon.get(T.last.f.slice(0, 7)); };
@@ -2010,7 +2010,7 @@
     const det = [['GRIFO', 'FECHA', 'NombreMes', 'AÑO', 'PLACA', 'TIPO ACTIVO', 'OLD ACTIVO', 'MODELO', 'ACTIVO', 'DESCRIPCION', 'CANTIDAD', 'UMD', 'NumeroMes', 'PERIODO', 'NUMERO SEMANA', 'PRECIO PROMEDIO', 'VALORIZADO', 'SEDE']];
     for (const r of [...D.rows].sort((a, b) => (a.fecha < b.fecha ? -1 : a.fecha > b.fecha ? 1 : String(a.grifo).localeCompare(String(b.grifo))))) {
       const f = String(r.fecha).slice(0, 10), g = +r.galones, v = +r.costo_real, a = ACT.get(String(r.placa)) || {};
-      det.push([GR(r.grifo), { d: f }, MESC2[+f.slice(5, 7) - 1], +f.slice(0, 4), r.placa, a.tipo_activo || String(r.tipo).toUpperCase(), a.old_activo || 'NO APLICA', a.modelo || 'NO APLICA', a.activo || 'NO APLICA', a.descripcion || 'NO APLICA', g, 'GAL', +f.slice(5, 7), +(f.slice(0, 4) + f.slice(5, 7)), isoW(f), g ? Math.round((v / g) * 100) / 100 : '', r2(v), String(r.sede).toUpperCase()]);
+      det.push([GR(r.grifo), { d: f }, MESC2[+f.slice(5, 7) - 1], +f.slice(0, 4), r.placa, r.tv ? 'TERCERO DPWL' : (a.tipo_activo || String(r.tipo).toUpperCase()), a.old_activo || 'NO APLICA', a.modelo || 'NO APLICA', a.activo || 'NO APLICA', a.descripcion || 'NO APLICA', g, 'GAL', +f.slice(5, 7), +(f.slice(0, 4) + f.slice(5, 7)), isoW(f), g ? Math.round((v / g) * 100) / 100 : '', r2(v), String(r.sede).toUpperCase()]);
     }
     const res = [['Tipo de activo', 'Placa', 'Despachos', 'Galones', 'Valorizado S/', 'Precio prom. S/', 'Valorizado US$', 'Precio prom. US$']];
     const byT = d3.group(D.rows, (r) => r.tipo);
