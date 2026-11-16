@@ -17,7 +17,16 @@ for _, r in p.iterrows():
     for ubic, sede, val in (('Callao', 'Callao', r.argentina), ('Gambetta', 'Callao', r.gambeta),
                             ('Piura', 'Paita', r.paita_prom)):
         rows.append(dict(fecha=r.fecha, grupo='Interno', ubicacion=ubic, sede=sede, suma=val, n=1, precio=val))
-nuevo = pd.concat([t[t.grupo != 'Interno'], pd.DataFrame(rows)], ignore_index=True)
+pdf = pd.DataFrame(rows)
+# Conserva los cambios de precio Interno ya publicados cuyo PDF ya no está en la carpeta
+# (p. ej. una carta borrada o renombrada): solo los días en que el precio cambió y que no
+# tienen carta. Las cartas presentes siempre mandan.
+ti = t[t.grupo == 'Interno'].sort_values('fecha')
+ti = ti[ti.groupby(['ubicacion'])['precio'].diff().fillna(1).abs() > 0.00005]
+huerfanos = ti[~ti.fecha.isin(set(pdf.fecha))]
+if len(huerfanos):
+    print('Cambios Interno sin carta en la carpeta (se conservan):', ', '.join(sorted(set(huerfanos.fecha))))
+nuevo = pd.concat([t[t.grupo != 'Interno'], huerfanos, pdf], ignore_index=True)
 
 # arrastre diario hasta la fecha de corte para cada grupo/ubicación
 dias = pd.date_range(nuevo.fecha.min(), corte).strftime('%Y-%m-%d')
