@@ -406,7 +406,7 @@
           <div class="fz-cardhead"><h2>Reporte operaciones valorizado</h2><div class="fz-tools"><div class="fz-seg" id="opv-cur"><button type="button" data-c="PEN" aria-pressed="true">S/</button><button type="button" data-c="USD" aria-pressed="false">US$</button></div><button type="button" class="fz-tbtn" id="opv-xls">Descargar Excel</button></div></div>
           <div class="fz-ptools" id="opv-tipos"></div>
           <div class="fz-chart dash-skeleton" data-draw="opval" data-source="consumo tipo_cambio activos"></div>
-          <p class="fz-note">Galones despachados a los equipos de operaciones en el periodo de arriba, valorizados con el precio promedio del día de cada grifo (sin IGV), igual que la tabla "Consumo_Operaciones Valorizado" del Power BI: valorizado = galones × precio promedio del día. Por defecto Reach Stacker, Rubber Tired Gantry y Tercero DPWL; puedes sumar otros tipos. Respeta fechas, sede y tipo de grifo de arriba. Haz clic en ▸ para ver las placas.</p>
+          <p class="fz-note">Galones despachados a los equipos de operaciones en los grifos internos (sin Primax ni Redcol, igual que el Power BI) en el periodo de arriba, valorizados con el precio promedio del día de cada grifo (sin IGV), igual que la tabla "Consumo_Operaciones Valorizado" del Power BI: valorizado = galones × precio promedio del día. Por defecto Reach Stacker, Rubber Tired Gantry y Tercero DPWL; puedes sumar otros tipos. Respeta fechas, sede y tipo de grifo de arriba. Haz clic en ▸ para ver las placas.</p>
         </section>
       </section>
       <section class="fz-page" data-page="activos" id="vista-activos" hidden>
@@ -1950,7 +1950,7 @@
   const opvRows = () => {
     const c = dash.data('consumo'); const B = base(); if (c.status !== 'ok' || !B) return null;
     const p = dash.params();
-    const all = c.data.filter((r) => B.inR(toD(String(r.fecha).slice(0, 10))) && (!p.sede || r.sede === p.sede) && (!p.tgrifo || (p.tgrifo === 'Externo' ? r.grifo === 'Primax' : r.grifo !== 'Primax'))).map((r) => (r.tipo === 'Trucks-V' ? { ...r, tipo: 'Tercero DPWL', tv: true } : r));
+    const all = c.data.filter((r) => r.grifo !== 'Primax' && B.inR(toD(String(r.fecha).slice(0, 10))) && (!p.sede || r.sede === p.sede) && (!p.tgrifo || (p.tgrifo === 'Externo' ? r.grifo === 'Primax' : r.grifo !== 'Primax'))).map((r) => (r.tipo === 'Trucks-V' ? { ...r, tipo: 'Tercero DPWL', tv: true } : r));
     return { all, rows: all.filter((r) => opvSt.tipos.has(r.tipo)), B };
   };
   const opvTC = (f) => { const T = tcData(); if (!T) return null; return T.mon.get(String(f).slice(0, 7)) ?? T.mon.get(T.last.f.slice(0, 7)); };
