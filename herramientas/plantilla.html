@@ -357,7 +357,7 @@
         <section class="fz-card" id="tarifa">
           <div class="fz-cardhead"><h2 id="tar-h2">Tarifa de grifos: precio de compra por mes (S/ por galón, sin IGV)</h2>
             <div class="fz-tools"><div class="fz-seg" id="tar-cur"><button type="button" data-c="PEN" aria-pressed="true">S/</button><button type="button" data-c="USD" aria-pressed="false">US$</button></div><div class="fz-seg" id="tar-rng"><button type="button" data-y="2024" aria-pressed="true">2024–2026</button><button type="button" data-y="2025" aria-pressed="false">2025–2026</button><button type="button" data-y="2026" aria-pressed="false">2026</button></div>
-            <div class="fz-seg" id="tar-lab" title="Qué valores se escriben sobre el gráfico"><button type="button" data-l="clave" aria-pressed="true">Valores clave</button><button type="button" data-l="todos" aria-pressed="false">Todos</button></div>
+            <div class="fz-seg" id="tar-lab" title="Qué valores se escriben sobre el gráfico"><button type="button" data-l="clave" aria-pressed="false">Valores clave</button><button type="button" data-l="todos" aria-pressed="true">Todos</button></div>
             <button type="button" class="fz-tbtn" data-tabla="tarifa" aria-pressed="false">Ver tabla</button><button type="button" class="fz-tbtn" id="tar-xls">Descargar Excel</button></div></div>
           <div class="fz-ptools" id="tar-g">
             <button type="button" class="fz-tog" data-g="Externo" aria-pressed="true"><i class="fz-sw fz-swg-0"></i>Grifo externo</button>
@@ -1290,7 +1290,7 @@
   const TG_TAR = { Externo: 'Externo (Coesti)', Interno: 'Interno', IBC: 'IBC' };
   const TG_LBL = { Externo: 'Grifo externo', Interno: 'Grifo interno', IBC: 'IBC' };
   const MESC = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'];
-  const tarSt = { y: '2024', gs: new Set(['Externo', 'Interno']), cur: 'PEN', lab: 'clave' };
+  const tarSt = { y: '2024', gs: new Set(['Externo', 'Interno']), cur: 'PEN', lab: 'todos' };
   let tcCache = null;
   const tcData = () => {
     const t = dash.data('tipo_cambio'); if (t.status !== 'ok' || !t.data.length) return null;
@@ -1410,7 +1410,7 @@
       if (tarSt.lab === 'todos' && x.step() >= 13) {
         // todos los valores, en vertical: el de arriba sube y el de abajo baja, para que no se crucen
         svg.append('g').selectAll('text').data(all).join('text')
-          .attr('transform', (q) => { const up = upOf(q); return `translate(${x(q.o.key) + 3.5},${y(q.v) + (up ? -6 : 6)}) rotate(-90)`; })
+          .attr('transform', (q) => { const up = upOf(q); return `translate(${x(q.o.key) + (up ? 2 : -2)},${y(q.v) + (up ? -6 : 9)}) rotate(-45)`; })
           .attr('text-anchor', (q) => (upOf(q) ? 'start' : 'end')).style('font-size', '10px').style('fill', TG_COL[g])
           .style('font-weight', (q) => (kp.has(q) ? 700 : 500)).style('paint-order', 'stroke').style('stroke', 'var(--color-panel, #fff)').style('stroke-width', '3px')
           .text((q) => nf2.format(q.v));
