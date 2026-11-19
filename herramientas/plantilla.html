@@ -357,6 +357,7 @@
         <section class="fz-card" id="tarifa">
           <div class="fz-cardhead"><h2 id="tar-h2">Tarifa de grifos: precio de compra por mes (S/ por galón, sin IGV)</h2>
             <div class="fz-tools"><div class="fz-seg" id="tar-cur"><button type="button" data-c="PEN" aria-pressed="true">S/</button><button type="button" data-c="USD" aria-pressed="false">US$</button></div><div class="fz-seg" id="tar-rng"><button type="button" data-y="2024" aria-pressed="true">2024–2026</button><button type="button" data-y="2025" aria-pressed="false">2025–2026</button><button type="button" data-y="2026" aria-pressed="false">2026</button></div>
+            <div class="fz-seg" id="tar-lab" title="Qué valores se escriben sobre el gráfico"><button type="button" data-l="clave" aria-pressed="true">Valores clave</button><button type="button" data-l="todos" aria-pressed="false">Todos</button></div>
             <button type="button" class="fz-tbtn" data-tabla="tarifa" aria-pressed="false">Ver tabla</button><button type="button" class="fz-tbtn" id="tar-xls">Descargar Excel</button></div></div>
           <div class="fz-ptools" id="tar-g">
             <button type="button" class="fz-tog" data-g="Externo" aria-pressed="true"><i class="fz-sw fz-swg-0"></i>Grifo externo</button>
@@ -1289,7 +1290,7 @@
   const TG_TAR = { Externo: 'Externo (Coesti)', Interno: 'Interno', IBC: 'IBC' };
   const TG_LBL = { Externo: 'Grifo externo', Interno: 'Grifo interno', IBC: 'IBC' };
   const MESC = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'];
-  const tarSt = { y: '2024', gs: new Set(['Externo', 'Interno']), cur: 'PEN' };
+  const tarSt = { y: '2024', gs: new Set(['Externo', 'Interno']), cur: 'PEN', lab: 'clave' };
   let tcCache = null;
   const tcData = () => {
     const t = dash.data('tipo_cambio'); if (t.status !== 'ok' || !t.data.length) return null;
@@ -1373,6 +1374,7 @@
   const tval = (o, g) => (!o || !o.g[g] ? null : o.proy || o.est ? o.g[g].v : o.g[g].gal ? o.g[g].tot / o.g[g].gal : null);
   const tvalC = (o, g) => cvt(o, tval(o, g));
   document.querySelectorAll('#tar-cur button').forEach((b) => b.addEventListener('click', () => { tarSt.cur = b.dataset.c; document.querySelectorAll('#tar-cur button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); dash.draw('tarifa'); dash.draw('tarifa-calc'); }));
+  document.querySelectorAll('#tar-lab button').forEach((b) => b.addEventListener('click', () => { tarSt.lab = b.dataset.l; document.querySelectorAll('#tar-lab button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); dash.draw('tarifa'); }));
   document.querySelectorAll('#tar-rng button').forEach((b) => b.addEventListener('click', () => { tarSt.y = b.dataset.y; document.querySelectorAll('#tar-rng button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); dash.draw('tarifa'); }));
   document.querySelectorAll('#tar-g .fz-tog').forEach((b) => b.addEventListener('click', () => { const g = b.dataset.g; if (tarSt.gs.has(g)) { if (tarSt.gs.size > 1) tarSt.gs.delete(g); } else tarSt.gs.add(g); document.querySelectorAll('#tar-g .fz-tog').forEach((x) => x.setAttribute('aria-pressed', String(tarSt.gs.has(x.dataset.g)))); dash.draw('tarifa'); }));
   const tcOpts = (TD) => [...TD.pers, ...TD.est].map((o) => { const op = document.createElement('option'); op.value = o.key; op.textContent = o.lab + (o.sem ? ' (' + o.d0.slice(8, 10) + '/' + o.d0.slice(5, 7) + '–' + o.d1.slice(8, 10) + '/' + o.d1.slice(5, 7) + ')' : '') + (o.est ? ' · tarifario' : ''); return op; });
@@ -1405,7 +1407,7 @@
       svg.append('g').selectAll('circle').data(all).join('circle').attr('cx', (q) => x(q.o.key)).attr('cy', (q) => y(q.v)).attr('r', (q) => (q.o.sem || q.o.proy ? 3.5 : 2.5)).attr('stroke-dasharray', (q) => (q.o.est ? '2 1.5' : null)).attr('fill', (q) => (q.o.proy ? 'var(--color-panel)' : q.o.est ? 'color-mix(in srgb, ' + TG_COL[g] + ' 45%, var(--color-panel))' : TG_COL[g])).attr('stroke', TG_COL[g]).attr('stroke-width', 1.5);
       const kp = new Set(); if (rp.length) { kp.add(rp[rp.length - 1]); kp.add(d3.greatest(rp, (q) => q.v)); kp.add(d3.least(rp, (q) => q.v)); } if (pp.length > 1) kp.add(pp[pp.length - 1]);
       const upOf = (q) => { const vs = gs.map((h) => tvalC(q.o, h)).filter((v) => v != null); const mx = d3.max(vs), mn = d3.min(vs); return vs.length < 2 || q.v === mx || (q.v !== mn && (q.v - mn) < (mx - q.v)); };
-      if (x.step() >= 13) {
+      if (tarSt.lab === 'todos' && x.step() >= 13) {
         // todos los valores, en vertical: el de arriba sube y el de abajo baja, para que no se crucen
         svg.append('g').selectAll('text').data(all).join('text')
           .attr('transform', (q) => { const up = upOf(q); return `translate(${x(q.o.key) + 3.5},${y(q.v) + (up ? -6 : 6)}) rotate(-90)`; })
@@ -1413,7 +1415,11 @@
           .style('font-weight', (q) => (kp.has(q) ? 700 : 500)).style('paint-order', 'stroke').style('stroke', 'var(--color-panel, #fff)').style('stroke-width', '3px')
           .text((q) => nf2.format(q.v));
       } else {
-        svg.append('g').selectAll('text').data([...kp]).join('text').attr('x', (q) => x(q.o.key)).attr('y', (q) => y(q.v) + (upOf(q) ? -7 : 14)).attr('text-anchor', 'middle').style('font-size', '11px').style('fill', TG_COL[g]).style('font-weight', 600).text((q) => nf2.format(q.v));
+        // valores clave: tramo reciente (últimos 6 periodos + proyección) y el máximo / mínimo del periodo
+        const lb = new Set([...kp, ...rp.slice(-6), ...pp.slice(1)]);
+        if (x.step() < 26) { lb.clear(); kp.forEach((q) => lb.add(q)); }
+        svg.append('g').selectAll('text').data([...lb]).join('text').attr('x', (q) => x(q.o.key)).attr('y', (q) => y(q.v) + (upOf(q) ? -8 : 16)).attr('text-anchor', 'middle')
+          .style('font-size', '11px').style('fill', TG_COL[g]).style('font-weight', (q) => (kp.has(q) ? 700 : 600)).style('paint-order', 'stroke').style('stroke', 'var(--color-panel, #fff)').style('stroke-width', '3px').text((q) => nf2.format(q.v));
       }
     });
     const tip = tipBox(el);
