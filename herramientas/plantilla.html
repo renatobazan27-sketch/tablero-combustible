@@ -1383,10 +1383,10 @@
     const real = TD.pers.filter((o) => o.m >= tarSt.y + '-01'); const pts = [...real, ...TD.est, ...TD.proy];
     const gs = ['Externo', 'Interno', 'IBC'].filter((g) => tarSt.gs.has(g));
     if (asTable.has('tarifa')) { renderTable(el, ['Periodo', ...gs.map((g) => TG_LBL[g] + ' ' + curS())], pts.map((o) => [o.lab, ...gs.map((g) => { const v = tvalC(o, g); return v == null ? '' : Math.round(v * 100) / 100; })]), gs.map((_, i) => i + 1)); return; }
-    const W = Math.max(300, el.clientWidth), H = big(el, 380), mt = 24, mb = 52, mr = 12;
+    const W = Math.max(300, el.clientWidth), H = big(el, 440), mt = 40, mb = 52, mr = 18;
     const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
     const vals = pts.flatMap((o) => gs.map((g) => tvalC(o, g))).filter((v) => v != null);
-    const vpad = Math.max(0.2, (d3.max(vals) - d3.min(vals)) * 0.08); const y = d3.scaleLinear([d3.min(vals) - vpad, d3.max(vals) + vpad], [H - mb, mt]).nice();
+    const vpad = Math.max(0.6, (d3.max(vals) - d3.min(vals)) * 0.16); const y = d3.scaleLinear([d3.min(vals) - vpad, d3.max(vals) + vpad], [H - mb, mt]).nice();
     const ticks = y.ticks(6), fmt = (t) => nf2.format(t); const ml = measure(svg, ticks.map(fmt)) + 10;
     const x = d3.scalePoint(pts.map((o) => o.key), [ml + 6, W - mr - 6]);
     gridY(svg, y, ml, W - mr, ticks, fmt);
@@ -1404,7 +1404,17 @@
       const all = [...rp, ...pp.slice(1)];
       svg.append('g').selectAll('circle').data(all).join('circle').attr('cx', (q) => x(q.o.key)).attr('cy', (q) => y(q.v)).attr('r', (q) => (q.o.sem || q.o.proy ? 3.5 : 2.5)).attr('stroke-dasharray', (q) => (q.o.est ? '2 1.5' : null)).attr('fill', (q) => (q.o.proy ? 'var(--color-panel)' : q.o.est ? 'color-mix(in srgb, ' + TG_COL[g] + ' 45%, var(--color-panel))' : TG_COL[g])).attr('stroke', TG_COL[g]).attr('stroke-width', 1.5);
       const kp = new Set(); if (rp.length) { kp.add(rp[rp.length - 1]); kp.add(d3.greatest(rp, (q) => q.v)); kp.add(d3.least(rp, (q) => q.v)); } if (pp.length > 1) kp.add(pp[pp.length - 1]);
-      svg.append('g').selectAll('text').data([...kp]).join('text').attr('x', (q) => x(q.o.key)).attr('y', (q) => { const vs = gs.map((h) => tvalC(q.o, h)).filter((v) => v != null); const mx = d3.max(vs), mn = d3.min(vs); const up = vs.length < 2 || q.v === mx || (q.v !== mn && (q.v - mn) < (mx - q.v)); return y(q.v) + (up ? -7 : 14); }).attr('text-anchor', 'middle').style('font-size', '11px').style('fill', TG_COL[g]).style('font-weight', 600).text((q) => nf2.format(q.v));
+      const upOf = (q) => { const vs = gs.map((h) => tvalC(q.o, h)).filter((v) => v != null); const mx = d3.max(vs), mn = d3.min(vs); return vs.length < 2 || q.v === mx || (q.v !== mn && (q.v - mn) < (mx - q.v)); };
+      if (x.step() >= 13) {
+        // todos los valores, en vertical: el de arriba sube y el de abajo baja, para que no se crucen
+        svg.append('g').selectAll('text').data(all).join('text')
+          .attr('transform', (q) => { const up = upOf(q); return `translate(${x(q.o.key) + 3.5},${y(q.v) + (up ? -6 : 6)}) rotate(-90)`; })
+          .attr('text-anchor', (q) => (upOf(q) ? 'start' : 'end')).style('font-size', '10px').style('fill', TG_COL[g])
+          .style('font-weight', (q) => (kp.has(q) ? 700 : 500)).style('paint-order', 'stroke').style('stroke', 'var(--color-panel, #fff)').style('stroke-width', '3px')
+          .text((q) => nf2.format(q.v));
+      } else {
+        svg.append('g').selectAll('text').data([...kp]).join('text').attr('x', (q) => x(q.o.key)).attr('y', (q) => y(q.v) + (upOf(q) ? -7 : 14)).attr('text-anchor', 'middle').style('font-size', '11px').style('fill', TG_COL[g]).style('font-weight', 600).text((q) => nf2.format(q.v));
+      }
     });
     const tip = tipBox(el);
     svg.append('g').selectAll('rect').data(pts).join('rect').attr('x', (o) => x(o.key) - x.step() / 2).attr('width', x.step()).attr('y', mt).attr('height', H - mb - mt).attr('fill', 'transparent')
