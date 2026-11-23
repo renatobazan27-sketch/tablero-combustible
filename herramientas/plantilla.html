@@ -236,6 +236,14 @@
   .fz-subh { font-size: var(--cds-font-size-body); font-weight: 600; margin: var(--cds-gap-md) 0 var(--cds-gap-xs); }
   .fz-tog { font: inherit; font-size: var(--cds-font-size-caption); display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--color-border-line); background: var(--color-bg); color: var(--color-fg); border-radius: 999px; padding: 3px 10px; cursor: pointer; }
   .fz-tog[aria-pressed=false] { opacity: .45; }
+  .fz-msel { position: relative; font-size: var(--cds-font-size-caption); }
+  .fz-msel > summary { list-style: none; cursor: pointer; padding: 5px 10px; border: 1px solid var(--color-border-line); border-radius: 999px; background: var(--color-panel, #fff); white-space: nowrap; }
+  .fz-msel > summary::-webkit-details-marker { display: none; }
+  .fz-msel > summary::after { content: ' ▾'; opacity: .6; }
+  .fz-msel-p { position: absolute; right: 0; top: calc(100% + 4px); z-index: 30; background: var(--color-panel, #fff); border: 1px solid var(--color-border-line); border-radius: 12px; box-shadow: 0 8px 24px rgb(15 27 45 / .14); padding: 8px 12px; min-width: 190px; display: grid; gap: 3px; }
+  .fz-msel-p label { display: flex; gap: 6px; align-items: center; cursor: pointer; white-space: nowrap; }
+  .fz-msel-h { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; opacity: .6; margin-top: 6px; }
+  .fz-msel-p .fz-tbtn { margin-top: 8px; justify-self: start; }
   .fz-ptools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cds-gap-sm); }
   .fz-ubic { display: grid; gap: var(--cds-gap-md, 12px); grid-template-columns: repeat(auto-fit, minmax(min(100%, 30rem), 1fr)); }
   .fz-ubic > div { border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-sm) var(--cds-pad-md); background: var(--color-bg); display: grid; gap: 6px; align-content: start; }
@@ -363,7 +371,7 @@
             <button type="button" class="fz-tog" data-g="Externo" aria-pressed="true"><i class="fz-sw fz-swg-0"></i>Grifo externo</button>
             <button type="button" class="fz-tog" data-g="Interno" aria-pressed="true"><i class="fz-sw fz-swg-1"></i>Grifo interno</button>
             <button type="button" class="fz-tog" data-g="IBC" aria-pressed="false"><i class="fz-sw fz-swg-2"></i>IBC</button>
-            <label class="fz-date" style="margin-left:auto">Sede / grifo <select class="fz-sel" id="tar-loc" aria-label="Sede o grifo"><option value="">Todas las sedes</option><optgroup label="Sede"><option value="S:Callao">Callao</option><option value="S:Paita">Paita</option></optgroup><optgroup label="Grifo externo"><option value="G:Primax">Primax / Coesti</option></optgroup><optgroup label="Grifo interno"><option value="G:Argentina">Argentina</option><option value="G:Gambetta1">Gambetta 1</option><option value="G:Paita">Paita</option></optgroup><optgroup label="IBC"><option value="G:Gambetta2">Gambetta 2</option><option value="G:Gambetta3">Gambetta 3</option><option value="G:Paita2">Paita 2</option></optgroup></select></label>
+            <details class="fz-msel" id="tar-loc" style="margin-left:auto"><summary>Sede / grifo: <b id="tar-loc-s">Todas</b></summary><div class="fz-msel-p"><div class="fz-msel-h">Sede</div><label><input type="checkbox" value="S:Callao"> Callao</label><label><input type="checkbox" value="S:Paita"> Paita</label><div class="fz-msel-h">Grifo externo</div><label><input type="checkbox" value="G:Primax"> Primax / Coesti</label><div class="fz-msel-h">Grifo interno</div><label><input type="checkbox" value="G:Argentina"> Argentina</label><label><input type="checkbox" value="G:Gambetta1"> Gambetta 1</label><label><input type="checkbox" value="G:Paita"> Paita</label><div class="fz-msel-h">IBC</div><label><input type="checkbox" value="G:Gambetta2"> Gambetta 2</label><label><input type="checkbox" value="G:Gambetta3"> Gambetta 3</label><label><input type="checkbox" value="G:Paita2"> Paita 2</label><button type="button" class="fz-tbtn" data-clear>Todas</button></div></details>
           </div>
           <div class="fz-chartwrap"><button type="button" class="fz-focusbtn" data-focus="tarifa" aria-label="Ver en pantalla completa" title="Ver en pantalla completa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button><div class="fz-chart dash-skeleton" data-draw="tarifa" data-source="tarifa_compras tarifarios tipo_cambio"></div></div>
           <p class="fz-note">Cada punto es el precio promedio de compra del mes: valorizado (S/ sin IGV) ÷ galones comprados. Grifo externo = Primax/Coesti; grifo interno = Argentina, Gambetta 1 y Paita; IBC = Gambetta 2, Gambetta 3 y Paita 2. El mes en curso se muestra por semanas (SEM) hasta que termina: mientras no estén cargadas sus compras en DPWL Precio Combustible, cada semana sale del tarifario diario ajustado al nivel de compra del último mes cerrado (factor compra ÷ tarifario); al cargar las compras se reemplaza por el precio real. En US$ se usa el tipo de cambio venta SBS (BCRP) promedio de cada mes o semana; la proyección usa el promedio del último mes. Línea punteada: proyección de los próximos meses (plazo según "Proyección" de arriba): parte del último precio de compra y le aplica la tendencia conservadora del tarifario de cada tipo.</p>
@@ -1291,14 +1299,15 @@
   const TG_TAR = { Externo: 'Externo (Coesti)', Interno: 'Interno', IBC: 'IBC' };
   const TG_LBL = { Externo: 'Grifo externo', Interno: 'Grifo interno', IBC: 'IBC' };
   const MESC = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'];
-  const tarSt = { y: '2024', gs: new Set(['Externo', 'Interno']), cur: 'PEN', lab: 'todos', loc: '' };
+  const tarSt = { y: '2024', gs: new Set(['Externo', 'Interno']), cur: 'PEN', lab: 'todos', loc: new Set() };
   const TG_SEDE = { Primax: 'Callao', Argentina: 'Callao', Gambetta1: 'Callao', Paita: 'Paita', Gambetta2: 'Callao', Gambetta3: 'Callao', Paita2: 'Paita' };
   const TG_GNOM = { Primax: 'Primax / Coesti', Argentina: 'Argentina', Gambetta1: 'Gambetta 1', Paita: 'Paita', Gambetta2: 'Gambetta 2', Gambetta3: 'Gambetta 3', Paita2: 'Paita 2' };
   // ubicaciones del tarifario que corresponden a cada sede / grifo (para semanas estimadas y proyección)
   const TG_UBI = { 'S:Callao': { Externo: ['Callao'], Interno: ['Callao', 'Gambetta'], IBC: ['Callao'] }, 'S:Paita': { Externo: [], Interno: ['Piura'], IBC: ['Paita'] }, 'G:Primax': { Externo: null }, 'G:Argentina': { Interno: ['Callao'] }, 'G:Gambetta1': { Interno: ['Gambetta'] }, 'G:Paita': { Interno: ['Piura'] }, 'G:Gambetta2': { IBC: ['Callao'] }, 'G:Gambetta3': { IBC: ['Callao'] }, 'G:Paita2': { IBC: ['Paita'] } };
-  const tgLocOk = (gr) => { const L = tarSt.loc; if (!L) return true; return L.startsWith('S:') ? TG_SEDE[gr] === L.slice(2) : gr === L.slice(2); };
-  const tgUbi = (g) => { const L = tarSt.loc; if (!L) return g === 'Interno' ? ['Callao', 'Gambetta', 'Piura'] : null; const u = TG_UBI[L]; if (!(g in u)) return []; return u[g]; };
-  const tgLocLbl = () => { const L = tarSt.loc; if (!L) return ''; return L.startsWith('S:') ? ' · sede ' + L.slice(2) : ' · grifo ' + TG_GNOM[L.slice(2)]; };
+  const tgLocOk = (gr) => { const L = tarSt.loc; return !L.size || L.has('S:' + TG_SEDE[gr]) || L.has('G:' + gr); };
+  const tgUbi = (g) => { const L = tarSt.loc; if (!L.size) return g === 'Interno' ? ['Callao', 'Gambetta', 'Piura'] : null; const s = new Set(); for (const k of L) { const u = TG_UBI[k]; if (!(g in u)) continue; if (u[g] === null) return null; u[g].forEach((z) => s.add(z)); } return [...s]; };
+  const tgLocNom = () => [...tarSt.loc].map((k) => (k.startsWith('S:') ? k.slice(2) : TG_GNOM[k.slice(2)])).join(', ');
+  const tgLocLbl = () => (tarSt.loc.size ? ' · ' + tgLocNom() : '');
   let tcCache = null;
   const tcData = () => {
     const t = dash.data('tipo_cambio'); if (t.status !== 'ok' || !t.data.length) return null;
@@ -1353,6 +1362,8 @@
       const lastReal = (g) => [...pers].reverse().find((z) => z.g[g] && z.g[g].gal);
       const fac = {};
       for (const g in all) { const lr = lastReal(g); if (!lr) continue; const tv = d3.mean(all[g].filter((q) => q.f.slice(0, 7) === lr.m), (q) => q.v); if (tv) fac[g] = (lr.g[g].tot / lr.g[g].gal) / tv; }
+      // semanas con compras de otros grifos pero sin compra de este tipo (p. ej. Primax sin cargar): tarifario × factor
+      for (const o of pers) { if (!o.sem) continue; for (const g in all) { if (o.g[g] || fac[g] == null) continue; const w = o.key.slice(-2); const a = all[g].filter((q) => q.f.slice(0, 7) === o.m && String(isoWeek(q.f)).padStart(2, '0') === w); if (a.length) o.g[g] = { v: d3.mean(a, (q) => q.v) * fac[g], tar: d3.mean(a, (q) => q.v), fac: fac[g], est: true }; } }
       const wk = new Map();
       for (const g in all) for (const q of all[g]) {
         if (q.f <= last || fac[g] == null) continue;
@@ -1380,10 +1391,14 @@
     const tarPer = (o, g) => { if (o.est) return o.g[g] ? o.g[g].tar : null; const a = (allT[g] || []).filter((q) => q.f >= o.d0 && q.f <= o.d1 && (o.sem || q.f.slice(0, 7) === o.m)); return a.length ? d3.mean(a, (q) => q.v) : null; };
     return { pers, est, proy, last, enCurso, tarPer };
   };
-  const tval = (o, g) => (!o || !o.g[g] ? null : o.proy || o.est ? o.g[g].v : o.g[g].gal ? o.g[g].tot / o.g[g].gal : null);
+  const tval = (o, g) => (!o || !o.g[g] ? null : o.proy || o.est || o.g[g].est ? o.g[g].v : o.g[g].gal ? o.g[g].tot / o.g[g].gal : null);
   const tvalC = (o, g) => cvt(o, tval(o, g));
   document.querySelectorAll('#tar-cur button').forEach((b) => b.addEventListener('click', () => { tarSt.cur = b.dataset.c; document.querySelectorAll('#tar-cur button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); dash.draw('tarifa'); dash.draw('tarifa-calc'); }));
-  document.getElementById('tar-loc')?.addEventListener('change', (ev) => { tarSt.loc = ev.target.value; if (tarSt.loc.startsWith('G:')) { tarSt.gs.add(TG_DE[tarSt.loc.slice(2)]); document.querySelectorAll('#tar-g .fz-tog').forEach((x) => x.setAttribute('aria-pressed', String(tarSt.gs.has(x.dataset.g)))); } dash.draw('tarifa'); dash.draw('tarifa-calc'); });
+  { const box = document.getElementById('tar-loc');
+    const sync = () => { box.querySelectorAll('input').forEach((i) => { i.checked = tarSt.loc.has(i.value); }); document.getElementById('tar-loc-s').textContent = tarSt.loc.size ? tgLocNom() : 'Todas'; document.querySelectorAll('#tar-g .fz-tog').forEach((x) => x.setAttribute('aria-pressed', String(tarSt.gs.has(x.dataset.g)))); dash.draw('tarifa'); dash.draw('tarifa-calc'); };
+    box?.addEventListener('change', (ev) => { const v = ev.target.value; if (ev.target.checked) { tarSt.loc.add(v); if (v.startsWith('G:')) tarSt.gs.add(TG_DE[v.slice(2)]); } else tarSt.loc.delete(v); sync(); });
+    box?.querySelector('[data-clear]')?.addEventListener('click', () => { tarSt.loc.clear(); sync(); box.open = false; });
+    document.addEventListener('click', (ev) => { if (box && box.open && !box.contains(ev.target)) box.open = false; }); }
   document.querySelectorAll('#tar-lab button').forEach((b) => b.addEventListener('click', () => { tarSt.lab = b.dataset.l; document.querySelectorAll('#tar-lab button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); dash.draw('tarifa'); }));
   document.querySelectorAll('#tar-rng button').forEach((b) => b.addEventListener('click', () => { tarSt.y = b.dataset.y; document.querySelectorAll('#tar-rng button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); dash.draw('tarifa'); }));
   document.querySelectorAll('#tar-g .fz-tog').forEach((b) => b.addEventListener('click', () => { const g = b.dataset.g; if (tarSt.gs.has(g)) { if (tarSt.gs.size > 1) tarSt.gs.delete(g); } else tarSt.gs.add(g); document.querySelectorAll('#tar-g .fz-tog').forEach((x) => x.setAttribute('aria-pressed', String(tarSt.gs.has(x.dataset.g)))); dash.draw('tarifa'); }));
@@ -1414,7 +1429,7 @@
       svg.append('path').datum(rp).attr('fill', 'none').attr('stroke', TG_COL[g]).attr('stroke-width', 2.2).attr('d', line);
       if (pp.length > 1) svg.append('path').datum(pp).attr('fill', 'none').attr('stroke', TG_COL[g]).attr('stroke-width', 2).attr('stroke-dasharray', '5 4').attr('d', line);
       const all = [...rp, ...pp.slice(1)];
-      svg.append('g').selectAll('circle').data(all).join('circle').attr('cx', (q) => x(q.o.key)).attr('cy', (q) => y(q.v)).attr('r', (q) => (q.o.sem || q.o.proy ? 3.5 : 2.5)).attr('stroke-dasharray', (q) => (q.o.est ? '2 1.5' : null)).attr('fill', (q) => (q.o.proy ? 'var(--color-panel)' : q.o.est ? 'color-mix(in srgb, ' + TG_COL[g] + ' 45%, var(--color-panel))' : TG_COL[g])).attr('stroke', TG_COL[g]).attr('stroke-width', 1.5);
+      svg.append('g').selectAll('circle').data(all).join('circle').attr('cx', (q) => x(q.o.key)).attr('cy', (q) => y(q.v)).attr('r', (q) => (q.o.sem || q.o.proy ? 3.5 : 2.5)).attr('stroke-dasharray', (q) => ((q.o.est || (q.o.g[g] && q.o.g[g].est)) ? '2 1.5' : null)).attr('fill', (q) => (q.o.proy ? 'var(--color-panel)' : (q.o.est || (q.o.g[g] && q.o.g[g].est)) ? 'color-mix(in srgb, ' + TG_COL[g] + ' 45%, var(--color-panel))' : TG_COL[g])).attr('stroke', TG_COL[g]).attr('stroke-width', 1.5);
       const kp = new Set(); if (rp.length) { kp.add(rp[rp.length - 1]); kp.add(d3.greatest(rp, (q) => q.v)); kp.add(d3.least(rp, (q) => q.v)); } if (pp.length > 1) kp.add(pp[pp.length - 1]);
       const upOf = (q) => { const vs = gs.map((h) => tvalC(q.o, h)).filter((v) => v != null); const mx = d3.max(vs), mn = d3.min(vs); return vs.length < 2 || q.v === mx || (q.v !== mn && (q.v - mn) < (mx - q.v)); };
       if (tarSt.lab === 'todos' && x.step() >= 13) {
@@ -1434,7 +1449,7 @@
     });
     const tip = tipBox(el);
     svg.append('g').selectAll('rect').data(pts).join('rect').attr('x', (o) => x(o.key) - x.step() / 2).attr('width', x.step()).attr('y', mt).attr('height', H - mb - mt).attr('fill', 'transparent')
-      .on('pointermove', (ev, o) => { const lines = gs.map((g) => { const v = tvalC(o, g); return [TG_COL[g], TG_LBL[g] + ': ' + (v == null ? '—' : curS() + ' ' + nf2.format(v)) + (o.proy || !o.g[g] ? '' : o.est ? ' (tarifario ' + nf2.format(o.g[g].tar) + ' × ' + o.g[g].fac.toFixed(3) + ')' : ' (' + nf0.format(o.g[g].gal) + ' gal)')]; }); tipLine(tip, (isUSD() && tcOf(o) ? 'TC ' + tcOf(o).toFixed(3) + ' · ' : '') + (o.proy ? o.lab + ' · escenario conservador' : o.est ? o.lab + ' (' + o.d0.slice(8, 10) + '/' + o.d0.slice(5, 7) + '–' + o.d1.slice(8, 10) + '/' + o.d1.slice(5, 7) + ') · estimado con tarifario' : o.sem ? o.lab + ' (' + o.d0.slice(8, 10) + '/' + o.d0.slice(5, 7) + '–' + o.d1.slice(8, 10) + '/' + o.d1.slice(5, 7) + ')' : o.lab), lines); const k = W / el.clientWidth; placeTip(tip, el, x(o.key) / k, mt / k + 10); })
+      .on('pointermove', (ev, o) => { const lines = gs.map((g) => { const v = tvalC(o, g); return [TG_COL[g], TG_LBL[g] + ': ' + (v == null ? '—' : curS() + ' ' + nf2.format(v)) + (o.proy || !o.g[g] ? '' : o.est || o.g[g].est ? ' (estimado: tarifario ' + nf2.format(o.g[g].tar) + ' × ' + o.g[g].fac.toFixed(3) + ')' : ' (' + nf0.format(o.g[g].gal) + ' gal)')]; }); tipLine(tip, (isUSD() && tcOf(o) ? 'TC ' + tcOf(o).toFixed(3) + ' · ' : '') + (o.proy ? o.lab + ' · escenario conservador' : o.est ? o.lab + ' (' + o.d0.slice(8, 10) + '/' + o.d0.slice(5, 7) + '–' + o.d1.slice(8, 10) + '/' + o.d1.slice(5, 7) + ') · estimado con tarifario' : o.sem ? o.lab + ' (' + o.d0.slice(8, 10) + '/' + o.d0.slice(5, 7) + '–' + o.d1.slice(8, 10) + '/' + o.d1.slice(5, 7) + ')' : o.lab), lines); const k = W / el.clientWidth; placeTip(tip, el, x(o.key) / k, mt / k + 10); })
       .on('pointerleave', () => { tip.hidden = true; });
     // selector de periodo del cálculo
     tcFill(TD);
@@ -1476,7 +1491,7 @@
     // 1) resumen por grifo (solo compras reales)
     const byGr = new Map(); const tot = {};
     const fx = (o) => (isUSD() ? 1 / (tcOf(o) || NaN) : 1); const S = curS();
-    for (const o of real) for (const g of gs) { const q = o.g[g]; if (!q) continue; const f = fx(o); const u = 1 / (tcOf(o) || NaN); const t = tot[g] || (tot[g] = { gal: 0, tot: 0, pen: 0, usd: 0 }); t.gal += q.gal; t.tot += q.tot * f; t.pen += q.tot; t.usd += q.tot * u; for (const gr in q.gr) { const k = g + '|' + gr; const a = byGr.get(k) || { g, gr, gal: 0, tot: 0, pen: 0, usd: 0 }; a.gal += q.gr[gr].gal; a.tot += q.gr[gr].tot * f; a.pen += q.gr[gr].tot; a.usd += q.gr[gr].tot * u; byGr.set(k, a); } }
+    for (const o of real) for (const g of gs) { const q = o.g[g]; if (!q || q.est) continue; const f = fx(o); const u = 1 / (tcOf(o) || NaN); const t = tot[g] || (tot[g] = { gal: 0, tot: 0, pen: 0, usd: 0 }); t.gal += q.gal; t.tot += q.tot * f; t.pen += q.tot; t.usd += q.tot * u; for (const gr in q.gr) { const k = g + '|' + gr; const a = byGr.get(k) || { g, gr, gal: 0, tot: 0, pen: 0, usd: 0 }; a.gal += q.gr[gr].gal; a.tot += q.gr[gr].tot * f; a.pen += q.gr[gr].tot; a.usd += q.gr[gr].tot * u; byGr.set(k, a); } }
     const take = gs.filter((g) => tot[g]).map((g) => TG_LBL[g] + ': ' + S + ' ' + nf0.format(tot[g].tot) + ' ÷ ' + nf0.format(tot[g].gal) + ' gal = ' + S + ' ' + nf2.format(tot[g].tot / tot[g].gal));
     const rng = sel[0].lab + ' a ' + sel[sel.length - 1].lab;
     el.append(mkEl('p', 'fz-take', real.length ? 'Compras de ' + real[0].lab + ' a ' + real[real.length - 1].lab + ' (' + fd(real[0].d0) + ' al ' + fd(real[real.length - 1].d1) + ') · ' + take.join(' · ') : 'El rango ' + rng + ' solo tiene semanas estimadas con tarifario (aún sin compras cargadas).'));
@@ -1489,7 +1504,8 @@
     for (const o of sel) {
       const f = fx(o); const tc = tcOf(o);
       const per = o.lab + (o.sem ? ' (' + o.d0.slice(8, 10) + '/' + o.d0.slice(5, 7) + '–' + o.d1.slice(8, 10) + '/' + o.d1.slice(5, 7) + ')' : '');
-      const gsP = gs.filter((g) => o.g[g]); if (!gsP.length) continue;
+      const gsA = gs.filter((g) => o.g[g]); if (!gsA.length) continue;
+      const gsP = o.est ? gsA : gsA.filter((g) => !o.g[g].est), gsE = o.est ? [] : gsA.filter((g) => o.g[g].est);
       if (o.est) {
         const pid = add(0, 0, per + ' · estimado con tarifario', null, null, tc, gsP.length === 1 ? o.g[gsP[0]].v : null, '', { est: true });
         for (const g of gsP) { const q = o.g[g]; add(1, pid, TG_LBL[g] + ' — tarifario S/ ' + nf2.format(q.tar) + ' × factor ' + q.fac.toFixed(3), null, null, tc, q.v, ''); }
@@ -1501,6 +1517,7 @@
         const q = o.g[g]; const tid = add(1, pid, TG_LBL[g], q.gal, q.tot * f, tc, q.tot / q.gal, pctS(q.gal, G));
         for (const [gr, r] of Object.entries(q.gr).sort((a, b) => b[1].gal - a[1].gal)) add(2, tid, GRIFO_LBL[gr] || gr, r.gal, r.tot * f, tc, r.tot / r.gal, pctS(r.gal, q.gal));
       }
+      for (const g of gsE) { const q = o.g[g]; add(1, pid, TG_LBL[g] + ' — sin compra cargada: tarifario S/ ' + nf2.format(q.tar) + ' × factor ' + q.fac.toFixed(3), null, null, tc, q.v, ''); }
     }
     if (real.length > 1) {
       const G = d3.sum(gs, (g) => (tot[g] ? tot[g].gal : 0)), V = d3.sum(gs, (g) => (tot[g] ? tot[g].tot : 0)), Vp = d3.sum(gs, (g) => (tot[g] ? tot[g].pen : 0)), Vu = d3.sum(gs, (g) => (tot[g] ? tot[g].usd : 0));
