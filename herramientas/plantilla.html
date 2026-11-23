@@ -458,15 +458,15 @@
         </section>
       </section>
       <section class="fz-page" data-page="ram" id="vista-ram" hidden>
-        <section class="fz-kpis" data-draw="ram-kpis" data-source="ram_gnv ram_diesel_pickup gnv_mensual tarifa_compras tarifarios"></section>
+        <section class="fz-kpis" data-draw="ram-kpis" data-source="ram_gnv ram_diesel_pickup gnv_mensual tarifa_compras tarifarios dia_seg flota_mensual error_proyeccion"></section>
         <section class="fz-card" id="ram-mes">
           <div class="fz-cardhead"><h2>Camionetas a GNV vs. diésel: ahorro por mes</h2><div class="fz-tools"><label class="fz-date">Ratio diésel <input type="number" id="ram-ratio" step="0.1" min="10" max="40" style="width:5.2rem"> km/gal</label><button type="button" class="fz-tbtn" id="ram-ratio-reset">Usar el del Kardex</button><button type="button" class="fz-tbtn" data-tabla="ram-chart" aria-pressed="false">Ver tabla</button></div></div>
           <p class="fz-note">Cuánto se pagó en GNV frente a lo que habría costado recorrer los mismos kilómetros con diésel (camionetas TERCERO NO DPWL_GNV, solo GNV, sin IGV).</p>
-          <div class="fz-chartwrap"><div class="fz-chart dash-skeleton" data-draw="ram-chart" data-source="ram_gnv ram_diesel_pickup gnv_mensual tarifa_compras tarifarios"></div></div>
+          <div class="fz-chartwrap"><div class="fz-chart dash-skeleton" data-draw="ram-chart" data-source="ram_gnv ram_diesel_pickup gnv_mensual tarifa_compras tarifarios dia_seg flota_mensual error_proyeccion"></div></div>
         </section>
         <section class="fz-card" id="ram-placa">
           <div class="fz-cardhead"><h2>Detalle por camioneta</h2></div>
-          <div class="fz-chart dash-skeleton" data-draw="ram-placas" data-source="ram_gnv ram_diesel_pickup gnv_mensual tarifa_compras tarifarios"></div>
+          <div class="fz-chart dash-skeleton" data-draw="ram-placas" data-source="ram_gnv ram_diesel_pickup gnv_mensual tarifa_compras tarifarios dia_seg flota_mensual error_proyeccion"></div>
           <p class="fz-note">Solo cargas de GNV. La primera carga de cada camioneta no tiene recorrido previo y no entra al cálculo. Las cargas que en el reporte de Redcol vienen sin importe se valorizan al precio mediano del GNV de ese mes.</p>
         </section>
       </section>
@@ -822,7 +822,7 @@
 
   // ---------- Análisis RAM (camionetas a GNV vs. diésel) ----------
   const ramSt = { ratio: null };
-  const ramIds = ['ram_gnv', 'ram_diesel_pickup', 'gnv_mensual', 'tarifa_compras', 'tarifarios'];
+  const ramIds = ['ram_gnv', 'ram_diesel_pickup', 'gnv_mensual', 'tarifa_compras', 'tarifarios', 'dia_seg', 'flota_mensual', 'error_proyeccion'];
   const ramRatioKdx = () => { const d = dash.data('ram_diesel_pickup').data; const km = d3.sum(d, (r) => +r.km), gal = d3.sum(d, (r) => +r.gal); return gal ? km / gal : 25; };
   const ramRatio = () => ramSt.ratio || ramRatioKdx();
   const ramExt = () => { // precio del grifo externo por mes (S/ sin IGV): compras Primax; si no hay, tarifario Coesti × factor
@@ -841,41 +841,49 @@
     return R.filter((r) => r.gnv); // solo GNV
   };
   const ramAgg = (a) => { const u = a.filter((r) => r.ok); return { km: d3.sum(u, (r) => r.km), m3: d3.sum(u.filter((r) => r.gnv), (r) => r.q), galG: d3.sum(u.filter((r) => !r.gnv), (r) => r.q), cGnv: d3.sum(u.filter((r) => r.gnv), (r) => r.tot), cGas: d3.sum(u.filter((r) => !r.gnv), (r) => r.tot), placas: new Set(a.map((r) => r.placa)).size }; };
+  // rango Desde/Hasta de la barra de filtros (sin datos de consumo cargados: todo el periodo)
+  const ramRango = () => { const B = base(); return B ? { s: iso(B.r.s), e: iso(B.r.e) } : { s: '0000', e: '9999' }; };
   const ramMeses = () => {
-    const C = ramCargas(); if (!C.length) return [];
-    const ext = ramExt(); const ratio = ramRatio(); const last = d3.max(C, (r) => r.d);
+    const CA = ramCargas(); if (!CA.length) return [];
+    const ext = ramExt(); const ratio = ramRatio(); const lastAll = d3.max(CA, (r) => r.d); const rg = ramRango();
+    const C = CA.filter((r) => r.d >= rg.s && r.d <= rg.e); if (!C.length) return [];
+    const last = d3.max(C, (r) => r.d), first = d3.min(C, (r) => r.d);
+    const dimOf = (m) => new Date(Date.UTC(+m.slice(0, 4), +m.slice(5, 7), 0)).getUTCDate();
     const fin = (o, pe) => { o.gal = o.km / ratio; o.cg = o.cGnv + o.cGas; o.pe = pe && pe.v; o.peEst = !!(pe && pe.est); o.cd = pe ? o.gal * pe.v : null; o.ah = o.cd != null ? o.cd - o.cg : null; o.kmm3 = o.m3 ? o.km / o.m3 : null; return o; };
-    const M = d3.groups(C, (r) => r.d.slice(0, 7)).sort((a, b) => (a[0] < b[0] ? -1 : 1)).map(([m, a]) => fin({ m, d: toD(m + '-01'), ...ramAgg(a), parcial: m === last.slice(0, 7) && +last.slice(8, 10) < new Date(Date.UTC(+m.slice(0, 4), +m.slice(5, 7), 0)).getUTCDate() ? last : null }, ext(m))).filter((o) => o.km > 0);
-    // proyección del mes siguiente: ritmo de los últimos 30 días × días del mes
-    const d0 = iso(new Date(+toD(last) - 29 * D)); const w = ramAgg(C.filter((r) => r.d >= d0)); const lm = M[M.length - 1]; M.win = { d0, last, w };
-    if (lm && w.km) {
-      const nd = new Date(Date.UTC(+last.slice(0, 4), +last.slice(5, 7), 1)); const m = iso(nd).slice(0, 7); const dias = new Date(Date.UTC(nd.getUTCFullYear(), nd.getUTCMonth() + 1, 0)).getUTCDate(); const k = dias / 30;
-      const pe = ext(m) || ext(lm.m) ? { v: (ext(m) || ext(lm.m)).v, est: true } : null;
-      M.push(fin({ m, d: nd, proy: true, km: w.km * k, m3: w.m3 * k, galG: w.galG * k, cGnv: w.cGnv * k, cGas: w.cGas * k, placas: w.placas }, pe));
-      // resto del mes en curso (días que faltan) al mismo ritmo, para estimar el cierre del mes
-      if (lm.parcial) { const dim = new Date(Date.UTC(+lm.m.slice(0, 4), +lm.m.slice(5, 7), 0)).getUTCDate(); const kr = (dim - +lm.parcial.slice(8, 10)) / 30; lm.resto = fin({ m: lm.m, d: lm.d, km: w.km * kr, m3: w.m3 * kr, galG: w.galG * kr, cGnv: w.cGnv * kr, cGas: w.cGas * kr, placas: w.placas, dias: dim - +lm.parcial.slice(8, 10) }, { v: lm.pe, est: lm.peEst }); }
+    const M = d3.groups(C, (r) => r.d.slice(0, 7)).sort((a, b) => (a[0] < b[0] ? -1 : 1)).map(([m, a]) => fin({ m, d: toD(m + '-01'), ...ramAgg(a), desde: m === rg.s.slice(0, 7) && +rg.s.slice(8, 10) > 1 ? rg.s : null, parcial: m === last.slice(0, 7) && +last.slice(8, 10) < dimOf(m) ? last : null }, ext(m))).filter((o) => o.km > 0);
+    // ritmo de los últimos 30 días con datos hasta el fin del rango
+    const d0 = iso(new Date(+toD(last) - 29 * D)); const w = ramAgg(CA.filter((r) => r.d >= d0 && r.d <= last)); const lm = M[M.length - 1]; M.win = { d0, last, w };
+    // proyección: solo si el rango llega al último dato; resto del mes en curso + los meses del filtro Proyección
+    if (lm && w.km && last >= lastAll) {
+      const pe0 = ext(lm.m) || [...M].reverse().map((o) => (o.pe ? { v: o.pe } : null)).find(Boolean);
+      if (lm.parcial) { const fd = dimOf(lm.m) - +lm.parcial.slice(8, 10), kr = fd / 30; lm.resto = fin({ m: lm.m, d: lm.d, km: w.km * kr, m3: w.m3 * kr, galG: w.galG * kr, cGnv: w.cGnv * kr, cGas: w.cGas * kr, placas: w.placas, dias: fd }, { v: lm.pe, est: lm.peEst }); }
+      for (let h = 1; h <= horiz(); h++) {
+        const nd = new Date(Date.UTC(+last.slice(0, 4), +last.slice(5, 7) - 1 + h, 1)); const m = iso(nd).slice(0, 7); const k = dimOf(m) / 30;
+        const pm = ext(m) || pe0; const pe = pm ? { v: pm.v, est: true } : null;
+        M.push(fin({ m, d: nd, proy: true, km: w.km * k, m3: w.m3 * k, galG: w.galG * k, cGnv: w.cGnv * k, cGas: w.cGas * k, placas: w.placas }, pe));
+      }
     }
     return M;
   };
-  const ramLbl = (o, corto) => (corto ? mesTxt(o.d) : mesL(o.d)) + (o.proy ? ' (proy.)' : o.parcial ? ' (al ' + o.parcial.slice(8, 10) + '/' + o.parcial.slice(5, 7) + ')' : '');
+  const ramLbl = (o, corto) => (corto ? mesTxt(o.d) : mesL(o.d)) + (o.proy ? ' (proy.)' : (o.desde ? ' (desde ' + o.desde.slice(8, 10) + '/' + o.desde.slice(5, 7) + ')' : '') + (o.parcial ? ' (al ' + o.parcial.slice(8, 10) + '/' + o.parcial.slice(5, 7) + ')' : ''));
   dash.draw('ram-kpis', (el) => {
     if (!gate(el, ramIds)) return;
     const M = ramMeses(); if (!M.length) return;
     const card = (lab, val, unit, sub, cls) => { const c = document.createElement('div'); c.className = 'fz-card'; const a = document.createElement('span'); a.className = 'fz-kpi-label'; a.textContent = lab; const v = document.createElement('span'); v.className = 'fz-kpi-val'; const b = document.createElement('b'); b.textContent = val; if (cls) b.className = cls; v.append(b, ' '); const u = document.createElement('span'); u.className = 'fz-unit'; u.textContent = unit; v.append(u); const s2 = document.createElement('span'); s2.className = 'fz-kpi-sub'; s2.textContent = sub; c.append(a, v, s2); el.append(c); };
-    const real = M.filter((o) => !o.proy && o.ah != null); const L = real[real.length - 1]; const P = M.find((o) => o.proy);
+    const real = M.filter((o) => !o.proy && o.ah != null); if (!real.length) return; const L = real[real.length - 1]; const PP = M.filter((o) => o.proy && o.ah != null); const P = PP.length ? { d: PP[0].d, d1: PP[PP.length - 1].d, n: PP.length, ah: d3.sum(PP, (o) => o.ah), km: d3.sum(PP, (o) => o.km) } : null;
     const tot = d3.sum(real, (o) => o.ah); const cls = (v) => (v >= 0 ? 'fz-good' : 'fz-bad');
-    const rest = L.resto && L.resto.ah != null ? L.resto.ah : 0, pa = P && P.ah != null ? P.ah : 0;
-    const fin = P || L;
-    card('Total ' + mesTxt(real[0].d) + ' a ' + mesTxt(fin.d) + ' · real + proyectado', 'S/ ' + nf0.format(tot + rest + pa), '', 'real S/ ' + nf0.format(tot) + ' + proyectado S/ ' + nf0.format(rest + pa), cls(tot + rest + pa));
+    const rest = L.resto && L.resto.ah != null ? L.resto.ah : 0, pa = P ? P.ah : 0;
+    const fin = P ? { d: P.d1 } : L;
+    card('Total ' + mesTxt(real[0].d) + ' a ' + mesTxt(fin.d) + (P || L.resto ? ' · real + proyectado' : ' · real'), 'S/ ' + nf0.format(tot + rest + pa), '', P || L.resto ? 'real S/ ' + nf0.format(tot) + ' + proyectado S/ ' + nf0.format(rest + pa) : 'sin proyección: «Hasta» no llega al último dato', cls(tot + rest + pa));
     card('Ahorro real · ' + mesTxt(real[0].d) + ' a ' + ramLbl(L, true), 'S/ ' + nf0.format(tot), '', 'GNV pagado S/ ' + nf0.format(d3.sum(real, (o) => o.cg)) + ' vs. diésel S/ ' + nf0.format(d3.sum(real, (o) => o.cd)), cls(tot));
     if (L.resto) card(mesL(L.d) + ' completo (estimado)', 'S/ ' + nf0.format(L.ah + rest), '', 'real S/ ' + nf0.format(L.ah) + ' + ' + L.resto.dias + ' días proyectados S/ ' + nf0.format(rest), cls(L.ah + rest));
     else card('Ahorro · ' + ramLbl(L), 'S/ ' + nf0.format(L.ah), '', nf0.format(L.km) + ' km · ' + L.placas + ' camionetas', cls(L.ah));
-    if (P && P.ah != null) card('Proyección · ' + mesL(P.d), 'S/ ' + nf0.format(P.ah), '', nf0.format(P.km) + ' km al ritmo de los últimos 30 días · ratio diésel ' + nf2.format(ramRatio()) + ' km/gal', cls(P.ah));
+    if (P) card('Proyección · ' + (P.n === 1 ? mesL(P.d) : mesTxt(P.d) + ' a ' + mesTxt(P.d1) + ' (' + P.n + ' meses)'), 'S/ ' + nf0.format(P.ah), '', nf0.format(P.km) + ' km al ritmo de los últimos 30 días · ratio diésel ' + nf2.format(ramRatio()) + ' km/gal', cls(P.ah));
   });
   dash.draw('ram-chart', (el) => {
     if (!gate(el, ramIds)) return;
     const inp = document.getElementById('ram-ratio'); if (inp && document.activeElement !== inp) inp.value = ramRatio().toFixed(2);
-    const MW = ramMeses(); const M = MW.filter((o) => o.ah != null); if (!M.length) return;
+    const MW = ramMeses(); const M = MW.filter((o) => o.ah != null); if (!M.length) { el.append(mkEl('p', 'fz-note', 'Sin cargas de GNV en el rango Desde/Hasta elegido.')); return; }
     const r2 = (v) => Math.round(v * 100) / 100, R = M.filter((o) => !o.proy);
     const cols = ['Mes', 'Camionetas', 'Km recorridos', 'm³ GNV', 'km/m³', 'Gal diésel equivalentes', 'Precio GNV S/ m³', 'Precio diésel externo S/ gal', 'Costo GNV S/', 'Costo diésel S/', 'Ahorro S/'];
     const rows = M.map((o) => [ramLbl(o) + (o.peEst ? ' *' : ''), o.placas, Math.round(o.km), r2(o.m3), r2(o.kmm3), r2(o.gal), r2(o.cGnv / o.m3), r2(o.pe), Math.round(o.cGnv), Math.round(o.cd), Math.round(o.ah)]);
@@ -893,7 +901,7 @@
         'GNV pagado: importe real de las cargas de GNV en Redcol, sin IGV.',
         'Si fuera diésel: km ÷ ' + rat + ' km/gal (rendimiento real de las camionetas pick up a diésel, Kardex 2026) = galones de diésel; × precio del grifo externo de ese mes, sin IGV.',
         '* Precio diésel estimado: si el mes aún no tiene compras de Primax cargadas, se usa el promedio del tarifario Coesti del mes × factor de ajuste (lo pagado ÷ tarifario del último mes con compras). El mes proyectado usa el último precio.',
-        W0 && W0.w.km ? 'Proyectado: repite el ritmo de los últimos 30 días con datos (' + fdm(W0.d0) + ' al ' + fdm(W0.last) + ': ' + nf0.format(W0.w.km) + ' km, ' + nf0.format(W0.w.m3) + ' m³, S/ ' + nf0.format(W0.w.cGnv) + ' de GNV) × los días a proyectar (los que faltan del mes en curso y el mes siguiente completo).' : null,
+        W0 && W0.w.km ? 'Proyectado: repite el ritmo de los últimos 30 días con datos (' + fdm(W0.d0) + ' al ' + fdm(W0.last) + ': ' + nf0.format(W0.w.km) + ' km, ' + nf0.format(W0.w.m3) + ' m³, S/ ' + nf0.format(W0.w.cGnv) + ' de GNV) × los días a proyectar (los que faltan del mes en curso y los meses elegidos en «Proyección»). Solo se proyecta si «Hasta» llega al último dato.' : null,
       ].filter(Boolean).forEach((t) => ul.append(mkEl('li', '', t)));
       det.append(ul); host.append(det);
     };
@@ -920,7 +928,7 @@
   });
   dash.draw('ram-placas', (el) => {
     if (!gate(el, ramIds)) return;
-    const C = ramCargas(); const ext = ramExt(); const ratio = ramRatio(); const r2 = (v) => Math.round(v * 100) / 100;
+    const rg = ramRango(); const C = ramCargas().filter((r) => r.d >= rg.s && r.d <= rg.e); const ext = ramExt(); const ratio = ramRatio(); const r2 = (v) => Math.round(v * 100) / 100;
     const by = d3.groups(C, (r) => r.placa).map(([p, a]) => { const t = ramAgg(a); let cd = 0; for (const [m, b] of d3.groups(a.filter((r) => r.ok), (r) => r.d.slice(0, 7))) { const pe = ext(m); if (pe) cd += d3.sum(b, (r) => r.km) / ratio * pe.v; } const cg = t.cGnv; return [p, d3.min(a, (r) => r.d), Math.round(t.km), r2(t.m3), t.m3 ? r2(t.km / t.m3) : '', Math.round(cg), Math.round(cd), Math.round(cd - cg)]; }).sort((a, b) => b[2] - a[2]);
     renderTable(el, ['Placa', 'Desde (1.ª carga GNV)', 'Km recorridos', 'm³ GNV', 'km/m³', 'GNV pagado S/', 'Si fuera diésel S/', 'Ahorro S/'], by, [2, 3, 4, 5, 6, 7]);
   });
@@ -1036,7 +1044,8 @@
     document.querySelectorAll('.fz-hzw, .fz-range-lbl, .fz-tipo').forEach((el) => { if (v !== 'precios' || !el.classList.contains('fz-no-tarif')) el.style.display = ''; });
     if (v === 'impacto') document.querySelectorAll('.fz-hzw, label.fz-date.fz-no-tarifa, .fz-range-lbl').forEach((el) => { el.style.display = 'none'; });
     if (v === 'reportes') document.querySelectorAll('.fz-hzw, .fz-tipo').forEach((el) => { el.style.display = 'none'; });
-    const fl = document.getElementById('filtros'); if (fl) fl.hidden = v === 'gnv' || v === 'ram';
+    const fl = document.getElementById('filtros'); if (fl) fl.hidden = v === 'gnv';
+    document.querySelectorAll('.fz-tg, .fz-sede, .fz-tipo').forEach((el) => { if (v === 'ram') el.style.display = 'none'; });
     dash.setLink(v);
   };
   document.querySelectorAll('.fz-navbtn[data-view]').forEach((b) => b.addEventListener('click', () => show(b.dataset.view)));
