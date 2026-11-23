@@ -363,6 +363,7 @@
             <button type="button" class="fz-tog" data-g="Externo" aria-pressed="true"><i class="fz-sw fz-swg-0"></i>Grifo externo</button>
             <button type="button" class="fz-tog" data-g="Interno" aria-pressed="true"><i class="fz-sw fz-swg-1"></i>Grifo interno</button>
             <button type="button" class="fz-tog" data-g="IBC" aria-pressed="false"><i class="fz-sw fz-swg-2"></i>IBC</button>
+            <label class="fz-date" style="margin-left:auto">Sede / grifo <select class="fz-sel" id="tar-loc" aria-label="Sede o grifo"><option value="">Todas las sedes</option><optgroup label="Sede"><option value="S:Callao">Callao</option><option value="S:Paita">Paita</option></optgroup><optgroup label="Grifo externo"><option value="G:Primax">Primax / Coesti</option></optgroup><optgroup label="Grifo interno"><option value="G:Argentina">Argentina</option><option value="G:Gambetta1">Gambetta 1</option><option value="G:Paita">Paita</option></optgroup><optgroup label="IBC"><option value="G:Gambetta2">Gambetta 2</option><option value="G:Gambetta3">Gambetta 3</option><option value="G:Paita2">Paita 2</option></optgroup></select></label>
           </div>
           <div class="fz-chartwrap"><button type="button" class="fz-focusbtn" data-focus="tarifa" aria-label="Ver en pantalla completa" title="Ver en pantalla completa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button><div class="fz-chart dash-skeleton" data-draw="tarifa" data-source="tarifa_compras tarifarios tipo_cambio"></div></div>
           <p class="fz-note">Cada punto es el precio promedio de compra del mes: valorizado (S/ sin IGV) ÷ galones comprados. Grifo externo = Primax/Coesti; grifo interno = Argentina, Gambetta 1 y Paita; IBC = Gambetta 2, Gambetta 3 y Paita 2. El mes en curso se muestra por semanas (SEM) hasta que termina: mientras no estén cargadas sus compras en DPWL Precio Combustible, cada semana sale del tarifario diario ajustado al nivel de compra del último mes cerrado (factor compra ÷ tarifario); al cargar las compras se reemplaza por el precio real. En US$ se usa el tipo de cambio venta SBS (BCRP) promedio de cada mes o semana; la proyección usa el promedio del último mes. Línea punteada: proyección de los próximos meses (plazo según "Proyección" de arriba): parte del último precio de compra y le aplica la tendencia conservadora del tarifario de cada tipo.</p>
@@ -1290,7 +1291,14 @@
   const TG_TAR = { Externo: 'Externo (Coesti)', Interno: 'Interno', IBC: 'IBC' };
   const TG_LBL = { Externo: 'Grifo externo', Interno: 'Grifo interno', IBC: 'IBC' };
   const MESC = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'];
-  const tarSt = { y: '2024', gs: new Set(['Externo', 'Interno']), cur: 'PEN', lab: 'todos' };
+  const tarSt = { y: '2024', gs: new Set(['Externo', 'Interno']), cur: 'PEN', lab: 'todos', loc: '' };
+  const TG_SEDE = { Primax: 'Callao', Argentina: 'Callao', Gambetta1: 'Callao', Paita: 'Paita', Gambetta2: 'Callao', Gambetta3: 'Callao', Paita2: 'Paita' };
+  const TG_GNOM = { Primax: 'Primax / Coesti', Argentina: 'Argentina', Gambetta1: 'Gambetta 1', Paita: 'Paita', Gambetta2: 'Gambetta 2', Gambetta3: 'Gambetta 3', Paita2: 'Paita 2' };
+  // ubicaciones del tarifario que corresponden a cada sede / grifo (para semanas estimadas y proyección)
+  const TG_UBI = { 'S:Callao': { Externo: ['Callao'], Interno: ['Callao', 'Gambetta'], IBC: ['Callao'] }, 'S:Paita': { Externo: [], Interno: ['Piura'], IBC: ['Paita'] }, 'G:Primax': { Externo: null }, 'G:Argentina': { Interno: ['Callao'] }, 'G:Gambetta1': { Interno: ['Gambetta'] }, 'G:Paita': { Interno: ['Piura'] }, 'G:Gambetta2': { IBC: ['Callao'] }, 'G:Gambetta3': { IBC: ['Callao'] }, 'G:Paita2': { IBC: ['Paita'] } };
+  const tgLocOk = (gr) => { const L = tarSt.loc; if (!L) return true; return L.startsWith('S:') ? TG_SEDE[gr] === L.slice(2) : gr === L.slice(2); };
+  const tgUbi = (g) => { const L = tarSt.loc; if (!L) return g === 'Interno' ? ['Callao', 'Gambetta', 'Piura'] : null; const u = TG_UBI[L]; if (!(g in u)) return []; return u[g]; };
+  const tgLocLbl = () => { const L = tarSt.loc; if (!L) return ''; return L.startsWith('S:') ? ' · sede ' + L.slice(2) : ' · grifo ' + TG_GNOM[L.slice(2)]; };
   let tcCache = null;
   const tcData = () => {
     const t = dash.data('tipo_cambio'); if (t.status !== 'ok' || !t.data.length) return null;
@@ -1313,11 +1321,11 @@
   const isoWeek = (f) => { const d = toD(f); const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())); const day = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - day); const y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1)); return Math.ceil(((t - y0) / D + 1) / 7); };
   const tarData = () => {
     const c = dash.data('tarifa_compras'); if (c.status !== 'ok' || !c.data.length) return null;
-    const last = d3.max(c.data, (x) => String(x.fecha)); const lastM = last.slice(0, 7);
+    const last = d3.max(c.data, (x) => String(x.fecha)); const lastM = last.slice(0, 7); // último día con compras de cualquier grifo (mantiene el corte mes/semanas igual con o sin filtro)
     const hoy = limaHoy(); const enCurso = lastM === hoy.slice(0, 7);
     const per = new Map(); // key -> {lab, ord, g: {grupo: {gal, tot, gr: {grifo: {gal, tot}}}}}
     for (const x of c.data) {
-      const f = String(x.fecha); const g = TG_DE[x.grifo]; if (!g) continue;
+      const f = String(x.fecha); const g = TG_DE[x.grifo]; if (!g || !tgLocOk(x.grifo)) continue;
       const m = f.slice(0, 7); let key, lab, ord;
       if (enCurso && m === lastM) { const w = isoWeek(f); key = m + '-W' + String(w).padStart(2, '0'); lab = 'SEM' + w; ord = key; }
       else { key = m; lab = MESC[+m.slice(5, 7) - 1] + '-' + m.slice(2, 4); ord = m; }
@@ -1336,7 +1344,8 @@
       const tr = {}, all = {};
       for (const g of ['Externo', 'Interno', 'IBC']) {
         const mm = new Map();
-        for (const x of t.data) { if (x.grupo !== TG_TAR[g]) continue; if (g === 'Interno' && !['Callao', 'Gambetta', 'Piura'].includes(x.ubicacion)) continue; const o = mm.get(x.fecha) || { s: 0, n: 0 }; o.s += +x.suma; o.n += +x.n; mm.set(x.fecha, o); }
+        const ub = tgUbi(g); if (ub && !ub.length) { all[g] = []; tr[g] = []; continue; }
+        for (const x of t.data) { if (x.grupo !== TG_TAR[g]) continue; if (ub && !ub.includes(x.ubicacion)) continue; const o = mm.get(x.fecha) || { s: 0, n: 0 }; o.s += +x.suma; o.n += +x.n; mm.set(x.fecha, o); }
         all[g] = [...mm.entries()].map(([f, o]) => ({ f, d: toD(f), v: o.s / o.n })).sort((a, b) => a.d - b.d);
         tr[g] = trend(all[g], H * 30 + 31);
       }
@@ -1363,7 +1372,7 @@
           const pts = (tr[g] || []).filter((q) => iso(q.d).slice(0, 7) === m);
           const le = [...est].reverse().find((z) => z.g[g]); const lr = lastReal(g);
           const anchor = le ? le.g[g].v : lr ? lr.g[g].tot / lr.g[g].gal : null;
-          if (pts.length && anchor != null) o.g[g] = { v: anchor * d3.mean(pts, (q) => q.v) / tr[g][0].v };
+          if (pts.length && anchor != null && tr[g][0]) o.g[g] = { v: anchor * d3.mean(pts, (q) => q.v) / tr[g][0].v };
         }
         proy.push(o);
       }
@@ -1374,13 +1383,14 @@
   const tval = (o, g) => (!o || !o.g[g] ? null : o.proy || o.est ? o.g[g].v : o.g[g].gal ? o.g[g].tot / o.g[g].gal : null);
   const tvalC = (o, g) => cvt(o, tval(o, g));
   document.querySelectorAll('#tar-cur button').forEach((b) => b.addEventListener('click', () => { tarSt.cur = b.dataset.c; document.querySelectorAll('#tar-cur button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); dash.draw('tarifa'); dash.draw('tarifa-calc'); }));
+  document.getElementById('tar-loc')?.addEventListener('change', (ev) => { tarSt.loc = ev.target.value; if (tarSt.loc.startsWith('G:')) { tarSt.gs.add(TG_DE[tarSt.loc.slice(2)]); document.querySelectorAll('#tar-g .fz-tog').forEach((x) => x.setAttribute('aria-pressed', String(tarSt.gs.has(x.dataset.g)))); } dash.draw('tarifa'); dash.draw('tarifa-calc'); });
   document.querySelectorAll('#tar-lab button').forEach((b) => b.addEventListener('click', () => { tarSt.lab = b.dataset.l; document.querySelectorAll('#tar-lab button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); dash.draw('tarifa'); }));
   document.querySelectorAll('#tar-rng button').forEach((b) => b.addEventListener('click', () => { tarSt.y = b.dataset.y; document.querySelectorAll('#tar-rng button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); dash.draw('tarifa'); }));
   document.querySelectorAll('#tar-g .fz-tog').forEach((b) => b.addEventListener('click', () => { const g = b.dataset.g; if (tarSt.gs.has(g)) { if (tarSt.gs.size > 1) tarSt.gs.delete(g); } else tarSt.gs.add(g); document.querySelectorAll('#tar-g .fz-tog').forEach((x) => x.setAttribute('aria-pressed', String(tarSt.gs.has(x.dataset.g)))); dash.draw('tarifa'); }));
   const tcOpts = (TD) => [...TD.pers, ...TD.est].map((o) => { const op = document.createElement('option'); op.value = o.key; op.textContent = o.lab + (o.sem ? ' (' + o.d0.slice(8, 10) + '/' + o.d0.slice(5, 7) + '–' + o.d1.slice(8, 10) + '/' + o.d1.slice(5, 7) + ')' : '') + (o.est ? ' · tarifario' : ''); return op; });
   dash.draw('tarifa', (el) => {
     if (!gate(el, ['tarifa_compras', 'tarifarios'])) return;
-    const h2 = document.getElementById('tar-h2'); if (h2) h2.textContent = 'Tarifa de grifos: precio de compra por mes (' + curS() + ' por galón, sin IGV)' + (isUSD() ? ' · TC venta SBS promedio del periodo' : '');
+    const h2 = document.getElementById('tar-h2'); if (h2) h2.textContent = 'Tarifa de grifos: precio de compra por mes (' + curS() + ' por galón, sin IGV)' + tgLocLbl() + (isUSD() ? ' · TC venta SBS promedio del periodo' : '');
     const TD = tarData(); if (!TD) return;
     const real = TD.pers.filter((o) => o.m >= tarSt.y + '-01'); const pts = [...real, ...TD.est, ...TD.proy];
     const gs = ['Externo', 'Interno', 'IBC'].filter((g) => tarSt.gs.has(g));
