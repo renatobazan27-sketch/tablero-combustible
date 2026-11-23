@@ -287,6 +287,7 @@
       <button type="button" class="fz-navbtn" data-view="activos" aria-current="false"><svg class="fz-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="9" width="13" height="8" rx="1"/><path d="M15 12h4l3 3v2h-7"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg><span>Grifos y activos</span></button>
       <button type="button" class="fz-navbtn" data-view="simulador" aria-current="false"><svg class="fz-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h2M12 12h2M16 12h0M8 16h2M12 16h2"/></svg><span>Simulador</span></button>
       <button type="button" class="fz-navbtn" data-view="gnv" aria-current="false"><svg class="fz-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7v18H7z"/><path d="M14 8h3l2 3v7a1.5 1.5 0 0 1-3 0v-4h-2"/><path d="M9 7h3"/></svg><span>GNV</span></button>
+      <button type="button" class="fz-navbtn" data-view="ram" aria-current="false"><svg class="fz-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 15V11l3-4h7l3 4h5a2 2 0 0 1 2 2v2h-2"/><path d="M8 15h7"/><circle cx="6" cy="16" r="2"/><circle cx="17" cy="16" r="2"/><path d="M6 11h8"/></svg><span>Análisis RAM</span></button>
       <button type="button" class="fz-navbtn" data-view="reportes" aria-current="false"><svg class="fz-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9 12h7M9 15h7M9 18h4"/></svg><span>Reportes</span></button>
       <button type="button" class="fz-navbtn" data-view="alertas" aria-current="false"><svg class="fz-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.5"/></svg><span>Alertas</span></button>
     </nav>
@@ -454,6 +455,19 @@
           <h2>Consumo de GNV por placa · últimos 3 meses</h2>
           <div class="fz-chart dash-skeleton" data-draw="gnv-placas" data-source="gnv_placa_mes"></div>
           <p class="fz-note">El GNV se mide en m³ y no se suma con los galones de diésel de las demás vistas. Los filtros de arriba no aplican a esta vista.</p>
+        </section>
+      </section>
+      <section class="fz-page" data-page="ram" id="vista-ram" hidden>
+        <section class="fz-kpis" data-draw="ram-kpis" data-source="ram_gnv ram_diesel_pickup gnv_mensual tarifa_compras tarifarios"></section>
+        <section class="fz-card" id="ram-mes">
+          <div class="fz-cardhead"><h2>Camionetas a GNV vs. diésel: ahorro por mes</h2><div class="fz-tools"><label class="fz-date">Ratio diésel <input type="number" id="ram-ratio" step="0.1" min="10" max="40" style="width:5.2rem"> km/gal</label><button type="button" class="fz-tbtn" id="ram-ratio-reset">Usar el del Kardex</button><button type="button" class="fz-tbtn" data-tabla="ram-chart" aria-pressed="false">Ver tabla</button></div></div>
+          <p class="fz-note">Camionetas tipo TERCERO NO DPWL_GNV que cargan GNV en el grifo Redcol. Para cada mes: km recorridos (avance del odómetro entre cargas, Reporte de combustible 2026) ÷ ratio diésel = galones que habrían usado a diésel; × precio del grifo externo del mes = costo diésel. Se compara con los m³ de GNV × precio Redcol del mes (todo sin IGV). El ratio diésel por defecto es el real de las camionetas pick up a diésel del Kardex (km ÷ galones).</p>
+          <div class="fz-chartwrap"><div class="fz-chart dash-skeleton" data-draw="ram-chart" data-source="ram_gnv ram_diesel_pickup gnv_mensual tarifa_compras tarifarios"></div></div>
+        </section>
+        <section class="fz-card" id="ram-placa">
+          <div class="fz-cardhead"><h2>Detalle por camioneta</h2></div>
+          <div class="fz-chart dash-skeleton" data-draw="ram-placas" data-source="ram_gnv ram_diesel_pickup gnv_mensual tarifa_compras tarifarios"></div>
+          <p class="fz-note">km/m³ = km recorridos ÷ m³ cargados después de cada avance de odómetro. La primera carga de cada camioneta no tiene recorrido previo y no entra al ratio ni al ahorro.</p>
         </section>
       </section>
       <section class="fz-page" data-page="alertas" id="vista-alertas" hidden>
@@ -805,6 +819,80 @@
   }));
 
 
+
+  // ---------- Análisis RAM (camionetas a GNV vs. diésel) ----------
+  const ramSt = { ratio: null };
+  const ramIds = ['ram_gnv', 'ram_diesel_pickup', 'gnv_mensual', 'tarifa_compras', 'tarifarios'];
+  const ramRatioKdx = () => { const d = dash.data('ram_diesel_pickup').data; const km = d3.sum(d, (r) => +r.km), gal = d3.sum(d, (r) => +r.gal); return gal ? km / gal : 25; };
+  const ramRatio = () => ramSt.ratio || ramRatioKdx();
+  const ramExt = () => { // precio del grifo externo por mes (S/ sin IGV): compras Primax; si no hay, tarifario Coesti × factor
+    const c = dash.data('tarifa_compras').data.filter((x) => x.grifo === 'Primax');
+    const mc = d3.rollup(c, (a) => d3.sum(a, (x) => +x.total) / d3.sum(a, (x) => +x.galones), (x) => String(x.fecha).slice(0, 7));
+    const dd = d3.rollup(dash.data('tarifarios').data.filter((x) => x.grupo === 'Externo (Coesti)'), (a) => d3.sum(a, (x) => +x.suma) / d3.sum(a, (x) => +x.n), (x) => String(x.fecha));
+    const tm = d3.rollup([...dd], (a) => d3.mean(a, (q) => q[1]), (q) => q[0].slice(0, 7));
+    const lastC = [...mc.keys()].sort().pop(); const fac = lastC && tm.get(lastC) ? mc.get(lastC) / tm.get(lastC) : 1;
+    return (m) => (mc.has(m) ? { v: mc.get(m), est: false } : tm.has(m) ? { v: tm.get(m) * fac, est: true } : null);
+  };
+  const ramMeses = () => {
+    const R = dash.data('ram_gnv').data; const ext = ramExt(); const ratio = ramRatio();
+    const gp = new Map(dash.data('gnv_mensual').data.filter((r) => +r.precio).map((r) => [String(r.mes).slice(0, 7), +r.precio])); const gk = [...gp.keys()].sort();
+    return d3.groups(R, (r) => String(r.mes).slice(0, 7)).sort((a, b) => (a[0] < b[0] ? -1 : 1)).map(([m, a]) => {
+      const km = d3.sum(a, (r) => +r.km), m3 = d3.sum(a, (r) => +r.m3_km), m3t = d3.sum(a, (r) => +r.m3);
+      const pg = gp.get(m) ?? gp.get(gk.filter((k) => k <= m).pop()); const pgEst = !gp.has(m);
+      const pe = ext(m); const gal = km / ratio;
+      const cg = pg != null ? m3 * pg : null, cd = pe ? gal * pe.v : null;
+      return { m, d: toD(m + '-01'), placas: a.filter((r) => +r.m3 > 0).length, km, m3, m3t, kmm3: m3 ? km / m3 : null, gal, pg, pgEst, pe: pe && pe.v, peEst: pe && pe.est, cg, cd, ah: cg != null && cd != null ? cd - cg : null };
+    }).filter((o) => o.km > 0);
+  };
+  dash.draw('ram-kpis', (el) => {
+    if (!gate(el, ramIds)) return;
+    const M = ramMeses(); if (!M.length) return;
+    const card = (lab, val, unit, sub, cls) => { const c = document.createElement('div'); c.className = 'fz-card'; const a = document.createElement('span'); a.className = 'fz-kpi-label'; a.textContent = lab; const v = document.createElement('span'); v.className = 'fz-kpi-val'; const b = document.createElement('b'); b.textContent = val; if (cls) b.className = cls; v.append(b, ' '); const u = document.createElement('span'); u.className = 'fz-unit'; u.textContent = unit; v.append(u); const s2 = document.createElement('span'); s2.className = 'fz-kpi-sub'; s2.textContent = sub; c.append(a, v, s2); el.append(c); };
+    const ok = M.filter((o) => o.ah != null); const L = ok[ok.length - 1];
+    const tot = d3.sum(ok, (o) => o.ah);
+    card('Ahorro acumulado · ' + mesTxt(ok[0].d) + ' a ' + mesTxt(L.d), 'S/ ' + nf0.format(tot), '', 'GNV S/ ' + nf0.format(d3.sum(ok, (o) => o.cg)) + ' vs. diésel S/ ' + nf0.format(d3.sum(ok, (o) => o.cd)), tot >= 0 ? 'fz-good' : 'fz-bad');
+    card('Ahorro · ' + mesL(L.d), 'S/ ' + nf0.format(L.ah), '', nf0.format(L.km) + ' km · ' + L.placas + ' camionetas', L.ah >= 0 ? 'fz-good' : 'fz-bad');
+    const km = d3.sum(M, (o) => o.km), m3 = d3.sum(M, (o) => o.m3);
+    card('Rendimiento GNV real', nf2.format(km / m3), 'km/m³', nf0.format(km) + ' km con ' + nf0.format(m3) + ' m³');
+    card('Ratio diésel usado', nf2.format(ramRatio()), 'km/gal', ramSt.ratio ? 'ingresado a mano (Kardex: ' + nf2.format(ramRatioKdx()) + ')' : 'real de las pick up a diésel (Kardex 2026)');
+  });
+  dash.draw('ram-chart', (el) => {
+    if (!gate(el, ramIds)) return;
+    const inp = document.getElementById('ram-ratio'); if (inp && document.activeElement !== inp) inp.value = ramRatio().toFixed(2);
+    const M = ramMeses().filter((o) => o.ah != null); if (!M.length) return;
+    const mk = (o) => mesL(o.d) + (o.pgEst || o.peEst ? ' *' : '');
+    const cols = ['Mes', 'Camionetas', 'Km recorridos', 'm³ GNV', 'km/m³', 'Gal diésel equivalentes', 'Precio GNV S/ m³', 'Precio diésel externo S/ gal', 'Costo GNV S/', 'Costo diésel S/', 'Ahorro S/'];
+    const rows = M.map((o) => [mk(o), o.placas, Math.round(o.km), Math.round(o.m3 * 100) / 100, Math.round(o.kmm3 * 100) / 100, Math.round(o.gal * 100) / 100, Math.round(o.pg * 100) / 100, Math.round(o.pe * 100) / 100, Math.round(o.cg), Math.round(o.cd), Math.round(o.ah)]);
+    rows.push(['Total', '', Math.round(d3.sum(M, (o) => o.km)), Math.round(d3.sum(M, (o) => o.m3) * 100) / 100, Math.round(d3.sum(M, (o) => o.km) / d3.sum(M, (o) => o.m3) * 100) / 100, Math.round(d3.sum(M, (o) => o.gal) * 100) / 100, '', '', Math.round(d3.sum(M, (o) => o.cg)), Math.round(d3.sum(M, (o) => o.cd)), Math.round(d3.sum(M, (o) => o.ah))]);
+    if (asTable.has('ram-chart')) { renderTable(el, cols, rows, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]); if (M.some((o) => o.pgEst || o.peEst)) el.append(mkEl('p', 'fz-note', '* Mes con precio estimado: sin compras de Primax cargadas (tarifario Coesti × factor) o sin precio Redcol del mes (último disponible).')); return; }
+    const W = Math.max(300, el.clientWidth), H = big(el, 320), mt = 26, mb = 30, mr = 10;
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+    const y = d3.scaleLinear([0, d3.max(M, (o) => Math.max(o.cd, o.cg)) * 1.15], [H - mb, mt]).nice();
+    const ticks = y.ticks(5), fmt = (t) => 'S/ ' + nf0.format(t); const ml = measure(svg, ticks.map(fmt)) + 12;
+    const x0 = d3.scaleBand(M.map((o) => o.m), [ml, W - mr]).padding(0.28); const x1 = d3.scaleBand(['cd', 'cg'], [0, x0.bandwidth()]).padding(0.08);
+    gridY(svg, y, ml, W - mr, ticks, fmt);
+    svg.append('g').selectAll('text').data(M).join('text').attr('x', (o) => x0(o.m) + x0.bandwidth() / 2).attr('y', H - 10).attr('text-anchor', 'middle').text((o) => mesTxt(o.d) + (o.pgEst || o.peEst ? '*' : ''));
+    const COL = { cd: C0, cg: 'var(--fz-green, #2E9E6B)' }, LBL = { cd: 'Si fuera diésel', cg: 'GNV pagado' };
+    const tip = tipBox(el);
+    const g = svg.append('g').selectAll('g').data(M).join('g').attr('transform', (o) => `translate(${x0(o.m)},0)`);
+    g.selectAll('rect').data((o) => ['cd', 'cg'].map((k) => ({ o, k }))).join('rect').attr('x', (q) => x1(q.k)).attr('width', x1.bandwidth()).attr('y', (q) => y(q.o[q.k])).attr('height', (q) => y(0) - y(q.o[q.k])).attr('rx', 2).attr('fill', (q) => COL[q.k])
+      .on('pointermove', (ev, q) => { const o = q.o; tipLine(tip, mesL(o.d), [[C0, 'Diésel: ' + nf0.format(o.gal) + ' gal × S/ ' + nf2.format(o.pe) + (o.peEst ? ' (estimado)' : '') + ' = S/ ' + nf0.format(o.cd)], [COL.cg, 'GNV: ' + nf0.format(o.m3) + ' m³ × S/ ' + nf2.format(o.pg) + (o.pgEst ? ' (último precio)' : '') + ' = S/ ' + nf0.format(o.cg)], ['var(--fz-orange)', 'Ahorro S/ ' + nf0.format(o.ah) + ' · ' + nf0.format(o.km) + ' km · ' + nf2.format(o.kmm3) + ' km/m³']]); const k = W / el.clientWidth; placeTip(tip, el, (x0(o.m) + x0.bandwidth() / 2) / k, y(o.cd) / k); })
+      .on('pointerleave', () => { tip.hidden = true; });
+    g.selectAll('text.v').data((o) => ['cd', 'cg'].map((k) => ({ o, k }))).join('text').attr('class', 'v').attr('x', (q) => x1(q.k) + x1.bandwidth() / 2).attr('y', (q) => y(q.o[q.k]) - 4).attr('text-anchor', 'middle').style('font-size', '10px').style('fill', (q) => COL[q.k]).text((q) => nf0.format(q.o[q.k]));
+    svg.append('g').selectAll('text').data(M).join('text').attr('x', (o) => x0(o.m) + x0.bandwidth() / 2).attr('y', (o) => y(o.cd) - 18).attr('text-anchor', 'middle').style('font-size', '11px').style('font-weight', 700).style('fill', 'var(--fz-orange)').text((o) => 'ahorro ' + nf0.format(o.ah));
+    const lg = svg.append('g').attr('transform', `translate(${ml},10)`); ['cd', 'cg'].forEach((k, i) => { lg.append('rect').attr('x', i * 130).attr('y', -8).attr('width', 10).attr('height', 10).attr('rx', 2).attr('fill', COL[k]); lg.append('text').attr('x', i * 130 + 14).attr('y', 1).style('font-size', '11px').text(LBL[k]); });
+    if (M.some((o) => o.pgEst || o.peEst)) el.append(mkEl('p', 'fz-note', '* Mes con precio estimado (sin compras de Primax cargadas: tarifario Coesti × factor; o sin precio Redcol del mes).'));
+  });
+  dash.draw('ram-placas', (el) => {
+    if (!gate(el, ramIds)) return;
+    const R = dash.data('ram_gnv').data; const M = new Map(ramMeses().map((o) => [o.m, o])); const ratio = ramRatio();
+    const by = d3.groups(R, (r) => String(r.placa)).map(([p, a]) => { let ah = 0; for (const r of a) { const o = M.get(String(r.mes).slice(0, 7)); if (o && o.pe && o.pg) ah += (+r.km / ratio) * o.pe - (+r.m3_km) * o.pg; } const km = d3.sum(a, (r) => +r.km), m3 = d3.sum(a, (r) => +r.m3_km); const ms = a.map((r) => String(r.mes).slice(0, 7)).sort(); return [p, ms[0] + ' a ' + ms[ms.length - 1], d3.sum(a, (r) => +r.cargas), Math.round(d3.sum(a, (r) => +r.m3) * 100) / 100, Math.round(km), m3 ? Math.round(km / m3 * 100) / 100 : '', Math.round(ah)]; }).sort((a, b) => b[4] - a[4]);
+    renderTable(el, ['Placa', 'Meses', 'Cargas', 'm³ cargados', 'Km recorridos', 'km/m³', 'Ahorro S/'], by, [2, 3, 4, 5, 6]);
+  });
+  { const inp = document.getElementById('ram-ratio');
+    inp?.addEventListener('change', () => { const v = parseFloat(String(inp.value).replace(',', '.')); ramSt.ratio = v >= 10 && v <= 40 ? v : null; ['ram-kpis', 'ram-chart', 'ram-placas'].forEach((k) => dash.draw(k)); });
+    document.getElementById('ram-ratio-reset')?.addEventListener('click', () => { ramSt.ratio = null; ['ram-kpis', 'ram-chart', 'ram-placas'].forEach((k) => dash.draw(k)); }); }
+
   // ---------- GNV ----------
   const gnvRows = () => dash.data('gnv_mensual').data.map((r) => ({ mes: String(r.mes), d: toD(String(r.mes) + '-01'), m3: +r.m3 || 0, costo: +r.costo || 0, precio: +r.precio || null, cons: +r.m3_consumo || 0, placas: +r.placas || 0 })).sort((a, b) => a.d - b.d);
   const mesL = (d) => MESL[d.getUTCMonth()] + ' ' + d.getUTCFullYear();
@@ -896,7 +984,7 @@
   });
 
   // ---------- Views (sidebar) ----------
-  const VIEWS = ['resumen', 'precios', 'precio', 'impacto', 'consumo', 'activos', 'simulador', 'gnv', 'alertas', 'reportes'];
+  const VIEWS = ['resumen', 'precios', 'precio', 'impacto', 'consumo', 'activos', 'simulador', 'gnv', 'ram', 'alertas', 'reportes'];
   const PRECIO_V = new Set(['precios', 'precio']);
   const show = (v) => {
     if (!VIEWS.includes(v)) v = 'resumen';
