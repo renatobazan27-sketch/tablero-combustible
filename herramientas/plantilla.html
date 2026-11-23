@@ -852,6 +852,8 @@
       const nd = new Date(Date.UTC(+last.slice(0, 4), +last.slice(5, 7), 1)); const m = iso(nd).slice(0, 7); const dias = new Date(Date.UTC(nd.getUTCFullYear(), nd.getUTCMonth() + 1, 0)).getUTCDate(); const k = dias / 30;
       const pe = ext(m) || ext(lm.m) ? { v: (ext(m) || ext(lm.m)).v, est: true } : null;
       M.push(fin({ m, d: nd, proy: true, km: w.km * k, m3: w.m3 * k, galG: w.galG * k, cGnv: w.cGnv * k, cGas: w.cGas * k, placas: w.placas }, pe));
+      // resto del mes en curso (días que faltan) al mismo ritmo, para estimar el cierre del mes
+      if (lm.parcial) { const dim = new Date(Date.UTC(+lm.m.slice(0, 4), +lm.m.slice(5, 7), 0)).getUTCDate(); const kr = (dim - +lm.parcial.slice(8, 10)) / 30; lm.resto = fin({ m: lm.m, d: lm.d, km: w.km * kr, m3: w.m3 * kr, galG: w.galG * kr, cGnv: w.cGnv * kr, cGas: w.cGas * kr, placas: w.placas, dias: dim - +lm.parcial.slice(8, 10) }, { v: lm.pe, est: lm.peEst }); }
     }
     return M;
   };
@@ -862,10 +864,13 @@
     const card = (lab, val, unit, sub, cls) => { const c = document.createElement('div'); c.className = 'fz-card'; const a = document.createElement('span'); a.className = 'fz-kpi-label'; a.textContent = lab; const v = document.createElement('span'); v.className = 'fz-kpi-val'; const b = document.createElement('b'); b.textContent = val; if (cls) b.className = cls; v.append(b, ' '); const u = document.createElement('span'); u.className = 'fz-unit'; u.textContent = unit; v.append(u); const s2 = document.createElement('span'); s2.className = 'fz-kpi-sub'; s2.textContent = sub; c.append(a, v, s2); el.append(c); };
     const real = M.filter((o) => !o.proy && o.ah != null); const L = real[real.length - 1]; const P = M.find((o) => o.proy);
     const tot = d3.sum(real, (o) => o.ah); const cls = (v) => (v >= 0 ? 'fz-good' : 'fz-bad');
-    card('Ahorro acumulado · ' + mesTxt(real[0].d) + ' a ' + ramLbl(L, true), 'S/ ' + nf0.format(tot), '', 'pagado S/ ' + nf0.format(d3.sum(real, (o) => o.cg)) + ' vs. diésel S/ ' + nf0.format(d3.sum(real, (o) => o.cd)), cls(tot));
-    card('Ahorro · ' + ramLbl(L), 'S/ ' + nf0.format(L.ah), '', nf0.format(L.km) + ' km · ' + L.placas + ' camionetas', cls(L.ah));
-    if (P && P.ah != null) card('Proyección · ' + mesL(P.d), 'S/ ' + nf0.format(P.ah), '', nf0.format(P.km) + ' km al ritmo de los últimos 30 días', cls(P.ah));
-    card('Ratio diésel usado', nf2.format(ramRatio()), 'km/gal', ramSt.ratio ? 'ingresado a mano (Kardex: ' + nf2.format(ramRatioKdx()) + ')' : 'real de las pick up a diésel (Kardex 2026)');
+    const rest = L.resto && L.resto.ah != null ? L.resto.ah : 0, pa = P && P.ah != null ? P.ah : 0;
+    const fin = P || L;
+    card('Total ' + mesTxt(real[0].d) + ' a ' + mesTxt(fin.d) + ' · real + proyectado', 'S/ ' + nf0.format(tot + rest + pa), '', 'real S/ ' + nf0.format(tot) + ' + proyectado S/ ' + nf0.format(rest + pa), cls(tot + rest + pa));
+    card('Ahorro real · ' + mesTxt(real[0].d) + ' a ' + ramLbl(L, true), 'S/ ' + nf0.format(tot), '', 'GNV pagado S/ ' + nf0.format(d3.sum(real, (o) => o.cg)) + ' vs. diésel S/ ' + nf0.format(d3.sum(real, (o) => o.cd)), cls(tot));
+    if (L.resto) card(mesL(L.d) + ' completo (estimado)', 'S/ ' + nf0.format(L.ah + rest), '', 'real S/ ' + nf0.format(L.ah) + ' + ' + L.resto.dias + ' días proyectados S/ ' + nf0.format(rest), cls(L.ah + rest));
+    else card('Ahorro · ' + ramLbl(L), 'S/ ' + nf0.format(L.ah), '', nf0.format(L.km) + ' km · ' + L.placas + ' camionetas', cls(L.ah));
+    if (P && P.ah != null) card('Proyección · ' + mesL(P.d), 'S/ ' + nf0.format(P.ah), '', nf0.format(P.km) + ' km al ritmo de los últimos 30 días · ratio diésel ' + nf2.format(ramRatio()) + ' km/gal', cls(P.ah));
   });
   dash.draw('ram-chart', (el) => {
     if (!gate(el, ramIds)) return;
@@ -874,12 +879,15 @@
     const r2 = (v) => Math.round(v * 100) / 100, R = M.filter((o) => !o.proy);
     const cols = ['Mes', 'Camionetas', 'Km recorridos', 'm³ GNV', 'km/m³', 'Gal diésel equivalentes', 'Precio GNV S/ m³', 'Precio diésel externo S/ gal', 'Costo GNV S/', 'Costo diésel S/', 'Ahorro S/'];
     const rows = M.map((o) => [ramLbl(o) + (o.peEst ? ' *' : ''), o.placas, Math.round(o.km), r2(o.m3), r2(o.kmm3), r2(o.gal), r2(o.cGnv / o.m3), r2(o.pe), Math.round(o.cGnv), Math.round(o.cd), Math.round(o.ah)]);
-    rows.splice(R.length, 0, ['Total real', '', Math.round(d3.sum(R, (o) => o.km)), r2(d3.sum(R, (o) => o.m3)), r2(d3.sum(R, (o) => o.km) / d3.sum(R, (o) => o.m3)), r2(d3.sum(R, (o) => o.gal)), r2(d3.sum(R, (o) => o.cGnv) / d3.sum(R, (o) => o.m3)), '', Math.round(d3.sum(R, (o) => o.cGnv)), Math.round(d3.sum(R, (o) => o.cd)), Math.round(d3.sum(R, (o) => o.ah))]);
-    const nota = '* Precio diésel estimado: sin compras de Primax cargadas ese mes (tarifario Coesti × factor); en la proyección se usa el último precio. La proyección repite el ritmo de los últimos 30 días (km, m³ y costo por día).';
+    const Lp = R[R.length - 1];
+    if (Lp && Lp.resto) { const q = Lp.resto, tc = (k) => Lp[k] + q[k]; rows.splice(R.length, 0, [mesL(Lp.d) + ' · ' + q.dias + ' días que faltan (proy.)', q.placas, Math.round(q.km), r2(q.m3), r2(q.kmm3), r2(q.gal), r2(q.cGnv / q.m3), r2(q.pe), Math.round(q.cGnv), Math.round(q.cd), Math.round(q.ah)], [mesL(Lp.d) + ' completo (real + proy.)', Lp.placas, Math.round(tc('km')), r2(tc('m3')), r2(tc('km') / tc('m3')), r2(tc('gal')), r2(tc('cGnv') / tc('m3')), r2(Lp.pe), Math.round(tc('cGnv')), Math.round(tc('cd')), Math.round(tc('ah'))]); }
+    rows.splice(R.length + (Lp && Lp.resto ? 2 : 0), 0, ['Total real', '', Math.round(d3.sum(R, (o) => o.km)), r2(d3.sum(R, (o) => o.m3)), r2(d3.sum(R, (o) => o.km) / d3.sum(R, (o) => o.m3)), r2(d3.sum(R, (o) => o.gal)), r2(d3.sum(R, (o) => o.cGnv) / d3.sum(R, (o) => o.m3)), '', Math.round(d3.sum(R, (o) => o.cGnv)), Math.round(d3.sum(R, (o) => o.cd)), Math.round(d3.sum(R, (o) => o.ah))]);
+    const nota = '* Precio diésel estimado: sin compras de Primax cargadas ese mes (tarifario Coesti × factor); en la proyección se usa el último precio. Lo proyectado (días que faltan del mes en curso y el mes siguiente) repite el ritmo de los últimos 30 días (km, m³ y costo por día).';
     if (asTable.has('ram-chart')) { renderTable(el, cols, rows, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]); el.append(mkEl('p', 'fz-note', nota)); return; }
     const W = Math.max(300, el.clientWidth), H = big(el, 340), mt = 30, mb = 32, mr = 10;
     const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
-    const y = d3.scaleLinear([0, d3.max(M, (o) => Math.max(o.cd, o.cg)) * 1.18], [H - mb, mt]).nice();
+    const top = (o) => Math.max(o.cd + (o.resto ? o.resto.cd : 0), o.cg + (o.resto ? o.resto.cGnv : 0));
+    const y = d3.scaleLinear([0, d3.max(M, top) * 1.18], [H - mb, mt]).nice();
     const ticks = y.ticks(5), fmt = (t) => 'S/ ' + nf0.format(t); const ml = measure(svg, ticks.map(fmt)) + 12;
     const x0 = d3.scaleBand(M.map((o) => o.m), [ml, W - mr]).padding(0.26); const x1 = d3.scaleBand(['cd', 'cg'], [0, x0.bandwidth()]).padding(0.08);
     gridY(svg, y, ml, W - mr, ticks, fmt);
@@ -887,13 +895,13 @@
     const CG = 'var(--fz-green, #2E9E6B)';
     const tip = tipBox(el);
     const g = svg.append('g').selectAll('g').data(M).join('g').attr('transform', (o) => `translate(${x0(o.m)},0)`).style('opacity', (o) => (o.proy ? 0.55 : 1));
-    const segs = (o) => [{ o, k: 'cd', y0: 0, y1: o.cd, c: C0 }, { o, k: 'cg', y0: 0, y1: o.cGnv, c: CG }];
-    g.selectAll('rect').data(segs).join('rect').attr('x', (q) => x1(q.k)).attr('width', x1.bandwidth()).attr('y', (q) => y(q.y1)).attr('height', (q) => Math.max(0, y(q.y0) - y(q.y1))).attr('fill', (q) => q.c).attr('stroke-dasharray', (q) => (q.o.proy ? '4 3' : null)).attr('stroke', (q) => (q.o.proy ? q.c : null))
-      .on('pointermove', (ev, q) => { const o = q.o; tipLine(tip, ramLbl(o), [[C0, 'Si fuera diésel: ' + nf0.format(o.gal) + ' gal × S/ ' + nf2.format(o.pe) + (o.peEst ? ' (estimado)' : '') + ' = S/ ' + nf0.format(o.cd)], [CG, 'GNV: ' + nf0.format(o.m3) + ' m³ = S/ ' + nf0.format(o.cGnv)], ['var(--fz-orange)', 'Ahorro S/ ' + nf0.format(o.ah) + ' · ' + nf0.format(o.km) + ' km · ' + nf2.format(o.kmm3) + ' km/m³']]); const k = W / el.clientWidth; placeTip(tip, el, (x0(o.m) + x0.bandwidth() / 2) / k, y(o.cd) / k); })
+    const segs = (o) => [{ o, k: 'cd', y0: 0, y1: o.cd, c: C0 }, { o, k: 'cg', y0: 0, y1: o.cGnv, c: CG }, ...(o.resto ? [{ o, k: 'cd', y0: o.cd, y1: o.cd + o.resto.cd, c: C0, r: true }, { o, k: 'cg', y0: o.cGnv, y1: o.cGnv + o.resto.cGnv, c: CG, r: true }] : [])];
+    g.selectAll('rect').data(segs).join('rect').attr('x', (q) => x1(q.k)).attr('width', x1.bandwidth()).attr('y', (q) => y(q.y1)).attr('height', (q) => Math.max(0, y(q.y0) - y(q.y1))).attr('fill', (q) => q.c).attr('fill-opacity', (q) => (q.r ? 0.4 : 1)).attr('stroke-dasharray', (q) => (q.o.proy || q.r ? '4 3' : null)).attr('stroke', (q) => (q.o.proy || q.r ? q.c : null))
+      .on('pointermove', (ev, q) => { const o = q.o; tipLine(tip, ramLbl(o), [[C0, 'Si fuera diésel: ' + nf0.format(o.gal) + ' gal × S/ ' + nf2.format(o.pe) + (o.peEst ? ' (estimado)' : '') + ' = S/ ' + nf0.format(o.cd)], [CG, 'GNV: ' + nf0.format(o.m3) + ' m³ = S/ ' + nf0.format(o.cGnv)], ['var(--fz-orange)', 'Ahorro S/ ' + nf0.format(o.ah) + ' · ' + nf0.format(o.km) + ' km · ' + nf2.format(o.kmm3) + ' km/m³'], ...(o.resto ? [['#999', 'Mes completo (+ ' + o.resto.dias + ' días proy.): ahorro S/ ' + nf0.format(o.ah + o.resto.ah)]] : [])]); const k = W / el.clientWidth; placeTip(tip, el, (x0(o.m) + x0.bandwidth() / 2) / k, y(o.cd) / k); })
       .on('pointerleave', () => { tip.hidden = true; });
-    g.selectAll('text.v').data((o) => [{ o, k: 'cd', v: o.cd }, { o, k: 'cg', v: o.cg }]).join('text').attr('class', 'v').attr('x', (q) => x1(q.k) + x1.bandwidth() / 2).attr('y', (q) => y(q.v) - 4).attr('text-anchor', 'middle').style('font-size', '10px').style('fill', (q) => (q.k === 'cd' ? C0 : CG)).text((q) => nf0.format(q.v));
-    svg.append('g').selectAll('text').data(M).join('text').attr('x', (o) => x0(o.m) + x0.bandwidth() / 2).attr('y', (o) => y(Math.max(o.cd, o.cg)) - 18).attr('text-anchor', 'middle').style('font-size', '11px').style('font-weight', 700).style('fill', (o) => (o.ah >= 0 ? 'var(--fz-orange)' : 'var(--color-fg-danger, #c62828)')).text((o) => 'ahorro ' + nf0.format(o.ah));
-    const lg = svg.append('g').attr('transform', `translate(${ml},12)`); [[C0, 'Si fuera diésel'], [CG, 'GNV pagado'], ['#bbb', 'Proyección (barras claras)']].forEach(([c, t], i) => { lg.append('rect').attr('x', i * 150).attr('y', -8).attr('width', 10).attr('height', 10).attr('rx', 2).attr('fill', c); lg.append('text').attr('x', i * 150 + 14).attr('y', 1).style('font-size', '11px').text(t); });
+    g.selectAll('text.v').data((o) => [{ o, k: 'cd', v: o.cd + (o.resto ? o.resto.cd : 0) }, { o, k: 'cg', v: o.cg + (o.resto ? o.resto.cGnv : 0) }]).join('text').attr('class', 'v').attr('x', (q) => x1(q.k) + x1.bandwidth() / 2).attr('y', (q) => y(q.v) - 4).attr('text-anchor', 'middle').style('font-size', '10px').style('fill', (q) => (q.k === 'cd' ? C0 : CG)).text((q) => nf0.format(q.v));
+    svg.append('g').selectAll('text').data(M).join('text').attr('x', (o) => x0(o.m) + x0.bandwidth() / 2).attr('y', (o) => y(top(o)) - 18).attr('text-anchor', 'middle').style('font-size', '11px').style('font-weight', 700).style('fill', (o) => (o.ah >= 0 ? 'var(--fz-orange)' : 'var(--color-fg-danger, #c62828)')).text((o) => (o.resto ? 'mes completo ' + nf0.format(o.ah + o.resto.ah) : 'ahorro ' + nf0.format(o.ah)));
+    const lg = svg.append('g').attr('transform', `translate(${ml},12)`); [[C0, 'Si fuera diésel'], [CG, 'GNV pagado'], ['#bbb', 'Proyectado (barras claras)']].forEach(([c, t], i) => { lg.append('rect').attr('x', i * 150).attr('y', -8).attr('width', 10).attr('height', 10).attr('rx', 2).attr('fill', c); lg.append('text').attr('x', i * 150 + 14).attr('y', 1).style('font-size', '11px').text(t); });
     el.append(mkEl('p', 'fz-note', nota));
   });
   dash.draw('ram-placas', (el) => {
@@ -1014,7 +1022,7 @@
     document.querySelectorAll('.fz-hzw, .fz-range-lbl, .fz-tipo').forEach((el) => { if (v !== 'precios' || !el.classList.contains('fz-no-tarif')) el.style.display = ''; });
     if (v === 'impacto') document.querySelectorAll('.fz-hzw, label.fz-date.fz-no-tarifa, .fz-range-lbl').forEach((el) => { el.style.display = 'none'; });
     if (v === 'reportes') document.querySelectorAll('.fz-hzw, .fz-tipo').forEach((el) => { el.style.display = 'none'; });
-    const fl = document.getElementById('filtros'); if (fl) fl.hidden = v === 'gnv';
+    const fl = document.getElementById('filtros'); if (fl) fl.hidden = v === 'gnv' || v === 'ram';
     dash.setLink(v);
   };
   document.querySelectorAll('.fz-navbtn[data-view]').forEach((b) => b.addEventListener('click', () => show(b.dataset.view)));
