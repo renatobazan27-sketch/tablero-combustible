@@ -65,16 +65,20 @@ button:disabled{opacity:.6;cursor:progress}
 const SALT='__SALT__', IV='__IV__', CT='__CT__', ITER=__ITER__, KID='__KID__', VER='__VER__', AT='__AT__';
 const SS='dpwl-comb-ses';
 // aviso de versión nueva: se inyecta en el tablero ya abierto
-const AVISO=`<div id="dpwl-upd" hidden style="position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:99999;background:#004071;color:#fff;border-radius:12px;padding:12px 16px;box-shadow:0 6px 24px rgba(0,0,0,.25);display:flex;gap:12px;align-items:center;font:14px system-ui,sans-serif;max-width:94vw">
-<span>🔄 Hay una versión nueva del tablero. Se actualizará en <b id="dpwl-upd-s">60</b> s.</span>
-<button id="dpwl-upd-ya" style="font:inherit;font-weight:600;border:0;border-radius:8px;padding:7px 12px;background:#F15922;color:#fff;cursor:pointer">Actualizar ahora</button>
-<button id="dpwl-upd-luego" style="font:inherit;border:1px solid rgba(255,255,255,.5);border-radius:8px;padding:7px 10px;background:transparent;color:#fff;cursor:pointer">En 10 min</button></div>
-<scr`+`ipt>(()=>{const VER='${VER}',AT='${AT}';let t=null,nv=null,pausa=0;const box=()=>document.getElementById('dpwl-upd');
-const ir=()=>{location.replace(location.pathname+'?v='+nv+location.hash);};
-const mostrar=()=>{const b=box();if(!b||!b.hidden||Date.now()<pausa)return;b.hidden=false;let s=60;document.getElementById('dpwl-upd-s').textContent=s;
-t=setInterval(()=>{s--;document.getElementById('dpwl-upd-s').textContent=s;if(s<=0){clearInterval(t);ir();}},1000);};
-document.addEventListener('click',(ev)=>{if(ev.target.id==='dpwl-upd-ya')ir();if(ev.target.id==='dpwl-upd-luego'){clearInterval(t);box().hidden=true;pausa=Date.now()+600000;}});
-const chk=async()=>{try{const r=await fetch('version.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)return;const j=await r.json();if(j.v&&j.v!==VER&&j.at&&j.at>AT){nv=j.v;mostrar();}}catch(_){}};
+const AVISO=`<scr`+`ipt>(()=>{const VER='${VER}',AT='${AT}',K='dpwl-upd-skip';let t=null,nv=null,pausa=0,el=null;
+const quitar=()=>{clearInterval(t);t=null;if(el){el.remove();el=null;}};
+const ir=()=>{try{sessionStorage.setItem(K,nv);}catch(_){}quitar();location.replace(location.pathname+'?v='+nv+'&r='+Date.now()+location.hash);};
+const luego=()=>{quitar();pausa=Date.now()+600000;};
+const btn=(txt,fn,st)=>{const b=document.createElement('button');b.type='button';b.textContent=txt;b.style.cssText='font:inherit;border-radius:8px;padding:7px 12px;cursor:pointer;pointer-events:auto;'+st;b.onclick=(ev)=>{ev.preventDefault();fn();};return b;};
+const mostrar=()=>{if(el||Date.now()<pausa)return;let s=60;
+el=document.createElement('div');el.style.cssText='position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:2147483647;background:#004071;color:#fff;border-radius:12px;padding:12px 16px;box-shadow:0 6px 24px rgba(0,0,0,.25);display:flex;gap:12px;align-items:center;font:14px system-ui,sans-serif;max-width:94vw;pointer-events:auto';
+const tx=document.createElement('span');const pint=()=>{tx.textContent='🔄 Hay una versión nueva del tablero. Se actualizará en '+s+' s.';};pint();
+el.append(tx,btn('Actualizar ahora',ir,'font-weight:600;border:0;background:#F15922;color:#fff'),btn('En 10 min',luego,'border:1px solid rgba(255,255,255,.5);background:transparent;color:#fff'));
+document.documentElement.appendChild(el);t=setInterval(()=>{s--;pint();if(s<=0)ir();},1000);};
+const chk=async()=>{try{const r=await fetch('version.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)return;const j=await r.json();
+if(!(j.v&&j.v!==VER&&j.at&&j.at>AT))return;let sk=null;try{sk=sessionStorage.getItem(K);}catch(_){}
+if(sk===j.v)return; /* ya se intentó recargar a esa versión y el servidor aún entrega la anterior: no insistir */
+nv=j.v;mostrar();}catch(_){}};
 setInterval(chk,300000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk();});setTimeout(chk,20000);})();</scr`+`ipt>`;
 const ub=(s)=>Uint8Array.from(atob(s),(c)=>c.charCodeAt(0));
 const LS='dpwl-comb-key';
