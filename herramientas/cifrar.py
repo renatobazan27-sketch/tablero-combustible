@@ -5,7 +5,7 @@ Uso: python3 cifrar.py Tablero_Combustible_DPWL.html "<clave>" salida/index.html
   funcionando después de cada actualización nocturna; el IV es nuevo en cada cifrado.
 - El HTML se comprime con gzip antes de cifrar (el navegador lo descomprime).
 """
-import sys, os, gzip, base64, hashlib
+import sys, os, gzip, base64, hashlib, json, datetime
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives import hashes
@@ -19,6 +19,9 @@ plain = gzip.compress(open(src, 'rb').read(), 9)
 ct = AESGCM(key).encrypt(iv, plain, None)
 kid = hashlib.sha256(key).hexdigest()[:12]  # identifica la llave para invalidar "recordar" si cambia la clave
 b64 = lambda b: base64.b64encode(b).decode()
+ver = hashlib.sha256(ct).hexdigest()[:12]  # versión publicada: cambia en cada actualización
+at = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+
 
 page = r"""<!doctype html>
 <html lang="es">
@@ -59,20 +62,35 @@ button:disabled{opacity:.6;cursor:progress}
 </form>
 </main>
 <script>
-const SALT='__SALT__', IV='__IV__', CT='__CT__', ITER=__ITER__, KID='__KID__';
+const SALT='__SALT__', IV='__IV__', CT='__CT__', ITER=__ITER__, KID='__KID__', VER='__VER__', AT='__AT__';
+const SS='dpwl-comb-ses';
+// aviso de versión nueva: se inyecta en el tablero ya abierto
+const AVISO=`<div id="dpwl-upd" hidden style="position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:99999;background:#004071;color:#fff;border-radius:12px;padding:12px 16px;box-shadow:0 6px 24px rgba(0,0,0,.25);display:flex;gap:12px;align-items:center;font:14px system-ui,sans-serif;max-width:94vw">
+<span>🔄 Hay una versión nueva del tablero. Se actualizará en <b id="dpwl-upd-s">60</b> s.</span>
+<button id="dpwl-upd-ya" style="font:inherit;font-weight:600;border:0;border-radius:8px;padding:7px 12px;background:#F15922;color:#fff;cursor:pointer">Actualizar ahora</button>
+<button id="dpwl-upd-luego" style="font:inherit;border:1px solid rgba(255,255,255,.5);border-radius:8px;padding:7px 10px;background:transparent;color:#fff;cursor:pointer">En 10 min</button></div>
+<scr`+`ipt>(()=>{const VER='${VER}',AT='${AT}';let t=null,nv=null,pausa=0;const box=()=>document.getElementById('dpwl-upd');
+const ir=()=>{location.replace(location.pathname+'?v='+nv+location.hash);};
+const mostrar=()=>{const b=box();if(!b||!b.hidden||Date.now()<pausa)return;b.hidden=false;let s=60;document.getElementById('dpwl-upd-s').textContent=s;
+t=setInterval(()=>{s--;document.getElementById('dpwl-upd-s').textContent=s;if(s<=0){clearInterval(t);ir();}},1000);};
+document.addEventListener('click',(ev)=>{if(ev.target.id==='dpwl-upd-ya')ir();if(ev.target.id==='dpwl-upd-luego'){clearInterval(t);box().hidden=true;pausa=Date.now()+600000;}});
+const chk=async()=>{try{const r=await fetch('version.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)return;const j=await r.json();if(j.v&&j.v!==VER&&j.at&&j.at>AT){nv=j.v;mostrar();}}catch(_){}};
+setInterval(chk,300000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk();});setTimeout(chk,20000);})();</scr`+`ipt>`;
 const ub=(s)=>Uint8Array.from(atob(s),(c)=>c.charCodeAt(0));
 const LS='dpwl-comb-key';
 async function abrir(key){
   const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:ub(IV)},key,ub(CT));
   const html=await new Response(new Blob([plain]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
-  document.open(); document.write(html); document.close();
+  const i=html.lastIndexOf('</body>');
+  const out=i>0?html.slice(0,i)+AVISO+html.slice(i):html+AVISO;
+  document.open(); document.write(out); document.close();
 }
 async function derivar(clave){
   const base=await crypto.subtle.importKey('raw',new TextEncoder().encode(clave),'PBKDF2',false,['deriveKey']);
   return crypto.subtle.deriveKey({name:'PBKDF2',salt:ub(SALT),iterations:ITER,hash:'SHA-256'},base,{name:'AES-GCM',length:256},true,['decrypt']);
 }
 (async()=>{
-  try{ const s=JSON.parse(localStorage.getItem(LS)||'null');
+  try{ const s=JSON.parse(localStorage.getItem(LS)||'null')||JSON.parse(sessionStorage.getItem(SS)||'null');
     if(s&&s.kid===KID){ const key=await crypto.subtle.importKey('raw',ub(s.k),{name:'AES-GCM'},false,['decrypt']); await abrir(key); return; } }catch(e){ try{localStorage.removeItem(LS);}catch(_){} }
 })();
 document.getElementById('f').addEventListener('submit',async(ev)=>{
@@ -81,18 +99,20 @@ document.getElementById('f').addEventListener('submit',async(ev)=>{
   b.disabled=true; b.textContent='Abriendo…'; e.textContent='';
   try{
     const key=await derivar(document.getElementById('k').value);
+    try{ const raw0=new Uint8Array(await crypto.subtle.exportKey('raw',key)); sessionStorage.setItem(SS,JSON.stringify({kid:KID,k:btoa(String.fromCharCode(...raw0))})); }catch(_){}
     if(document.getElementById('r').checked){
       try{ const raw=new Uint8Array(await crypto.subtle.exportKey('raw',key)); localStorage.setItem(LS,JSON.stringify({kid:KID,k:btoa(String.fromCharCode(...raw))})); }catch(_){}
     }
     await abrir(key);
-  }catch(err){ e.textContent='Clave incorrecta.'; b.disabled=false; b.textContent='Entrar'; try{localStorage.removeItem(LS);}catch(_){} }
+  }catch(err){ e.textContent='Clave incorrecta.'; b.disabled=false; b.textContent='Entrar'; try{localStorage.removeItem(LS);sessionStorage.removeItem(SS);}catch(_){} }
 });
 </script>
 </body>
 </html>
 """
 page = (page.replace('__SALT__', b64(salt)).replace('__IV__', b64(iv)).replace('__CT__', b64(ct))
-        .replace('__ITER__', str(ITER)).replace('__KID__', kid))
+        .replace('__ITER__', str(ITER)).replace('__KID__', kid).replace('__VER__', ver).replace('__AT__', at))
 os.makedirs(os.path.dirname(out) or '.', exist_ok=True)
 open(out, 'w', encoding='utf-8').write(page)
-print(out, round(os.path.getsize(out) / 1e6, 2), 'MB')
+json.dump({'v': ver, 'at': at}, open(os.path.join(os.path.dirname(out) or '.', 'version.json'), 'w'))
+print(out, round(os.path.getsize(out) / 1e6, 2), 'MB', 'versión', ver)
