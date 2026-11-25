@@ -375,7 +375,7 @@
             <details class="fz-msel" id="tar-loc" style="margin-left:auto"><summary>Sede / grifo: <b id="tar-loc-s">Todas</b></summary><div class="fz-msel-p"><div class="fz-msel-h">Sede</div><label><input type="checkbox" value="S:Callao"> Callao</label><label><input type="checkbox" value="S:Paita"> Paita</label><div class="fz-msel-h">Grifo externo</div><label><input type="checkbox" value="G:Primax"> Primax / Coesti</label><div class="fz-msel-h">Grifo interno</div><label><input type="checkbox" value="G:Argentina"> Argentina</label><label><input type="checkbox" value="G:Gambetta1"> Gambetta 1</label><label><input type="checkbox" value="G:Paita"> Paita</label><div class="fz-msel-h">IBC</div><label><input type="checkbox" value="G:Gambetta2"> Gambetta 2</label><label><input type="checkbox" value="G:Gambetta3"> Gambetta 3</label><label><input type="checkbox" value="G:Paita2"> Paita 2</label><button type="button" class="fz-tbtn" data-clear>Todas</button></div></details>
           </div>
           <div class="fz-chartwrap"><button type="button" class="fz-focusbtn" data-focus="tarifa" aria-label="Ver en pantalla completa" title="Ver en pantalla completa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button><div class="fz-chart dash-skeleton" data-draw="tarifa" data-source="tarifa_compras tarifarios tipo_cambio"></div></div>
-          <p class="fz-note">Cada punto es el precio promedio de compra del mes: valorizado (S/ sin IGV) ÷ galones comprados. Grifo externo = Primax/Coesti; grifo interno = Argentina, Gambetta 1 y Paita; IBC = Gambetta 2, Gambetta 3 y Paita 2. El mes en curso se muestra por semanas (SEM) hasta que termina: mientras no estén cargadas sus compras en DPWL Precio Combustible, cada semana sale del tarifario diario ajustado al nivel de compra del último mes cerrado (factor compra ÷ tarifario); al cargar las compras se reemplaza por el precio real. En US$ se usa el tipo de cambio venta SBS (BCRP) promedio de cada mes o semana; la proyección usa el promedio del último mes. Línea punteada: proyección de los próximos meses (plazo según "Proyección" de arriba): parte del último precio de compra y le aplica la tendencia conservadora del tarifario de cada tipo.</p>
+          <p class="fz-note">Cada punto es el precio promedio de compra del mes: valorizado (S/ sin IGV) ÷ galones comprados. Grifo externo = Primax/Coesti; grifo interno = Argentina, Gambetta 1 y Paita; IBC = Gambetta 2, Gambetta 3 y Paita 2. El mes en curso se muestra por semanas (SEM) hasta que termina: mientras no estén cargadas sus compras en DPWL Precio Combustible, cada semana sale del tarifario diario ajustado al nivel de compra del último mes cerrado (factor compra ÷ tarifario); al cargar las compras se reemplaza por el precio real. En US$ se usa el tipo de cambio venta SBS (BCRP) promedio de cada mes o semana; la proyección usa el promedio del último mes. Proyección de los próximos meses (plazo según "Proyección" de arriba): la línea punteada es el <b>precio esperado</b> (se mantiene el último precio, sube o baja con cada carta y tarifario nuevo); la línea de puntos con la franja clara es el <b>techo conservador</b> para presupuestar (hasta dónde podría subir; en 4 de cada 5 casos no se supera, según cuánto varía normalmente cada semana).</p>
         </section>
         <section class="fz-card" id="tarifa-calc">
           <div class="fz-cardhead"><h2>¿Cómo sale cada precio?</h2><div class="fz-tools"><label class="fz-date">Desde <select class="fz-sel" id="tc-d" aria-label="Desde"></select></label><label class="fz-date">Hasta <select class="fz-sel" id="tc-h" aria-label="Hasta"></select></label><select class="fz-sel" id="tc-g" aria-label="Tipo"><option value="Todos">Todos los tipos</option><option value="Externo">Grifo externo</option><option value="Interno">Grifo interno</option><option value="IBC">IBC</option></select></div></div>
@@ -1476,7 +1476,7 @@
     }
     const pers = [...per.values()].sort((a, b) => (a.ord < b.ord ? -1 : 1));
     // semanas sin compras cargadas: tarifario diario × factor de calibración (compra ÷ tarifario del último mes con compras)
-    // proyección: promedio mensual del escenario conservador del tarifario
+    // proyección: precio esperado = último precio (v); techo = promedio mensual del escenario conservador del tarifario (hi)
     const proy = [], est = []; let allT = {};
     const t = dash.data('tarifarios');
     if (t.status === 'ok') {
@@ -1514,7 +1514,7 @@
           const pts = (tr[g] || []).filter((q) => iso(q.d).slice(0, 7) === m);
           const le = [...est].reverse().find((z) => z.g[g]); const lr = lastReal(g);
           const anchor = le ? le.g[g].v : lr ? lr.g[g].tot / lr.g[g].gal : null;
-          if (pts.length && anchor != null && tr[g][0]) o.g[g] = { v: anchor * d3.mean(pts, (q) => q.v) / tr[g][0].v };
+          if (pts.length && anchor != null && tr[g][0]) o.g[g] = { v: anchor, hi: anchor * d3.mean(pts, (q) => q.v) / tr[g][0].v };
         }
         proy.push(o);
       }
@@ -1543,7 +1543,7 @@
     if (asTable.has('tarifa')) { renderTable(el, ['Periodo', ...gs.map((g) => TG_LBL[g] + ' ' + curS())], pts.map((o) => [o.lab, ...gs.map((g) => { const v = tvalC(o, g); return v == null ? '' : Math.round(v * 100) / 100; })]), gs.map((_, i) => i + 1)); return; }
     const W = Math.max(300, el.clientWidth), H = big(el, 440), mt = 40, mb = 52, mr = 18;
     const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
-    const vals = pts.flatMap((o) => gs.map((g) => tvalC(o, g))).filter((v) => v != null);
+    const vals = pts.flatMap((o) => gs.map((g) => tvalC(o, g))).concat(TD.proy.flatMap((o) => gs.map((g) => (o.g[g] && o.g[g].hi != null ? cvt(o, o.g[g].hi) : null)))).filter((v) => v != null);
     const vpad = Math.max(0.6, (d3.max(vals) - d3.min(vals)) * 0.16); const y = d3.scaleLinear([d3.min(vals) - vpad, d3.max(vals) + vpad], [H - mb, mt]).nice();
     const ticks = y.ticks(6), fmt = (t) => nf2.format(t); const ml = measure(svg, ticks.map(fmt)) + 10;
     const x = d3.scalePoint(pts.map((o) => o.key), [ml + 6, W - mr - 6]);
@@ -1559,20 +1559,28 @@
       const line = d3.line().x((q) => x(q.o.key)).y((q) => y(q.v));
       svg.append('path').datum(rp).attr('fill', 'none').attr('stroke', TG_COL[g]).attr('stroke-width', 2.2).attr('d', line);
       if (pp.length > 1) svg.append('path').datum(pp).attr('fill', 'none').attr('stroke', TG_COL[g]).attr('stroke-width', 2).attr('stroke-dasharray', '5 4').attr('d', line);
+      const hp = [rp[rp.length - 1], ...TD.proy.map((o) => ({ o, v: o.g[g] && o.g[g].hi != null ? cvt(o, o.g[g].hi) : null })).filter((q) => q.v != null)].filter(Boolean);
+      if (hp.length > 1) {
+        const ar = d3.area().x((q) => x(q.o.key)).y0((q, i) => y(pp[i] ? pp[i].v : q.v)).y1((q) => y(q.v));
+        if (hp.length === pp.length) svg.append('path').datum(hp).attr('fill', TG_COL[g]).attr('fill-opacity', 0.08).attr('d', ar);
+        svg.append('path').datum(hp).attr('fill', 'none').attr('stroke', TG_COL[g]).attr('stroke-opacity', 0.6).attr('stroke-width', 1.3).attr('stroke-dasharray', '1.5 3').attr('d', line);
+        const hl = hp[hp.length - 1];
+        svg.append('text').attr('x', x(hl.o.key) - 8).attr('y', y(hl.v) - 5).attr('text-anchor', 'end').style('font-size', '10px').style('fill', TG_COL[g]).style('paint-order', 'stroke').style('stroke', 'var(--color-panel, #fff)').style('stroke-width', '3px').text('techo ' + nf2.format(hl.v));
+      }
       const all = [...rp, ...pp.slice(1)];
       svg.append('g').selectAll('circle').data(all).join('circle').attr('cx', (q) => x(q.o.key)).attr('cy', (q) => y(q.v)).attr('r', (q) => (q.o.sem || q.o.proy ? 3.5 : 2.5)).attr('stroke-dasharray', (q) => ((q.o.est || (q.o.g[g] && q.o.g[g].est)) ? '2 1.5' : null)).attr('fill', (q) => (q.o.proy ? 'var(--color-panel)' : (q.o.est || (q.o.g[g] && q.o.g[g].est)) ? 'color-mix(in srgb, ' + TG_COL[g] + ' 45%, var(--color-panel))' : TG_COL[g])).attr('stroke', TG_COL[g]).attr('stroke-width', 1.5);
       const kp = new Set(); if (rp.length) { kp.add(rp[rp.length - 1]); kp.add(d3.greatest(rp, (q) => q.v)); kp.add(d3.least(rp, (q) => q.v)); } if (pp.length > 1) kp.add(pp[pp.length - 1]);
       const upOf = (q) => { const vs = gs.map((h) => tvalC(q.o, h)).filter((v) => v != null); const mx = d3.max(vs), mn = d3.min(vs); return vs.length < 2 || q.v === mx || (q.v !== mn && (q.v - mn) < (mx - q.v)); };
       if (tarSt.lab === 'todos' && x.step() >= 13) {
         // todos los valores, en vertical: el de arriba sube y el de abajo baja, para que no se crucen
-        svg.append('g').selectAll('text').data(all).join('text')
+        svg.append('g').selectAll('text').data(all.filter((q) => !q.o.proy || q === pp[pp.length - 1])).join('text')
           .attr('transform', (q) => { const up = upOf(q); return `translate(${x(q.o.key) + (up ? 2 : -2)},${y(q.v) + (up ? -6 : 9)}) rotate(-45)`; })
           .attr('text-anchor', (q) => (upOf(q) ? 'start' : 'end')).style('font-size', '10px').style('fill', TG_COL[g])
           .style('font-weight', (q) => (kp.has(q) ? 700 : 500)).style('paint-order', 'stroke').style('stroke', 'var(--color-panel, #fff)').style('stroke-width', '3px')
           .text((q) => nf2.format(q.v));
       } else {
         // valores clave: tramo reciente (últimos 6 periodos + proyección) y el máximo / mínimo del periodo
-        const lb = new Set([...kp, ...rp.slice(-6), ...pp.slice(1)]);
+        const lb = new Set([...kp, ...rp.slice(-6), ...pp.slice(-1)]);
         if (x.step() < 26) { lb.clear(); kp.forEach((q) => lb.add(q)); }
         svg.append('g').selectAll('text').data([...lb]).join('text').attr('x', (q) => x(q.o.key)).attr('y', (q) => y(q.v) + (upOf(q) ? -8 : 16)).attr('text-anchor', 'middle')
           .style('font-size', '11px').style('fill', TG_COL[g]).style('font-weight', (q) => (kp.has(q) ? 700 : 600)).style('paint-order', 'stroke').style('stroke', 'var(--color-panel, #fff)').style('stroke-width', '3px').text((q) => nf2.format(q.v));
@@ -1580,7 +1588,7 @@
     });
     const tip = tipBox(el);
     svg.append('g').selectAll('rect').data(pts).join('rect').attr('x', (o) => x(o.key) - x.step() / 2).attr('width', x.step()).attr('y', mt).attr('height', H - mb - mt).attr('fill', 'transparent')
-      .on('pointermove', (ev, o) => { const lines = gs.map((g) => { const v = tvalC(o, g); return [TG_COL[g], TG_LBL[g] + ': ' + (v == null ? '—' : curS() + ' ' + nf2.format(v)) + (o.proy || !o.g[g] ? '' : o.est || o.g[g].est ? ' (estimado: tarifario ' + nf2.format(o.g[g].tar) + ' × ' + o.g[g].fac.toFixed(3) + ')' : ' (' + nf0.format(o.g[g].gal) + ' gal)')]; }); tipLine(tip, (isUSD() && tcOf(o) ? 'TC ' + tcOf(o).toFixed(3) + ' · ' : '') + (o.proy ? o.lab + ' · escenario conservador' : o.est ? o.lab + ' (' + o.d0.slice(8, 10) + '/' + o.d0.slice(5, 7) + '–' + o.d1.slice(8, 10) + '/' + o.d1.slice(5, 7) + ') · estimado con tarifario' : o.sem ? o.lab + ' (' + o.d0.slice(8, 10) + '/' + o.d0.slice(5, 7) + '–' + o.d1.slice(8, 10) + '/' + o.d1.slice(5, 7) + ')' : o.lab), lines); const k = W / el.clientWidth; placeTip(tip, el, x(o.key) / k, mt / k + 10); })
+      .on('pointermove', (ev, o) => { const lines = gs.map((g) => { const v = tvalC(o, g); return [TG_COL[g], TG_LBL[g] + ': ' + (v == null ? '—' : curS() + ' ' + nf2.format(v)) + (o.proy && o.g[g] && o.g[g].hi != null ? ' esperado · techo ' + curS() + ' ' + nf2.format(cvt(o, o.g[g].hi)) : '') + (o.proy || !o.g[g] ? '' : o.est || o.g[g].est ? ' (estimado: tarifario ' + nf2.format(o.g[g].tar) + ' × ' + o.g[g].fac.toFixed(3) + ')' : ' (' + nf0.format(o.g[g].gal) + ' gal)')]; }); tipLine(tip, (isUSD() && tcOf(o) ? 'TC ' + tcOf(o).toFixed(3) + ' · ' : '') + (o.proy ? o.lab + ' · precio esperado y techo conservador' : o.est ? o.lab + ' (' + o.d0.slice(8, 10) + '/' + o.d0.slice(5, 7) + '–' + o.d1.slice(8, 10) + '/' + o.d1.slice(5, 7) + ') · estimado con tarifario' : o.sem ? o.lab + ' (' + o.d0.slice(8, 10) + '/' + o.d0.slice(5, 7) + '–' + o.d1.slice(8, 10) + '/' + o.d1.slice(5, 7) + ')' : o.lab), lines); const k = W / el.clientWidth; placeTip(tip, el, x(o.key) / k, mt / k + 10); })
       .on('pointerleave', () => { tip.hidden = true; });
     // selector de periodo del cálculo
     tcFill(TD);
@@ -1591,7 +1599,7 @@
     const r2 = (v) => (v == null ? '' : Math.round(v * 100) / 100);
     const mesIni = (o) => (o.sem || o.proy ? o : { ...o, d0: o.m + '-01', d1: o.m + '-31' });
     const tab = [['Periodo', 'Origen', ...gsA.map((g) => TG_LBL[g] + ' precio usado (S/.)'), ...gsA.map((g) => TG_LBL[g] + ' tarifario puro (S/.)'), ...gsA.map((g) => TG_LBL[g] + ' factor'), 'TC venta SBS promedio del periodo', ...gsA.map((g) => TG_LBL[g] + ' precio usado (US$)')],
-      ...[...TD.pers, ...TD.est, ...TD.proy].map((o) => { const oo = mesIni(o); return [o.lab, o.proy ? 'Proyección' : o.est ? 'Estimado: tarifario × factor' : 'Compra real (valorizado ÷ galones)', ...gsA.map((g) => r2(tval(o, g))), ...gsA.map((g) => (o.proy ? '' : r2(TD.tarPer(oo, g)))), ...gsA.map((g) => { const v = tval(o, g), t = o.proy ? null : TD.tarPer(oo, g); return v != null && t ? Math.round((v / t) * 1000) / 1000 : ''; }), tcOf(o) ? Math.round(tcOf(o) * 1000) / 1000 : '', ...gsA.map((g) => { const v = tval(o, g), c = tcOf(o); return v != null && c ? r2(v / c) : ''; })]; })];
+      ...[...TD.pers, ...TD.est, ...TD.proy].map((o) => { const oo = mesIni(o); return [o.lab, o.proy ? 'Proyección (precio esperado)' : o.est ? 'Estimado: tarifario × factor' : 'Compra real (valorizado ÷ galones)', ...gsA.map((g) => r2(tval(o, g))), ...gsA.map((g) => (o.proy ? '' : r2(TD.tarPer(oo, g)))), ...gsA.map((g) => { const v = tval(o, g), t = o.proy ? null : TD.tarPer(oo, g); return v != null && t ? Math.round((v / t) * 1000) / 1000 : ''; }), tcOf(o) ? Math.round(tcOf(o) * 1000) / 1000 : '', ...gsA.map((g) => { const v = tval(o, g), c = tcOf(o); return v != null && c ? r2(v / c) : ''; })]; })];
     const lb = (g) => [...TD.pers].reverse().find((z) => z.g[g] && z.g[g].gal);
     const fx = [['Semana', 'Desde', 'Hasta', 'Tipo', 'Tarifario promedio de la semana', 'Mes base', 'Compra del mes base (valorizado ÷ galones)', 'Tarifario del mes base', 'Factor = compra ÷ tarifario', 'Precio estimado = tarifario × factor']];
     for (const o of TD.est) for (const g of gsA) { const q = o.g[g]; if (!q) continue; const b = lb(g); fx.push([o.lab, o.d0, o.d1, TG_LBL[g], r2(q.tar), b ? b.lab : '', b ? r2(b.g[g].tot / b.g[g].gal) : '', b ? r2(TD.tarPer({ ...b, d0: b.m + '-01', d1: b.m + '-31' }, g)) : '', Math.round(q.fac * 1000) / 1000, r2(q.v)]); }
